@@ -6,7 +6,7 @@ import type { PreviewState } from '~/composables/usePreviewState'
 // this file's own consumers.
 import { avatarForName } from '~/composables/programData/avatars'
 
-export const userName = 'Nova'
+export const userName = 'Joana'
 // Resolved through the same registry every other face on the platform uses, so
 // the signed-in user looks like herself wherever she turns up.
 export const userAvatar = avatarForName(userName)
@@ -164,12 +164,16 @@ export interface Bounty {
   game: string
   amt: string
   img: string
+  // Set on invite-only bounties a game team hands a code out for directly,
+  // instead of posting the listing publicly. Absent on every public bounty.
+  accessCode?: string
 }
 
 export const bounties: Bounty[] = [
   { title: 'Design a boss intro cutscene', game: 'Ink Drinker', amt: '$40', img: '/images/img/games/endstar-avatar.png' },
   { title: 'Fix double-jump collision bug', game: 'Pixel Racer', amt: '$25', img: '/images/img/generic-image.png' },
-  { title: 'Compose a 30s title theme', game: 'Star Weaver', amt: '$60', img: '/images/img/default-image.png' }
+  { title: 'Compose a 30s title theme', game: 'Star Weaver', amt: '$60', img: '/images/img/default-image.png' },
+  { title: 'Port save system to new engine build', game: 'Ink Drinker', amt: '$120', img: '/images/img/games/endstar-avatar.png', accessCode: 'INKDRINKER' }
 ]
 
 export interface UpcomingEvent {

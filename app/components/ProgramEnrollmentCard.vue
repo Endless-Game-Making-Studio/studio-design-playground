@@ -213,11 +213,41 @@ function submitCode() {
 }
 
 const enrollModalOpen = ref(false)
-const enrollModalStep = ref<'confirm' | 'success' | 'cancel' | 'vpc-gate' | 'self-paced-confirm'>('confirm')
+const enrollModalStep = ref<'confirm' | 'success' | 'cancel' | 'vpc-gate' | 'self-paced-confirm' | 'access-code'>('confirm')
 
 function openEnrollModal() {
   enrollModalStep.value = 'confirm'
   enrollModalOpen.value = true
+}
+
+// The discrete "I have an access code" link redeems a code against any of
+// this program's gated cohorts, not just whichever one happens to be
+// selected — the default pick favors an open or self-paced session (see
+// defaultCohortId above), so a learner's private cohort can sit unselected
+// further down the picker even though they already have its code.
+const joinCode = ref('')
+const joinCodeError = ref(false)
+
+function openAccessCodeModal() {
+  joinCode.value = ''
+  joinCodeError.value = false
+  enrollModalStep.value = 'access-code'
+  enrollModalOpen.value = true
+}
+
+function submitJoinCode() {
+  const cohort = props.instances
+    .flatMap(i => i.cohorts)
+    .find(c => c.accessCode === joinCode.value.trim())
+
+  if (!cohort || cohortStatusFor(cohort, props.enrollment, false) !== 'requires-access-code') {
+    joinCodeError.value = true
+    return
+  }
+
+  unlockedCohortIds.value.push(cohort.id)
+  selectedCohortId.value = cohort.id
+  enrollModalStep.value = 'confirm'
 }
 
 function openSelfPacedConfirmModal() {
@@ -232,6 +262,7 @@ const modalTitle = computed(() => {
   if (enrollModalStep.value === 'confirm') return t('program.enroll.confirmModal.title')
   if (enrollModalStep.value === 'vpc-gate') return t('onboarding.vpcGate.title')
   if (enrollModalStep.value === 'self-paced-confirm') return t('program.enroll.selfPacedConfirmModal.title')
+  if (enrollModalStep.value === 'access-code') return t('program.enroll.accessCodeModal.title')
   return t('program.enroll.successModal.title')
 })
 
@@ -275,6 +306,10 @@ const signUpToEnroll = computed(() => signUpTo(
 // guest's `next` marks that they meant to start, not just "come back here."
 const signUpToStartSelfPaced = computed(() => signUpTo(`${route.path}?startSelfPaced=1`))
 
+// The access-code link has no intent worth carrying: the code itself never
+// survives the round trip, so a guest just lands back here and clicks again.
+const signUpToAccessCode = computed(() => signUpTo(route.path))
+
 function onEnrollClick() {
   // Guests follow the `to` link instead; nothing to do here for them.
   if (!isLoggedIn.value) return
@@ -290,6 +325,12 @@ function onStartLearningClick() {
   // Guests follow the `to` link instead; nothing to do here for them.
   if (!isLoggedIn.value) return
   openSelfPacedConfirmModal()
+}
+
+function onAccessCodeLinkClick() {
+  // Guests follow the `to` link instead; nothing to do here for them.
+  if (!isLoggedIn.value) return
+  openAccessCodeModal()
 }
 
 function confirmSelfPaced() {
@@ -379,7 +420,12 @@ function addToCalendar() {
 </script>
 
 <template>
-  <UPageCard variant="soft" :ui="{ root: 'bg-white border border-primary/20' }">
+  <UPageCard
+    variant="outline"
+    spotlight
+    class="[--spotlight-color:var(--color-orange-200)]"
+    :ui="{ spotlight: 'absolute inset-px rounded-[inherit] pointer-events-none bg-default' }"
+  >
     <ul class="flex flex-col gap-3">
       <li v-for="fact in facts" :key="fact.key" class="flex items-center gap-3">
         <img v-if="fact.image" :src="fact.image" alt="" class="size-8 shrink-0" />
@@ -492,7 +538,6 @@ function addToCalendar() {
         </template>
 
         <template v-else-if="selectedStatus === 'self-paced-always-open'">
-          <UBadge :label="t('program.enroll.sessionDescription.selfPaced')" color="neutral" variant="soft" class="mb-3" />
           <!-- No seat or start date to pick, but starting still opens the
                classroom immediately — worth a confirmation rather than a
                silent one-click commit. A guest's intent survives the sign-up
@@ -545,6 +590,18 @@ function addToCalendar() {
           />
         </template>
       </div>
+
+      <UButton
+        v-if="!enrolledCohort && selectedStatus !== 'requires-access-code'"
+        :label="t('program.enroll.hasAccessCode')"
+        variant="link"
+        color="neutral"
+        size="sm"
+        block
+        class="justify-center mt-2"
+        :to="isLoggedIn ? undefined : signUpToAccessCode"
+        @click="onAccessCodeLinkClick"
+      />
     </template>
 
     <UModal v-model:open="enrollModalOpen">
@@ -586,6 +643,30 @@ function addToCalendar() {
           <p class="text-sm text-muted">
             {{ t('program.enroll.selfPacedConfirmModal.body', { program: template.title }) }}
           </p>
+        </div>
+
+        <div v-else-if="enrollModalStep === 'access-code'" class="flex flex-col items-center text-center gap-3">
+          <div class="flex items-center justify-center size-12 rounded-full bg-primary/10 text-primary">
+            <UIcon name="lucide:key-round" class="size-6" />
+          </div>
+          <div class="font-heading font-bold text-lg text-highlighted">
+            {{ t('program.enroll.accessCodeModal.title') }}
+          </div>
+          <p class="text-sm text-muted">
+            {{ t('program.enroll.accessCodeModal.body', { program: template.title }) }}
+          </p>
+          <UFormField
+            :error="joinCodeError ? t('program.enroll.accessCodeModal.error') : undefined"
+            class="w-full text-left"
+          >
+            <UInput
+              v-model="joinCode"
+              icon="lucide:key-round"
+              :placeholder="t('program.enroll.accessCode.placeholder')"
+              class="w-full"
+              @keydown.enter="submitJoinCode"
+            />
+          </UFormField>
         </div>
 
         <div v-else-if="enrollModalStep === 'vpc-gate'" class="flex flex-col items-center text-center gap-3">
@@ -635,6 +716,10 @@ function addToCalendar() {
         <template v-else-if="enrollModalStep === 'self-paced-confirm'">
           <UButton :label="t('program.enroll.selfPacedConfirmModal.cancel')" color="neutral" variant="outline" @click="enrollModalOpen = false" />
           <UButton :label="t('program.enroll.selfPacedConfirmModal.confirm')" color="primary" @click="confirmSelfPaced" />
+        </template>
+        <template v-else-if="enrollModalStep === 'access-code'">
+          <UButton :label="t('program.enroll.accessCodeModal.cancel')" color="neutral" variant="outline" @click="enrollModalOpen = false" />
+          <UButton :label="t('program.enroll.accessCodeModal.confirm')" color="primary" :disabled="!joinCode.trim()" @click="submitJoinCode" />
         </template>
         <UButton
           v-else
