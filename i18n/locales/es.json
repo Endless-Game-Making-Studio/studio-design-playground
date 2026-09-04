@@ -639,6 +639,8 @@
       },
       "sidebar": {
         "classrooms": "Salones",
+        "program": "Programa",
+        "allPrograms": "Todos los programas",
         "newClassroom": "Nuevo salón",
         "mentorTraining": "Capacitación para mentores",
         "listEmpty": "Todavía no tienes salones"
@@ -649,13 +651,26 @@
         "cta": "Nuevo salón"
       },
       "tabs": {
-        "progress": "Progreso",
+        "progress": "Progreso de tareas",
+        "users": "Usuarios",
+        "feed": "Publicaciones",
         "settings": "Ajustes"
       },
       "progress": {
-        "title": "Progreso",
         "avgCompletion": "Progreso promedio",
         "seatsFilled": "Cupos ocupados"
+      },
+      "users": {
+        "count": "{count} estudiante | {count} estudiantes",
+        "invite": "Invitar estudiantes",
+        "mentorRole": "Mentor",
+        "learnerRole": "Estudiante"
+      },
+      "feed": {
+        "empty": {
+          "title": "Todavía no hay publicaciones",
+          "body": "Comparte una novedad, una pregunta o un reto con tu salón."
+        }
       },
       "settings": {
         "title": "Ajustes del salón",

@@ -24,9 +24,9 @@ const dateRangeLabel = computed(() =>
 </script>
 
 <template>
-  <div class="mt-8 flex flex-col gap-6">
-    <SectionTitle :title="t('teach.hub.settings.title')" />
-
+  <!-- Rendered inside a slideover that already carries the "Classroom
+       settings" title, so no SectionTitle of its own here. -->
+  <div class="flex flex-col gap-6">
     <UPageCard variant="subtle">
       <template #header>
         <span class="text-xs font-semibold text-dimmed uppercase tracking-wide">
