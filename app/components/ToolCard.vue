@@ -1,14 +1,8 @@
 <script setup lang="ts">
-import type { ToolCardData } from '~/composables/useMakeMockData'
+import { toolEntry, type ToolCardData } from '~/composables/useMakeMockData'
 
-defineProps<{
+const props = defineProps<{
   tool: ToolCardData
-}>()
-
-// The card stays presentational and hands the tool back up — the drawer is a
-// single instance owned by the page, not one per card.
-const emit = defineEmits<{
-  launch: [tool: ToolCardData]
 }>()
 
 // Typed lookup, not an inline ternary — see DESIGN.md's STATUS_COLOR convention (TaskTile.vue).
@@ -16,6 +10,19 @@ const BADGE_COLOR: Record<ToolCardData['badge'], 'success' | 'warning'> = {
   Live: 'success',
   Beta: 'warning'
 }
+
+const LAUNCH_ICON = {
+  download: 'lucide:download',
+  // Leaves Endless Studios entirely, versus a tab that keeps our bar on top.
+  external: 'lucide:external-link',
+  tab: 'lucide:square-arrow-out-up-right'
+} as const
+
+const destination = computed(() => toolEntry(props.tool))
+
+const launchIcon = computed(() =>
+  LAUNCH_ICON[props.tool.isDownload ? 'download' : destination.value.external ? 'external' : 'tab']
+)
 </script>
 
 <template>
@@ -48,22 +55,18 @@ const BADGE_COLOR: Record<ToolCardData['badge'], 'success' | 'warning'> = {
     <p class="text-sm text-muted flex-1">{{ tool.blurb }}</p>
 
     <template #footer>
-      <!-- One button, not a set: with no `to`, UButton already falls through to
-           a real `<button>`. Native tools navigate in-app, embeddable ones open
-           the drawer, everything else keeps its outward link. The label stays
-           the same throughout — all three launch the tool, and only the icon
-           marks which of them leaves the platform. -->
+      <!-- Every tool opens in a new tab now, so the destination is the only
+           thing that varies: our own tools land on a page that carries the
+           platform's bar, the rest leave for their own site. The label stays
+           the same throughout — the icon is what says where you're going. -->
       <UButton
         block
         variant="soft"
         color="neutral"
-        :icon="tool.isDownload
-          ? 'lucide:download'
-          : tool.route ? 'lucide:arrow-right' : tool.embedUrl ? 'lucide:maximize' : 'lucide:external-link'"
-        :disabled="!tool.route && !tool.embedUrl && !tool.url"
-        :to="tool.route ?? (tool.embedUrl ? undefined : tool.url)"
-        :target="tool.route || tool.embedUrl ? undefined : '_blank'"
-        @click="!tool.route && tool.embedUrl && emit('launch', tool)"
+        :icon="launchIcon"
+        :disabled="!destination.href"
+        :to="destination.href"
+        target="_blank"
       >
         {{ tool.isDownload ? 'Download' : 'Launch tool' }}
       </UButton>

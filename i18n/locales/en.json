@@ -318,14 +318,14 @@
   },
   "pixelStitch": {
     "title": "Threadbare Pixel Stitch",
-    "subtitle": "Weave pixel art and animations for your Threadbare characters and props.",
-    "backToTools": "Maker Tools",
     "openProject": "Open",
-    "saveProject": "Save",
+    "saveProject": "Save as .tps file",
+    "savePng": "Save as PNG",
+    "savePngTooltip": "Download the current frame as a PNG",
     "exportingGif": "Exporting GIF…",
     "canvasSize": {
       "label": "Canvas",
-      "tooltip": "Set the canvas to {size} pixels"
+      "tooltip": "Choose the canvas size — this clears every frame"
     },
     "tools": {
       "pencil": "Pencil",
@@ -351,15 +351,12 @@
       "redo": "Redo the last action",
       "toggleGrid": "Toggle the grid overlay",
       "importImage": "Import an image onto the canvas",
-      "exportPng": "Export the current frame as a PNG",
       "exportGif": "Export the animation as a GIF",
       "clearOptions": "Clear the canvas",
       "clearCurrentLayer": "Clear current layer",
       "clearAllLayers": "Clear all layers",
       "exportSpriteSheet": "Export every frame as a sprite sheet",
-      "importSpriteSheet": "Import a sprite sheet as frames",
-      "submit": "Save & submit",
-      "submitTooltip": "Download the current frame as a PNG"
+      "importSpriteSheet": "Import a sprite sheet as frames"
     },
     "canvas": {
       "zoomIn": "Zoom in",
@@ -371,12 +368,11 @@
       "hintPasting": "Move the pointer to position it, click to paste, or press Esc to cancel."
     },
     "color": {
-      "title": "Colour",
-      "dragToSave": "Drag onto a palette slot to save this colour",
-      "pickerTooltip": "Pick a colour",
+      "currentTooltip": "Click to pick a colour, or drag it onto a palette slot",
       "hexTooltip": "Enter a hex colour code",
       "brushOpacity": "Brush opacity",
       "dragToCustomize": "Drag colours onto slots to customise the palette.",
+      "rowLabel": "Palette row",
       "swatchTooltip": "{color} — click to select, drop a colour to replace",
       "row": {
         "base": "Colour",
@@ -409,6 +405,7 @@
     },
     "preview": {
       "title": "Animation preview",
+      "label": "Preview",
       "fps": "FPS",
       "fpsTooltip": "Adjust the playback speed in frames per second"
     },
@@ -442,7 +439,6 @@
       "cannotDeleteLastFrame": "You can't delete the last frame",
       "frameDeleted": "Frame deleted",
       "frameDuplicated": "Frame duplicated",
-      "canvasSizeChanged": "Canvas size changed to {size}",
       "backgroundRemoved": "Background removed",
       "nothingToRemove": "No background detected",
       "flippedHorizontal": "Flipped horizontally",
