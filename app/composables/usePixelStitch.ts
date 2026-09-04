@@ -342,7 +342,6 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
       for (const layer of frame.layers) layer.data = emptyGrid(size)
     }
     resetHistory(currentLayer.value?.data ?? emptyGrid(size))
-    toast.add({ title: t('pixelStitch.toast.canvasSizeChanged', { size: `${size}×${size}` }), color: 'success' })
   }
 
   // ─── Palette ──────────────────────────────────────────────────────────────

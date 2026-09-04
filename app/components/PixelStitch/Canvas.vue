@@ -458,7 +458,13 @@ const selectionHint = computed(() => {
     />
 
     <UPageCard variant="outline" :ui="{ root: 'rounded-2xl', container: 'p-3 sm:p-3 gap-3' }">
-      <div class="flex items-center justify-center gap-1">
+      <!-- Everything that frames the canvas without drawing on it: its size,
+           the zoom, the history and the grid overlay. The rail beside the
+           canvas is left to the tools that put pixels down. -->
+      <div class="flex flex-wrap items-center gap-2">
+        <PixelStitchCanvasSizeSelector />
+
+        <div class="mx-auto flex items-center gap-1">
         <UTooltip :text="t('pixelStitch.canvas.zoomOut')">
           <UButton
             icon="lucide:minus"
@@ -490,6 +496,42 @@ const selectionHint = computed(() => {
             @click="zoomBy(0.25)"
           />
         </UTooltip>
+        </div>
+
+        <div class="flex items-center gap-1">
+          <UTooltip :text="t('pixelStitch.toolbar.undo')">
+            <UButton
+              icon="lucide:undo"
+              color="neutral"
+              variant="outline"
+              size="sm"
+              :disabled="!editor.canUndo.value"
+              :aria-label="t('pixelStitch.toolbar.undo')"
+              @click="editor.undo()"
+            />
+          </UTooltip>
+          <UTooltip :text="t('pixelStitch.toolbar.redo')">
+            <UButton
+              icon="lucide:redo"
+              color="neutral"
+              variant="outline"
+              size="sm"
+              :disabled="!editor.canRedo.value"
+              :aria-label="t('pixelStitch.toolbar.redo')"
+              @click="editor.redo()"
+            />
+          </UTooltip>
+          <UTooltip :text="t('pixelStitch.toolbar.toggleGrid')">
+            <UButton
+              icon="lucide:grid-3x3"
+              size="sm"
+              :color="editor.gridVisible.value ? 'primary' : 'neutral'"
+              :variant="editor.gridVisible.value ? 'solid' : 'outline'"
+              :aria-label="t('pixelStitch.toolbar.toggleGrid')"
+              @click="editor.gridVisible.value = !editor.gridVisible.value"
+            />
+          </UTooltip>
+        </div>
       </div>
 
       <div ref="containerRef" class="flex items-center justify-center overflow-auto rounded-xl bg-elevated p-4">

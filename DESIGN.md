@@ -221,4 +221,5 @@ The component library is **Nuxt UI v4** — per `CLAUDE.md`'s "Building UI — m
 - Don't treat the current page's fixed 1080px content width or fixed 324px right rail as a responsive pattern to replicate — it's a known prototype characteristic, not a deliberate breakpoint system.
 - Don't treat the bottom-pinned "PREVIEW AS" state switcher as a real UI pattern — it's explicitly dev-only scaffolding in the source, kept only for manual QA until real session state exists.
 - Don't add a fixed-px custom type scale — Tailwind's standard scale is the only one in use here; there's no legacy scale to work around.
+- Don't toast to confirm something the user can already see happen on screen (a canvas resize, a panel opening, a swatch changing) — a toast is for feedback that has no visible result, like an export or a save. Warn before a destructive change instead, where the control lives.
 - Don't invent new duration/easing values for animation — use `--duration-fast`/`--duration-base` where a token already exists, and follow `docs/animation.md`'s easing/GPU/reduced-motion rules for anything new.

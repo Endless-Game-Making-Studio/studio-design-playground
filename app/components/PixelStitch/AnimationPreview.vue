@@ -49,29 +49,30 @@ onBeforeUnmount(stop)
 </script>
 
 <template>
-  <UPageCard variant="outline" :ui="{ root: 'rounded-2xl', container: 'p-4 sm:p-4 gap-3' }">
-    <h3 class="font-heading font-bold text-sm text-highlighted">{{ t('pixelStitch.preview.title') }}</h3>
+  <!-- Sits inside the frame strip's card: the preview and the timeline are one
+       animation panel, so it brings no card of its own. -->
+  <div class="flex w-32 shrink-0 flex-col gap-1.5">
+    <!-- Captioned because the preview canvas would otherwise read as one more
+         frame thumbnail sitting at the head of the strip. -->
+    <p class="text-[10px] font-semibold uppercase tracking-wider text-dimmed">
+      {{ t('pixelStitch.preview.label') }}
+    </p>
+    <canvas
+      ref="canvasRef"
+      :width="PREVIEW_SIZE"
+      :height="PREVIEW_SIZE"
+      class="w-full rounded-xl ring-1 ring-default"
+      role="img"
+      :aria-label="t('pixelStitch.preview.title')"
+      :style="{ imageRendering: 'pixelated' }"
+    />
 
-    <div class="flex justify-center">
-      <canvas
-        ref="canvasRef"
-        :width="PREVIEW_SIZE"
-        :height="PREVIEW_SIZE"
-        class="rounded-xl ring-1 ring-default"
-        :style="{ imageRendering: 'pixelated' }"
-      />
+    <div class="flex items-center justify-between text-xs text-dimmed">
+      <span class="tabular-nums">{{ t('pixelStitch.preview.fps') }}: {{ editor.fps.value }}</span>
+      <span class="tabular-nums">{{ editor.currentFrameIndex.value + 1 }} / {{ editor.frames.value.length }}</span>
     </div>
-
-    <div class="flex flex-col gap-1">
-      <div class="flex items-center justify-between text-xs text-dimmed">
-        <span class="tabular-nums">{{ t('pixelStitch.preview.fps') }}: {{ editor.fps.value }}</span>
-        <span class="tabular-nums">
-          {{ t('pixelStitch.frames.frame') }} {{ editor.currentFrameIndex.value + 1 }} / {{ editor.frames.value.length }}
-        </span>
-      </div>
-      <UTooltip :text="t('pixelStitch.preview.fpsTooltip')">
-        <USlider v-model="editor.fps.value" :min="1" :max="30" :step="1" size="xs" class="w-full" />
-      </UTooltip>
-    </div>
-  </UPageCard>
+    <UTooltip :text="t('pixelStitch.preview.fpsTooltip')">
+      <USlider v-model="editor.fps.value" :min="1" :max="30" :step="1" size="xs" class="w-full" />
+    </UTooltip>
+  </div>
 </template>
