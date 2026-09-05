@@ -69,7 +69,6 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
   // ─── Tool state ───────────────────────────────────────────────────────────
 
   const currentColor = ref('#FF00FF')
-  const brushOpacity = ref(1)
   const currentTool = ref<PixelTool>('pencil')
   const brushSize = ref(1)
   const eraserSize = ref(1)
@@ -491,7 +490,6 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
     fps,
     // tools
     currentColor,
-    brushOpacity,
     currentTool,
     brushSize,
     eraserSize,

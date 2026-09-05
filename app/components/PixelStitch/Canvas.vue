@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PixelGrid, Point } from '~/composables/pixelStitch/types'
-import { cloneGrid, hexToRgba, isHexColor } from '~/composables/pixelStitch/project'
+import { cloneGrid } from '~/composables/pixelStitch/project'
 import { compositeLayers, drawCheckerboard } from '~/composables/pixelStitch/render'
 import { usePixelStitchContext } from '~/composables/usePixelStitchContext'
 
@@ -17,13 +17,10 @@ const containerRef = ref<HTMLElement | null>(null)
 const GHOST_PREVIOUS = '#f97316'
 const GHOST_NEXT = '#6b8afd'
 
-// Opacity is applied when painting, not stored, so the palette keeps clean hex
-// values while a translucent brush still lays down translucent pixels.
-const drawColor = computed(() =>
-  editor.brushOpacity.value < 1 && isHexColor(editor.currentColor.value)
-    ? hexToRgba(editor.currentColor.value, editor.brushOpacity.value)
-    : editor.currentColor.value
-)
+// Straight hex, no alpha: a pixel here is painted or empty. A half-opaque
+// value would survive on the canvas but not through an export, so it can't be
+// offered as a colour someone is allowed to pick.
+const drawColor = computed(() => editor.currentColor.value)
 
 // ─── Sizing ─────────────────────────────────────────────────────────────────
 

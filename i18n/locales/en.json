@@ -381,7 +381,7 @@
       "dragToSave": "Drag onto a palette slot to save this colour",
       "pickerTooltip": "Pick a colour",
       "hexTooltip": "Enter a hex colour code",
-      "brushOpacity": "Brush opacity",
+      "moreShades": "More shades",
       "dragToCustomize": "Drag colours onto slots to customise the palette.",
       "swatchTooltip": "{color} — click to select, drop a colour to replace",
       "row": {

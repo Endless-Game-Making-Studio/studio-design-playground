@@ -381,7 +381,7 @@
       "dragToSave": "Arrastra a un espacio de la paleta para guardar este color",
       "pickerTooltip": "Elegir un color",
       "hexTooltip": "Introduce un código de color hexadecimal",
-      "brushOpacity": "Opacidad del pincel",
+      "moreShades": "Más tonos",
       "dragToCustomize": "Arrastra colores a los espacios para personalizar la paleta.",
       "swatchTooltip": "{color} — haz clic para seleccionar, suelta un color para reemplazarlo",
       "row": {

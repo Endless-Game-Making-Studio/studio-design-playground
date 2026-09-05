@@ -16,13 +16,13 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
 
-// Below full opacity the preview swatch shows the checkerboard through the
-// brush colour — the palette itself still stores opaque hex.
-export const TranslucentBrush: Story = {
+// The eyedropper is the one tool that lives in this panel rather than the
+// rail, so its selected state is the panel's, not the rail's.
+export const EyedropperSelected: Story = {
   decorators: [withEditor({
     width: INSPECTOR_WIDTH,
     seed: (editor) => {
-      editor.brushOpacity.value = 0.35
+      editor.currentTool.value = 'eyedropper'
       editor.currentColor.value = '#1E00FF'
     }
   })]
