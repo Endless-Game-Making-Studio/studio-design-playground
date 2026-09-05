@@ -86,6 +86,37 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
   const palette = ref<string[]>([...DEFAULT_PALETTE])
 
   const isPlaying = ref(false)
+
+  // Whether the animation panel along the bottom is open. It lives here rather
+  // than in the panel because the page's own bottom padding has to clear it.
+  const animationPanelOpen = ref(false)
+
+  // Playback lives with the state rather than inside the preview component:
+  // play stays available while the panel is closed and the preview is not
+  // mounted. It advances the shared frame cursor, so the canvas and the strip
+  // follow along — nothing here is a separate player.
+  let playbackTimer: ReturnType<typeof setInterval> | null = null
+
+  function stopPlayback() {
+    if (playbackTimer) clearInterval(playbackTimer)
+    playbackTimer = null
+  }
+
+  watch(
+    [isPlaying, fps, () => frames.value.length],
+    ([playing, rate, frameCount]) => {
+      stopPlayback()
+      if (!playing || frameCount < 2) return
+      // Re-created whenever fps changes, which is what lets the drag retime a
+      // running animation instead of waiting for the next play.
+      playbackTimer = setInterval(() => {
+        currentFrameIndex.value = (currentFrameIndex.value + 1) % frames.value.length
+      }, 1000 / rate)
+    },
+    { immediate: true }
+  )
+
+  onBeforeUnmount(stopPlayback)
   const onionSkin = ref<OnionSkinSettings>({
     enabled: false,
     previousFrames: 1,
@@ -534,6 +565,7 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
     setZoom,
     palette,
     isPlaying,
+    animationPanelOpen,
     onionSkin,
     selection,
     clipboard,

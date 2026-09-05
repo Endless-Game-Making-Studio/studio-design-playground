@@ -13,6 +13,8 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 // A new project holds one frame; delete is disabled until there's a second.
+// The dashed tile at the end is how a frame gets added — there is no Add
+// button in the panel header.
 export const SingleFrame: Story = {}
 
 // Thumbnails are drawn to their own canvases and redraw as the artwork changes.

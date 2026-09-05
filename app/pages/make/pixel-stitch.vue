@@ -238,7 +238,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
 </script>
 
 <template>
-  <div class="flex min-h-dvh flex-col bg-slate-50 pb-52 lg:h-dvh lg:overflow-hidden lg:pb-52">
+  <div class="flex min-h-dvh flex-col bg-slate-50 lg:h-dvh lg:overflow-hidden" :class="editor.animationPanelOpen.value ? 'pb-52' : 'pb-14'">
     <header class="flex flex-wrap items-center justify-between gap-3 border-b border-default bg-slate-100 px-3 py-2 sm:px-4">
       <div class="flex min-w-0 flex-wrap items-center gap-3">
         <UButton to="/make" icon="lucide:arrow-left" :label="t('pixelStitch.backToTools')" color="neutral" variant="ghost" size="sm" />
@@ -286,15 +286,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
         <div class="p-4"><PixelStitchColorPicker /></div>
         <USeparator />
         <div class="p-4"><PixelStitchLayerPanel /></div>
-        <USeparator />
-        <div class="p-4"><PixelStitchOnionSkinControls /></div>
-        <USeparator />
-        <div class="p-4"><PixelStitchAnimationPreview /></div>
       </aside>
     </div>
 
-    <footer class="fixed inset-x-0 bottom-0 z-10 h-52 border-t border-default bg-slate-100 p-4">
-      <PixelStitchFrameStrip />
+    <footer class="fixed inset-x-0 bottom-0 z-10 border-t border-default bg-slate-100">
+      <PixelStitchAnimationPanel />
     </footer>
   </div>
 

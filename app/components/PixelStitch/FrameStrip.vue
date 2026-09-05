@@ -44,34 +44,8 @@ function onDrop(target: number) {
 </script>
 
 <template>
-  <section class="flex h-full flex-col gap-3">
-    <div class="flex items-center justify-between">
-      <h3 class="font-heading font-bold text-sm text-highlighted">{{ t('pixelStitch.frames.title') }}</h3>
-      <div class="flex gap-1.5">
-        <UTooltip :text="editor.isPlaying.value ? t('pixelStitch.frames.pause') : t('pixelStitch.frames.play')">
-          <UButton
-            :icon="editor.isPlaying.value ? 'lucide:pause' : 'lucide:play'"
-            size="xs"
-            color="neutral"
-            variant="outline"
-            :aria-label="editor.isPlaying.value ? t('pixelStitch.frames.pause') : t('pixelStitch.frames.play')"
-            @click="editor.isPlaying.value = !editor.isPlaying.value"
-          />
-        </UTooltip>
-        <UTooltip :text="t('pixelStitch.frames.addTooltip')">
-          <UButton
-            :label="t('pixelStitch.frames.add')"
-            icon="lucide:plus"
-            size="xs"
-            color="neutral"
-            variant="outline"
-            @click="editor.addFrame()"
-          />
-        </UTooltip>
-      </div>
-    </div>
-
-    <div class="flex gap-2 overflow-x-auto pb-1">
+  <section class="flex h-full flex-col">
+    <div class="flex h-full items-start gap-2 overflow-x-auto pb-1">
       <div
         v-for="(frame, index) in editor.frames.value"
         :key="frame.id"
@@ -117,6 +91,20 @@ function onDrop(target: number) {
           </div>
         </div>
       </div>
+
+      <!-- The Add button left the header for this: a new frame appears at the
+           end of the strip, so the control that makes one belongs there. -->
+      <UTooltip :text="t('pixelStitch.frames.addTooltip')">
+        <button
+          type="button"
+          class="flex h-[110px] w-[84px] shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-default text-dimmed transition-colors hover:border-primary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          :aria-label="t('pixelStitch.frames.addTooltip')"
+          @click="editor.addFrame()"
+        >
+          <Icon name="lucide:plus" class="size-5" />
+          <span class="text-xs">{{ t('pixelStitch.frames.add') }}</span>
+        </button>
+      </UTooltip>
     </div>
   </section>
 </template>

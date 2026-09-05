@@ -411,6 +411,8 @@
       "opacityLabel": "Opacidad de {name}"
     },
     "frames": {
+      "count": "{count} fotograma | {count} fotogramas",
+      "collapse": "Cerrar el panel de animación",
       "title": "Fotogramas de animación",
       "frame": "Fotograma",
       "add": "Añadir",

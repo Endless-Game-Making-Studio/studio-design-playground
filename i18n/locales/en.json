@@ -411,6 +411,8 @@
       "opacityLabel": "Opacity of {name}"
     },
     "frames": {
+      "count": "{count} frame | {count} frames",
+      "collapse": "Close the animation panel",
       "title": "Animation frames",
       "frame": "Frame",
       "add": "Add",
