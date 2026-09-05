@@ -8,7 +8,7 @@ import type {
   Selection,
   SelectionMode
 } from '~/composables/pixelStitch/types'
-import { MAX_HISTORY_STEPS } from '~/composables/pixelStitch/types'
+import { MAX_HISTORY_STEPS, MAX_ZOOM, MIN_ZOOM } from '~/composables/pixelStitch/types'
 import {
   DEFAULT_PALETTE,
   cloneGrid,
@@ -74,6 +74,15 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
   const eraserSize = ref(1)
   const gridVisible = ref(true)
   const zoom = ref(1)
+
+  // Measured by the canvas, which is the only part that knows how big its
+  // scroll area is; the zoom control in the top bar reads it for its
+  // fit-to-window preset.
+  const fitZoom = ref(1)
+
+  function setZoom(value: number) {
+    zoom.value = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value))
+  }
   const palette = ref<string[]>([...DEFAULT_PALETTE])
 
   const isPlaying = ref(false)
@@ -501,6 +510,8 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
     eraserSize,
     gridVisible,
     zoom,
+    fitZoom,
+    setZoom,
     palette,
     isPlaying,
     onionSkin,

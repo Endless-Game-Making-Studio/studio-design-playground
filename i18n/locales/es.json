@@ -372,6 +372,8 @@
       "submitTooltip": "Descargar el fotograma actual como PNG"
     },
     "canvas": {
+      "zoomFit": "Ajustar a la ventana",
+      "zoomPresets": "Ajustes de zoom",
       "zoomIn": "Acercar",
       "zoomOut": "Alejar",
       "zoomReset": "Restablecer el zoom al 100%",

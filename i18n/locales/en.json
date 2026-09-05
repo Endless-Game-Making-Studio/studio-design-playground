@@ -372,6 +372,8 @@
       "submitTooltip": "Download the current frame as a PNG"
     },
     "canvas": {
+      "zoomFit": "Fit to window",
+      "zoomPresets": "Zoom presets",
       "zoomIn": "Zoom in",
       "zoomOut": "Zoom out",
       "zoomReset": "Reset the zoom to 100%",

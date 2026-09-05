@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { PixelGrid, Point } from '~/composables/pixelStitch/types'
+import { ARTBOARD_SIZE, MAX_ZOOM, MIN_ZOOM } from '~/composables/pixelStitch/types'
 import { cloneGrid } from '~/composables/pixelStitch/project'
 import { compositeLayers, drawCheckerboard } from '~/composables/pixelStitch/render'
 import { usePixelStitchContext } from '~/composables/usePixelStitchContext'
@@ -9,6 +10,7 @@ const { t } = useI18n()
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const containerRef = ref<HTMLElement | null>(null)
+const boardRef = ref<HTMLElement | null>(null)
 
 // Onion-skin ghosts are tinted rather than drawn in their own colors, so past
 // and future frames stay distinguishable from the frame being drawn. Brand
@@ -24,28 +26,89 @@ const drawColor = computed(() => editor.currentColor.value)
 
 // ─── Sizing ─────────────────────────────────────────────────────────────────
 
-// One artwork pixel in screen pixels. Chosen to fill the panel without
-// overflowing the viewport, with a floor per canvas size — a 128×128 grid at
-// its natural fit would be unusably small, so it's allowed to overflow and
-// scroll instead.
-const pixelSize = ref(16)
+// One artwork pixel in artboard pixels. The artboard is a fixed square at
+// 100%, so this follows only the grid — the window has no say in it, and
+// opening the animation panel scrolls the area rather than shrinking the
+// drawing.
+const pixelSize = computed(() => ARTBOARD_SIZE / editor.canvasSize.value)
+const canvasPixels = computed(() => ARTBOARD_SIZE)
 
-function measurePixelSize() {
+const scaledSize = computed(() => ARTBOARD_SIZE * editor.zoom.value)
+
+// What the fit-to-window preset in the top bar resolves to. Measured here
+// because the scroll area is the only thing that knows its own size.
+function measureFitZoom() {
   const container = containerRef.value
-  if (!container) return 16
-  const size = editor.canvasSize.value
-  const maxWidth = container.clientWidth - 64
-  const maxHeight = Math.min(window.innerHeight * 0.6, 800)
-  const fitted = Math.floor(Math.min(maxWidth / size, maxHeight / size))
-  const minimum = size <= 32 ? 12 : size <= 64 ? 6 : size <= 128 ? 3 : 2
-  return Math.max(minimum, Math.min(fitted, 48))
+  if (!container) return
+  const available = Math.min(container.clientWidth, container.clientHeight) - 32
+  editor.fitZoom.value = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, available / ARTBOARD_SIZE))
 }
 
-function updatePixelSize() {
-  pixelSize.value = measurePixelSize()
+// ─── Zoom and panning ───────────────────────────────────────────────────────
+
+// Anchored to the pointer: zooming to the centre of the area makes people
+// chase the part they were looking at. The board's rect before and after the
+// change is what says how far to scroll, which keeps this correct regardless
+// of the centring and padding around it.
+async function onWheel(event: WheelEvent) {
+  const container = containerRef.value
+  const board = boardRef.value
+  if (!container || !board) return
+  event.preventDefault()
+
+  const before = board.getBoundingClientRect()
+  const u = (event.clientX - before.left) / before.width
+  const v = (event.clientY - before.top) / before.height
+
+  const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, editor.zoom.value * Math.exp(-event.deltaY * 0.0015)))
+  if (next === editor.zoom.value) return
+  editor.zoom.value = next
+
+  await nextTick()
+  const after = board.getBoundingClientRect()
+  container.scrollLeft += after.left + u * after.width - event.clientX
+  container.scrollTop += after.top + v * after.height - event.clientY
 }
 
-const canvasPixels = computed(() => editor.canvasSize.value * pixelSize.value)
+// Space-drag pans the area. It has to suppress the drawing handlers while it
+// is held, or a pan would lay down a stroke.
+const spaceHeld = ref(false)
+const panning = ref(false)
+let panOrigin = { x: 0, y: 0, scrollLeft: 0, scrollTop: 0 }
+
+function onPanKeyDown(event: KeyboardEvent) {
+  if (event.code !== 'Space' || event.repeat) return
+  const target = event.target as HTMLElement | null
+  if (target?.closest('input, textarea, [contenteditable]')) return
+  event.preventDefault()
+  spaceHeld.value = true
+}
+
+function onPanKeyUp(event: KeyboardEvent) {
+  if (event.code !== 'Space') return
+  spaceHeld.value = false
+  panning.value = false
+}
+
+function onPanStart(event: PointerEvent) {
+  const container = containerRef.value
+  if (!spaceHeld.value || !container) return
+  event.preventDefault()
+  panning.value = true
+  container.setPointerCapture(event.pointerId)
+  panOrigin = { x: event.clientX, y: event.clientY, scrollLeft: container.scrollLeft, scrollTop: container.scrollTop }
+}
+
+function onPanMove(event: PointerEvent) {
+  const container = containerRef.value
+  if (!panning.value || !container) return
+  container.scrollLeft = panOrigin.scrollLeft - (event.clientX - panOrigin.x)
+  container.scrollTop = panOrigin.scrollTop - (event.clientY - panOrigin.y)
+}
+
+function onPanEnd() {
+  panning.value = false
+}
 
 // ─── Painting ───────────────────────────────────────────────────────────────
 
@@ -318,6 +381,10 @@ function applySingleShotTool(point: Point): boolean {
 // and touch handlers that had already drifted apart (touch cleared the
 // clipboard after a paste, mouse kept it); pointer events collapse them.
 function onPointerDown(event: PointerEvent) {
+  // Space-drag owns the pointer while it is held, or a pan would lay down a
+  // stroke on its way past.
+  if (spaceHeld.value) return
+
   const point = toGrid(event.clientX, event.clientY)
   if (!point) return
   canvasRef.value?.setPointerCapture(event.pointerId)
@@ -425,8 +492,6 @@ function trackPasteCursor(event: PointerEvent) {
 
 // ─── Lifecycle ──────────────────────────────────────────────────────────────
 
-watch(() => editor.canvasSize.value, () => nextTick(updatePixelSize))
-
 // Deep, because drawing mutates the pixel arrays inside the frames rather than
 // replacing them.
 watch(
@@ -459,16 +524,36 @@ function repaintOnReturn() {
   if (!document.hidden) requestAnimationFrame(paint)
 }
 
+let fitObserver: ResizeObserver | null = null
+
 onMounted(() => {
-  updatePixelSize()
+  measureFitZoom()
   nextTick(paint)
-  window.addEventListener('resize', updatePixelSize)
+  if (containerRef.value && typeof ResizeObserver !== 'undefined') {
+    fitObserver = new ResizeObserver(measureFitZoom)
+    fitObserver.observe(containerRef.value)
+  }
+  window.addEventListener('resize', measureFitZoom)
+  window.addEventListener('keydown', onPanKeyDown)
+  window.addEventListener('keyup', onPanKeyUp)
+  window.addEventListener('blur', onPanKeyUp2)
   document.addEventListener('visibilitychange', repaintOnReturn)
   window.addEventListener('focus', repaintOnReturn)
 })
 
+// Releasing space outside the window never reports a keyup, which would leave
+// the area stuck in pan mode.
+function onPanKeyUp2() {
+  spaceHeld.value = false
+  panning.value = false
+}
+
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', updatePixelSize)
+  fitObserver?.disconnect()
+  window.removeEventListener('resize', measureFitZoom)
+  window.removeEventListener('keydown', onPanKeyDown)
+  window.removeEventListener('keyup', onPanKeyUp)
+  window.removeEventListener('blur', onPanKeyUp2)
   document.removeEventListener('visibilitychange', repaintOnReturn)
   window.removeEventListener('focus', repaintOnReturn)
   document.removeEventListener('pointermove', trackPasteCursor)
@@ -486,7 +571,7 @@ const selectionHint = computed(() => {
 </script>
 
 <template>
-  <div class="flex min-h-full flex-col gap-3">
+  <div class="flex h-full min-h-0 flex-col gap-3">
     <UAlert
       v-if="selectionHint"
       :description="selectionHint"
@@ -495,18 +580,35 @@ const selectionHint = computed(() => {
       variant="soft"
     />
 
-    <div class="flex flex-1 flex-col items-center justify-center gap-3">
-      <div ref="containerRef" class="flex min-h-[480px] w-full flex-1 items-center justify-center overflow-auto p-4">
+    <div class="flex min-h-0 flex-1 flex-col gap-3">
+      <!-- `grid place-items-center` rather than flex: it keeps a board smaller
+           than the area centred while still letting a bigger one scroll off
+           both edges, which flex clips at the start. The wheel is claimed here
+           and nowhere else, so the side panels keep theirs. -->
+      <div
+        ref="containerRef"
+        class="grid min-h-0 w-full flex-1 place-items-center overflow-auto p-4"
+        :class="spaceHeld ? (panning ? 'cursor-grabbing' : 'cursor-grab') : ''"
+        @wheel="onWheel"
+        @pointerdown="onPanStart"
+        @pointermove="onPanMove"
+        @pointerup="onPanEnd"
+        @pointercancel="onPanEnd"
+      >
         <!-- `touch-none` stops a drawing drag from scrolling the page on a
              tablet; `image-rendering: pixelated` keeps the zoom crisp instead
              of blurring artwork pixels into each other. -->
-        <!-- The zoom transform sits on the wrapper rather than the canvas so
-             the brush cursor scales with the artwork and can be positioned in
-             plain canvas pixels. -->
-        <div
-          class="relative"
-          :style="{ transform: `scale(${editor.zoom.value})`, transformOrigin: 'center center' }"
-        >
+        <!-- Two nested boxes: the outer one carries the scaled size so the
+             scroll area knows how big the board actually is (a transform alone
+             does not affect layout), the inner one carries the transform so
+             the brush cursor scales with the artwork and can still be placed
+             in plain artboard pixels. -->
+        <div :style="{ width: `${scaledSize}px`, height: `${scaledSize}px` }">
+          <div
+            ref="boardRef"
+            class="relative"
+            :style="{ width: `${canvasPixels}px`, height: `${canvasPixels}px`, transform: `scale(${editor.zoom.value})`, transformOrigin: 'top left' }"
+          >
           <canvas
             ref="canvasRef"
             :width="canvasPixels"
@@ -523,11 +625,12 @@ const selectionHint = computed(() => {
           />
           <!-- White outside, dark inside: one stroke alone vanishes over the
                pixel it happens to be covering. -->
-          <div
-            v-if="showsBrushCursor && brushCursorStyle"
-            class="pointer-events-none absolute"
-            :style="{ ...brushCursorStyle, boxShadow: '0 0 0 1px #ffffff, inset 0 0 0 1px #18181b' }"
-          />
+            <div
+              v-if="showsBrushCursor && brushCursorStyle"
+              class="pointer-events-none absolute"
+              :style="{ ...brushCursorStyle, boxShadow: '0 0 0 1px #ffffff, inset 0 0 0 1px #18181b' }"
+            />
+          </div>
         </div>
       </div>
     </div>

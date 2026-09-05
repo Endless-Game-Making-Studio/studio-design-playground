@@ -8,12 +8,43 @@ import { downloadProjectFile, openProjectFile } from '~/composables/pixelStitch/
 import { frameToBlob } from '~/composables/pixelStitch/render'
 import { exportAsGif } from '~/composables/pixelStitch/gifExport'
 import { exportSpriteSheet, importSpriteSheet } from '~/composables/pixelStitch/spriteSheet'
+import { MAX_ZOOM, MIN_ZOOM, ZOOM_PRESETS } from '~/composables/pixelStitch/types'
 
 definePageMeta({ layout: false })
 
 const { t } = useI18n()
 const editor = usePixelStitch()
 providePixelStitch(editor)
+
+// ─── Zoom ───────────────────────────────────────────────────────────────────
+
+// Minus and plus walk the presets rather than adding a fixed step, so someone
+// without a wheel lands on the same round numbers the menu offers.
+function stepZoom(direction: 1 | -1) {
+  const current = editor.zoom.value
+  const next = direction === 1
+    ? ZOOM_PRESETS.find(preset => preset > current + 0.001)
+    : [...ZOOM_PRESETS].reverse().find(preset => preset < current - 0.001)
+  editor.setZoom(next ?? (direction === 1 ? MAX_ZOOM : MIN_ZOOM))
+}
+
+// Only an exact match ticks. Rounding a wheel-stopped value to the nearest
+// preset would claim the zoom is somewhere it isn't.
+const zoomItems = computed<DropdownMenuItem[]>(() => [
+  {
+    label: t('pixelStitch.canvas.zoomFit'),
+    icon: 'lucide:maximize',
+    checked: Math.abs(editor.zoom.value - editor.fitZoom.value) < 0.001,
+    type: 'checkbox' as const,
+    onSelect: () => editor.setZoom(editor.fitZoom.value)
+  },
+  ...ZOOM_PRESETS.map(preset => ({
+    label: `${preset * 100}%`,
+    checked: editor.zoom.value === preset,
+    type: 'checkbox' as const,
+    onSelect: () => editor.setZoom(preset)
+  }))
+])
 
 // ─── Export / import ────────────────────────────────────────────────────────
 
@@ -216,13 +247,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
         <USeparator orientation="vertical" class="hidden h-7 sm:block" />
         <div class="flex items-center gap-1">
           <UTooltip :text="t('pixelStitch.canvas.zoomOut')">
-            <UButton icon="lucide:minus" size="sm" color="neutral" variant="outline" :aria-label="t('pixelStitch.canvas.zoomOut')" :disabled="editor.zoom.value <= 0.25" @click="editor.zoom.value = Math.max(0.25, editor.zoom.value - 0.25)" />
+            <UButton icon="lucide:minus" size="sm" color="neutral" variant="outline" :aria-label="t('pixelStitch.canvas.zoomOut')" :disabled="editor.zoom.value <= MIN_ZOOM" @click="stepZoom(-1)" />
           </UTooltip>
-          <UTooltip :text="t('pixelStitch.canvas.zoomReset')">
-            <UButton :label="`${Math.round(editor.zoom.value * 100)}%`" size="sm" color="neutral" variant="ghost" :aria-label="t('pixelStitch.canvas.zoomReset')" @click="editor.zoom.value = 1" />
-          </UTooltip>
+          <!-- The middle is a third control, not a label between two: it opens
+               the sizes worth going to directly. -->
+          <UDropdownMenu :items="zoomItems">
+            <UButton :label="`${Math.round(editor.zoom.value * 100)}%`" size="sm" color="neutral" variant="ghost" class="min-w-16 justify-center tabular-nums" :aria-label="t('pixelStitch.canvas.zoomPresets')" />
+          </UDropdownMenu>
           <UTooltip :text="t('pixelStitch.canvas.zoomIn')">
-            <UButton icon="lucide:plus" size="sm" color="neutral" variant="outline" :aria-label="t('pixelStitch.canvas.zoomIn')" :disabled="editor.zoom.value >= 4" @click="editor.zoom.value = Math.min(4, editor.zoom.value + 0.25)" />
+            <UButton icon="lucide:plus" size="sm" color="neutral" variant="outline" :aria-label="t('pixelStitch.canvas.zoomIn')" :disabled="editor.zoom.value >= MAX_ZOOM" @click="stepZoom(1)" />
           </UTooltip>
         </div>
         <USeparator orientation="vertical" class="hidden h-7 sm:block" />
@@ -247,7 +280,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
         </div>
       </aside>
 
-      <main class="min-w-0 bg-slate-50 p-4 sm:p-6 lg:overflow-auto lg:p-8"><PixelStitchCanvas /></main>
+      <main class="flex min-h-[480px] min-w-0 flex-col bg-slate-50 lg:min-h-0 lg:overflow-hidden"><PixelStitchCanvas /></main>
 
       <aside class="border-b border-default bg-slate-100 lg:min-h-0 lg:overflow-y-auto lg:border-b-0 lg:border-l">
         <div class="p-4"><PixelStitchColorPicker /></div>
