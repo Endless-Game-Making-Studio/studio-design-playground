@@ -404,8 +404,8 @@
       "hide": "Hide this layer",
       "show": "Show this layer",
       "rename": "Rename this layer",
-      "moveUp": "Move this layer up",
-      "moveDown": "Move this layer down",
+      "reorder": "Drag to reorder, or use the arrow keys",
+      "reorderLabel": "Reorder {name}",
       "delete": "Delete this layer",
       "opacity": "Opacity"
     },

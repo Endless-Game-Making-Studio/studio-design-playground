@@ -197,15 +197,14 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
     if (layer) layer.name = name
   }
 
-  // "Up" is toward the top of the stack, which is the end of the array, since
-  // later layers composite over earlier ones.
-  function moveLayer(index: number, direction: 1 | -1) {
+  // Absolute rather than a one-step nudge: both the drag and the arrow keys
+  // know the position they want to land on.
+  function reorderLayer(from: number, to: number) {
     const layers = currentFrame.value?.layers
-    const target = index + direction
-    if (!layers || target < 0 || target >= layers.length) return
-    const [moved] = layers.splice(index, 1)
-    layers.splice(target, 0, moved!)
-    currentLayerIndex.value = target
+    if (!layers || from === to || to < 0 || to >= layers.length) return
+    const [moved] = layers.splice(from, 1)
+    layers.splice(to, 0, moved!)
+    currentLayerIndex.value = to
   }
 
   function clearLayer() {
@@ -533,7 +532,7 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
     toggleLayerVisibility,
     setLayerOpacity,
     renameLayer,
-    moveLayer,
+    reorderLayer,
     clearLayer,
     clearAllLayers,
     // frames

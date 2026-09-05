@@ -44,3 +44,14 @@ export const HiddenAndFaded: Story = {
     }
   })]
 }
+
+// Mid-drag: the held row is left as an empty dashed slot, the lifted chip
+// follows the pointer and a mark shows where it will land.
+export const MidDrag: Story = {
+  decorators: [withEditor({ width: INSPECTOR_WIDTH, seed: buildStack })],
+  play: async ({ canvasElement }) => {
+    const grip = canvasElement.querySelectorAll('button[aria-label^="Reorder"]')[2] as HTMLElement
+    grip.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 40, clientY: 200 }))
+    grip.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: 40, clientY: 60 }))
+  }
+}
