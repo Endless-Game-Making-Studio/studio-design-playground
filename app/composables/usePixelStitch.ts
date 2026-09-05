@@ -182,9 +182,20 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
     notify('layerDeleted')
   }
 
-  function toggleLayerVisibility(index: number) {
+  // What a layer was at before it was hidden. Deliberately not part of the
+  // project: 45% coming back as 45% is a convenience within a session, not a
+  // second piece of state a saved file has to agree about.
+  const opacityBeforeHiding = new Map<number, number>()
+
+  function toggleLayerHidden(index: number) {
     const layer = currentFrame.value?.layers[index]
-    if (layer) layer.visible = !layer.visible
+    if (!layer) return
+    if (layer.opacity > 0) {
+      opacityBeforeHiding.set(layer.id, layer.opacity)
+      layer.opacity = 0
+      return
+    }
+    layer.opacity = opacityBeforeHiding.get(layer.id) ?? 1
   }
 
   function setLayerOpacity(index: number, opacity: number) {
@@ -454,6 +465,16 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
   }
 
   function applyProjectData(data: ProjectData) {
+    // Files written before hiding became zero carry a `visible` flag; a layer
+    // saved as hidden has to stay hidden rather than reappear at full strength.
+    for (const frame of data.frames) {
+      for (const layer of frame.layers) {
+        const legacy = layer as typeof layer & { visible?: boolean }
+        if (legacy.visible === false) layer.opacity = 0
+        delete legacy.visible
+      }
+    }
+
     frames.value = data.frames
     canvasSize.value = data.canvasSize
     fps.value = data.fps
@@ -529,7 +550,7 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
     // layers
     addLayer,
     deleteLayer,
-    toggleLayerVisibility,
+    toggleLayerHidden,
     setLayerOpacity,
     renameLayer,
     reorderLayer,

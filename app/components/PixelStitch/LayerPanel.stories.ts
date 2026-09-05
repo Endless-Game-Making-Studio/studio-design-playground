@@ -33,12 +33,14 @@ export const Stack: Story = {
   decorators: [withEditor({ width: INSPECTOR_WIDTH, seed: buildStack })]
 }
 
+// Hidden is zero, so both rows below carry a number; a layer left whole
+// carries none.
 export const HiddenAndFaded: Story = {
   decorators: [withEditor({
     width: INSPECTOR_WIDTH,
     seed: (editor) => {
       buildStack(editor)
-      editor.toggleLayerVisibility(1)
+      editor.toggleLayerHidden(1)
       editor.setLayerOpacity(2, 0.4)
       editor.currentLayerIndex.value = 0
     }

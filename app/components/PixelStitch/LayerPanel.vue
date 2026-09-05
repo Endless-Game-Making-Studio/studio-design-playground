@@ -97,7 +97,7 @@ async function onGripKeyDown(index: number, event: KeyboardEvent) {
             editor.currentLayerIndex.value === index ? 'ring-2 ring-primary' : 'ring-1 ring-default',
             dragIndex === index ? 'border-2 border-dashed border-default bg-transparent opacity-40' : 'bg-slate-50'
           ]"
-          class="flex cursor-pointer flex-col gap-2 rounded-xl p-2.5"
+          class="flex cursor-pointer flex-col rounded-xl p-2.5"
           @click="editor.currentLayerIndex.value = index"
         >
           <div class="flex items-center gap-1">
@@ -129,16 +129,52 @@ async function onGripKeyDown(index: number, event: KeyboardEvent) {
               />
             </UTooltip>
 
-            <UTooltip :text="layer.visible ? t('pixelStitch.layers.hide') : t('pixelStitch.layers.show')">
-              <UButton
-                :icon="layer.visible ? 'lucide:eye' : 'lucide:eye-off'"
-                size="xs"
-                color="neutral"
-                variant="ghost"
-                :aria-label="layer.visible ? t('pixelStitch.layers.hide') : t('pixelStitch.layers.show')"
-                @click.stop="editor.toggleLayerVisibility(index)"
-              />
-            </UTooltip>
+            <!-- Only below 100%: a list with no numbers is a list where every
+                 layer is whole. -->
+            <span v-if="layer.opacity < 1" class="shrink-0 text-xs tabular-nums text-dimmed">
+              {{ Math.round(layer.opacity * 100) }}%
+            </span>
+
+            <UPopover>
+              <UTooltip :text="t('pixelStitch.layers.opacity')">
+                <UButton
+                  :icon="layer.opacity > 0 ? 'lucide:eye' : 'lucide:eye-off'"
+                  size="xs"
+                  color="neutral"
+                  variant="ghost"
+                  :aria-label="t('pixelStitch.layers.opacityLabel', { name: layer.name })"
+                  @click.stop
+                />
+              </UTooltip>
+              <template #content>
+                <!-- The button at the left end is the zero, so hiding and 0%
+                     are the same gesture as well as the same state. -->
+                <div class="flex w-56 items-center gap-2 p-3" @click.stop>
+                  <UButton
+                    :icon="layer.opacity > 0 ? 'lucide:eye' : 'lucide:eye-off'"
+                    size="xs"
+                    color="neutral"
+                    :variant="layer.opacity > 0 ? 'ghost' : 'soft'"
+                    :aria-label="layer.opacity > 0 ? t('pixelStitch.layers.hide') : t('pixelStitch.layers.show')"
+                    :aria-pressed="layer.opacity === 0"
+                    @click="editor.toggleLayerHidden(index)"
+                  />
+                  <USlider
+                    :model-value="layer.opacity"
+                    :min="0"
+                    :max="1"
+                    :step="0.05"
+                    size="xs"
+                    class="flex-1"
+                    :aria-label="t('pixelStitch.layers.opacity')"
+                    @update:model-value="value => editor.setLayerOpacity(index, Number(value))"
+                  />
+                  <span class="w-10 shrink-0 text-right text-xs tabular-nums text-dimmed">
+                    {{ Math.round(layer.opacity * 100) }}%
+                  </span>
+                </div>
+              </template>
+            </UPopover>
             <UTooltip :text="t('pixelStitch.layers.delete')">
               <HoldToConfirm
                 :label="t('pixelStitch.layers.delete')"
@@ -146,22 +182,6 @@ async function onGripKeyDown(index: number, event: KeyboardEvent) {
                 @confirm="editor.deleteLayer(index)"
               />
             </UTooltip>
-          </div>
-
-          <div class="flex flex-col gap-1">
-            <div class="flex items-center justify-between text-xs text-dimmed">
-              <span>{{ t('pixelStitch.layers.opacity') }}</span>
-              <span class="tabular-nums">{{ Math.round(layer.opacity * 100) }}%</span>
-            </div>
-            <USlider
-              :model-value="layer.opacity"
-              :min="0"
-              :max="1"
-              :step="0.1"
-              size="xs"
-              @click.stop
-              @update:model-value="value => editor.setLayerOpacity(index, Number(value))"
-            />
           </div>
         </div>
       </template>

@@ -9,7 +9,7 @@ export function cloneGrid(grid: PixelGrid): PixelGrid {
 }
 
 export function createLayer(size: number, id: number, name = `Layer ${id}`): Layer {
-  return { id, name, data: emptyGrid(size), visible: true, opacity: 1 }
+  return { id, name, data: emptyGrid(size), opacity: 1 }
 }
 
 export function createFrame(size: number, id: number): Frame {

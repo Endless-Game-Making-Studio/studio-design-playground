@@ -7,7 +7,8 @@ export interface Layer {
   id: number
   name: string
   data: PixelGrid
-  visible: boolean
+  // Hiding a layer and setting it to 0% are the same state, so there is only
+  // one of them: hidden *is* zero, here and in the saved project.
   opacity: number
 }
 

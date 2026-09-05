@@ -1,7 +1,7 @@
 import type { Frame, Layer } from './types'
 
-// Every export path and every preview flattens the same way — visible layers
-// bottom-up, each at its own opacity — so the compositing lives here once
+// Every export path and every preview flattens the same way — layers with any
+// opacity left, bottom-up at that opacity — so the compositing lives here once
 // rather than being re-derived in the canvas, the previews and three exporters.
 export function compositeLayers(
   ctx: CanvasRenderingContext2D,
@@ -16,7 +16,7 @@ export function compositeLayers(
   alpha = 1
 ) {
   for (const layer of layers) {
-    if (!layer.visible) continue
+    if (layer.opacity === 0) continue
     ctx.globalAlpha = layer.opacity * alpha
     for (let y = 0; y < canvasSize; y++) {
       for (let x = 0; x < canvasSize; x++) {

@@ -351,7 +351,7 @@ function pickColor(point: Point) {
   for (let i = layers.length - 1; i >= 0; i--) {
     const layer = layers[i]!
     const color = layer.data[point.y]?.[point.x]
-    if (layer.visible && color) {
+    if (layer.opacity > 0 && color) {
       editor.currentColor.value = color
       return
     }

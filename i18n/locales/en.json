@@ -407,7 +407,8 @@
       "reorder": "Drag to reorder, or use the arrow keys",
       "reorderLabel": "Reorder {name}",
       "delete": "Delete this layer",
-      "opacity": "Opacity"
+      "opacity": "Opacity",
+      "opacityLabel": "Opacity of {name}"
     },
     "frames": {
       "title": "Animation frames",

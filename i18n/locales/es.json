@@ -407,7 +407,8 @@
       "reorder": "Arrastra para reordenar, o usa las flechas",
       "reorderLabel": "Reordenar {name}",
       "delete": "Eliminar esta capa",
-      "opacity": "Opacidad"
+      "opacity": "Opacidad",
+      "opacityLabel": "Opacidad de {name}"
     },
     "frames": {
       "title": "Fotogramas de animación",
