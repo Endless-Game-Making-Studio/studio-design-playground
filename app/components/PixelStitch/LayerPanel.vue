@@ -79,14 +79,10 @@ const layers = computed(() => editor.currentFrame.value?.layers ?? [])
             />
           </UTooltip>
           <UTooltip :text="t('pixelStitch.layers.delete')">
-            <UButton
-              icon="lucide:trash-2"
-              size="xs"
-              color="neutral"
-              variant="ghost"
+            <HoldToConfirm
+              :label="t('pixelStitch.layers.delete')"
               :disabled="layers.length === 1"
-              :aria-label="t('pixelStitch.layers.delete')"
-              @click.stop="editor.deleteLayer(index)"
+              @confirm="editor.deleteLayer(index)"
             />
           </UTooltip>
         </div>

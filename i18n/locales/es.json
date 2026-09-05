@@ -327,6 +327,11 @@
       "label": "Lienzo",
       "tooltip": "Establecer el lienzo en {size} píxeles"
     },
+    "holdToConfirm": {
+      "instruction": "Mantén pulsado durante un segundo para {action}.",
+      "holding": "Manteniendo",
+      "completed": "Confirmado"
+    },
     "tools": {
       "pencil": "Lápiz",
       "pencilTooltip": "Dibujar píxeles uno a uno",

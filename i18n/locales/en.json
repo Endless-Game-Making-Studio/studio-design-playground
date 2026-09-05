@@ -327,6 +327,11 @@
       "label": "Canvas",
       "tooltip": "Set the canvas to {size} pixels"
     },
+    "holdToConfirm": {
+      "instruction": "Hold for one second to {action}.",
+      "holding": "Holding",
+      "completed": "Confirmed"
+    },
     "tools": {
       "pencil": "Pencil",
       "pencilTooltip": "Draw pixels one at a time",

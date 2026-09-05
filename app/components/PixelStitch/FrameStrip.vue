@@ -108,13 +108,10 @@ function onDrop(target: number) {
               />
             </UTooltip>
             <UTooltip :text="t('pixelStitch.frames.delete')">
-              <UButton
-                icon="lucide:trash-2"
-                size="xs"
-                color="neutral"
-                variant="ghost"
-                :aria-label="t('pixelStitch.frames.delete')"
-                @click.stop="editor.deleteFrame(index)"
+              <HoldToConfirm
+                :label="t('pixelStitch.frames.delete')"
+                :disabled="editor.frames.value.length === 1"
+                @confirm="editor.deleteFrame(index)"
               />
             </UTooltip>
           </div>
