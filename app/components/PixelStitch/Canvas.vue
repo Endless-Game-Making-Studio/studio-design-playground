@@ -150,6 +150,47 @@ function toGrid(clientX: number, clientY: number): Point | null {
   return x >= 0 && x < size && y >= 0 && y < size ? { x, y } : null
 }
 
+// ─── Brush cursor ───────────────────────────────────────────────────────────
+
+// Hiding the size on the tool costs discoverability; this pays it back. The
+// square is the brush footprint, snapped to the grid, so someone who never
+// opens the stepper still sees the size under their hand.
+const cursorPoint = ref<Point | null>(null)
+
+const brushRadius = computed(() =>
+  editor.currentTool.value === 'eraser' ? editor.eraserSize.value : editor.brushSize.value
+)
+
+const showsBrushCursor = computed(() =>
+  editor.currentTool.value === 'pencil' || editor.currentTool.value === 'eraser'
+)
+
+const brushCursorStyle = computed(() => {
+  const point = cursorPoint.value
+  if (!point) return null
+  const scale = pixelSize.value
+  const radius = brushRadius.value
+  const origin = Math.floor(radius / 2)
+  return {
+    left: `${(point.x - origin) * scale}px`,
+    top: `${(point.y - origin) * scale}px`,
+    width: `${radius * scale}px`,
+    height: `${radius * scale}px`
+  }
+})
+
+// A touch screen has no hovering pointer, so there the square only exists
+// while a finger is down — otherwise it would be stranded wherever the last
+// tap landed.
+function trackCursor(event: PointerEvent) {
+  if (!showsBrushCursor.value) return
+  if (event.pointerType === 'touch' && event.buttons === 0) {
+    cursorPoint.value = null
+    return
+  }
+  cursorPoint.value = toGrid(event.clientX, event.clientY)
+}
+
 // ─── Tools ──────────────────────────────────────────────────────────────────
 
 const isDrawing = ref(false)
@@ -312,6 +353,8 @@ function onPointerDown(event: PointerEvent) {
 }
 
 function onPointerMove(event: PointerEvent) {
+  trackCursor(event)
+
   // Paste tracking runs on the document instead, so the stamp keeps following
   // the cursor past the canvas edge.
   if (editor.selectionMode.value === 'pasting' && !isSelecting.value) return
@@ -339,7 +382,9 @@ function onPointerMove(event: PointerEvent) {
   paintAt(point)
 }
 
-function onPointerUp() {
+function onPointerUp(event?: PointerEvent) {
+  if (event?.pointerType === 'touch') cursorPoint.value = null
+
   if (isSelecting.value && editor.selection.value) {
     editor.selectionMode.value = 'selected'
     isSelecting.value = false
@@ -356,6 +401,8 @@ function onPointerUp() {
 }
 
 function onPointerLeave() {
+  cursorPoint.value = null
+
   // Not during a paste: the cursor is expected to leave and come back while
   // positioning the stamp.
   if (editor.selectionMode.value === 'pasting') return
@@ -453,19 +500,35 @@ const selectionHint = computed(() => {
         <!-- `touch-none` stops a drawing drag from scrolling the page on a
              tablet; `image-rendering: pixelated` keeps the zoom crisp instead
              of blurring artwork pixels into each other. -->
-        <canvas
-          ref="canvasRef"
-          :width="canvasPixels"
-          :height="canvasPixels"
-          class="touch-none rounded-sm ring-1 ring-default cursor-crosshair"
-          :style="{ imageRendering: 'pixelated', transform: `scale(${editor.zoom.value})`, transformOrigin: 'center center' }"
-          @pointerdown="onPointerDown"
-          @pointermove="onPointerMove"
-          @pointerup="onPointerUp"
-          @pointercancel="onPointerUp"
-          @pointerleave="onPointerLeave"
-          @contextmenu.prevent
-        />
+        <!-- The zoom transform sits on the wrapper rather than the canvas so
+             the brush cursor scales with the artwork and can be positioned in
+             plain canvas pixels. -->
+        <div
+          class="relative"
+          :style="{ transform: `scale(${editor.zoom.value})`, transformOrigin: 'center center' }"
+        >
+          <canvas
+            ref="canvasRef"
+            :width="canvasPixels"
+            :height="canvasPixels"
+            class="block touch-none rounded-sm ring-1 ring-default"
+            :class="showsBrushCursor ? 'cursor-none' : 'cursor-crosshair'"
+            :style="{ imageRendering: 'pixelated' }"
+            @pointerdown="onPointerDown"
+            @pointermove="onPointerMove"
+            @pointerup="onPointerUp"
+            @pointercancel="onPointerUp"
+            @pointerleave="onPointerLeave"
+            @contextmenu.prevent
+          />
+          <!-- White outside, dark inside: one stroke alone vanishes over the
+               pixel it happens to be covering. -->
+          <div
+            v-if="showsBrushCursor && brushCursorStyle"
+            class="pointer-events-none absolute"
+            :style="{ ...brushCursorStyle, boxShadow: '0 0 0 1px #ffffff, inset 0 0 0 1px #18181b' }"
+          />
+        </div>
       </div>
     </div>
   </div>
