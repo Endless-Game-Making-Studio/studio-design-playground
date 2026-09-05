@@ -342,6 +342,7 @@
       "selectTooltip": "Select an area to copy (Ctrl+C) or cut (Ctrl+X), then paste (Ctrl+V)"
     },
     "toolbar": {
+      "import": "Import",
       "removeBackground": "Remove the background from the current layer",
       "flipHorizontal": "Flip horizontally",
       "flipVertical": "Flip vertically",

@@ -6,7 +6,7 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <UPageCard variant="outline" :ui="{ root: 'rounded-2xl', container: 'p-4 sm:p-4 gap-3' }">
+  <section class="flex flex-col gap-3">
     <div class="flex items-center justify-between">
       <h3 class="font-heading font-bold text-sm text-highlighted">{{ t('pixelStitch.onion.title') }}</h3>
       <UTooltip :text="t('pixelStitch.onion.tooltip')">
@@ -50,5 +50,5 @@ const { t } = useI18n()
         </span>
       </div>
     </template>
-  </UPageCard>
+  </section>
 </template>

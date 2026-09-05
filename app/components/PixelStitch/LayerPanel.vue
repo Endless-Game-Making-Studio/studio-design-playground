@@ -8,7 +8,7 @@ const layers = computed(() => editor.currentFrame.value?.layers ?? [])
 </script>
 
 <template>
-  <UPageCard variant="outline" :ui="{ root: 'rounded-2xl', container: 'p-4 sm:p-4 gap-3' }">
+  <section class="flex flex-col gap-3">
     <div class="flex items-center justify-between">
       <h3 class="font-heading font-bold text-sm text-highlighted">{{ t('pixelStitch.layers.title') }}</h3>
       <UTooltip :text="t('pixelStitch.layers.addTooltip')">
@@ -26,15 +26,11 @@ const layers = computed(() => editor.currentFrame.value?.layers ?? [])
     <!-- Listed bottom-up, matching the compositing order: the first entry is
          the layer everything else paints over. -->
     <div class="flex max-h-96 flex-col gap-2 overflow-y-auto">
-      <UCard
+      <div
         v-for="(layer, index) in layers"
         :key="layer.id"
-        variant="subtle"
-        :ui="{
-          root: editor.currentLayerIndex.value === index ? 'rounded-xl ring-2 ring-primary' : 'rounded-xl',
-          body: 'p-2.5 sm:p-2.5 flex flex-col gap-2'
-        }"
-        class="cursor-pointer"
+        :class="editor.currentLayerIndex.value === index ? 'ring-2 ring-primary' : 'ring-1 ring-default'"
+        class="flex cursor-pointer flex-col gap-2 rounded-xl bg-slate-50 p-2.5"
         @click="editor.currentLayerIndex.value = index"
       >
         <div class="flex items-center gap-1">
@@ -110,7 +106,7 @@ const layers = computed(() => editor.currentFrame.value?.layers ?? [])
             @update:model-value="value => editor.setLayerOpacity(index, Number(value))"
           />
         </div>
-      </UCard>
+      </div>
     </div>
-  </UPageCard>
+  </section>
 </template>

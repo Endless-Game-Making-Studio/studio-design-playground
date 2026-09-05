@@ -342,6 +342,7 @@
       "selectTooltip": "Selecciona un área para copiar (Ctrl+C) o cortar (Ctrl+X), y luego pegar (Ctrl+V)"
     },
     "toolbar": {
+      "import": "Importar",
       "removeBackground": "Eliminar el fondo de la capa actual",
       "flipHorizontal": "Voltear horizontalmente",
       "flipVertical": "Voltear verticalmente",

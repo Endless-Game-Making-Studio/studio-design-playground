@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { userName, userAvatar, topbarStatsFor } from '~/composables/useHomeMockData'
-import { useXpBalance } from '~/composables/useXpBalance'
+import type { DropdownMenuItem } from '@nuxt/ui'
 import { usePixelStitch } from '~/composables/usePixelStitch'
 import { providePixelStitch } from '~/composables/usePixelStitchContext'
 import { emptyGrid } from '~/composables/pixelStitch/project'
@@ -10,12 +9,9 @@ import { frameToBlob } from '~/composables/pixelStitch/render'
 import { exportAsGif } from '~/composables/pixelStitch/gifExport'
 import { exportSpriteSheet, importSpriteSheet } from '~/composables/pixelStitch/spriteSheet'
 
-definePageMeta({ layout: 'dashboard' })
+definePageMeta({ layout: false })
 
 const { t } = useI18n()
-const { total: xpTotal } = useXpBalance()
-const topbarStats = computed(() => topbarStatsFor(true, xpTotal.value))
-
 const editor = usePixelStitch()
 providePixelStitch(editor)
 
@@ -165,6 +161,19 @@ async function loadProject() {
   editor.notify('projectLoaded')
 }
 
+const importItems = computed<DropdownMenuItem[]>(() => [
+  { label: t('pixelStitch.openProject'), icon: 'lucide:folder-open', onSelect: loadProject },
+  { label: t('pixelStitch.toolbar.importImage'), icon: 'lucide:image-plus', onSelect: importImage },
+  { label: t('pixelStitch.toolbar.importSpriteSheet'), icon: 'lucide:grid-2x2-check', onSelect: () => openSheetModal('import') }
+])
+
+const saveItems = computed<DropdownMenuItem[]>(() => [
+  { label: t('pixelStitch.saveProject'), icon: 'lucide:save', onSelect: saveProjectFile },
+  { label: t('pixelStitch.toolbar.exportPng'), icon: 'lucide:image-down', onSelect: exportPng },
+  { label: t('pixelStitch.toolbar.exportGif'), icon: 'lucide:file-image', onSelect: exportGif },
+  { label: t('pixelStitch.toolbar.exportSpriteSheet'), icon: 'lucide:grid-2x2-plus', onSelect: () => openSheetModal('export') }
+])
+
 // ─── Keyboard ───────────────────────────────────────────────────────────────
 
 // Bound to the window rather than the canvas: the shortcuts have to work while
@@ -198,79 +207,63 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
 </script>
 
 <template>
-  <!-- `sm:p-0`/`sm:gap-0` as well as the bare ones — see index.vue for why. -->
-  <UDashboardPanel :ui="{ body: 'p-0 sm:p-0 gap-0 sm:gap-0 overflow-x-auto' }">
-    <template #body>
-      <AppTopbar v-bind="topbarStats" :user-name="userName" :user-avatar="userAvatar" />
-
-      <UContainer class="mt-8 pb-16">
-        <div class="flex flex-wrap items-center gap-4">
-          <UButton
-            to="/make"
-            icon="lucide:arrow-left"
-            :label="t('pixelStitch.backToTools')"
-            color="neutral"
-            variant="ghost"
-            size="sm"
-            class="-ml-2"
-          />
-          <div class="ml-auto flex gap-2">
-            <UButton
-              :label="t('pixelStitch.openProject')"
-              icon="lucide:folder-open"
-              color="neutral"
-              variant="outline"
-              size="sm"
-              @click="loadProject"
-            />
-            <UButton
-              :label="t('pixelStitch.saveProject')"
-              icon="lucide:save"
-              color="neutral"
-              variant="outline"
-              size="sm"
-              @click="saveProjectFile"
-            />
-          </div>
+  <div class="flex min-h-dvh flex-col bg-slate-50 pb-52 lg:h-dvh lg:overflow-hidden lg:pb-52">
+    <header class="flex flex-wrap items-center justify-between gap-3 border-b border-default bg-slate-100 px-3 py-2 sm:px-4">
+      <div class="flex min-w-0 flex-wrap items-center gap-3">
+        <UButton to="/make" icon="lucide:arrow-left" :label="t('pixelStitch.backToTools')" color="neutral" variant="ghost" size="sm" />
+        <USeparator orientation="vertical" class="hidden h-7 sm:block" />
+        <PixelStitchCanvasSizeSelector compact />
+        <USeparator orientation="vertical" class="hidden h-7 sm:block" />
+        <div class="flex items-center gap-1">
+          <UTooltip :text="t('pixelStitch.canvas.zoomOut')">
+            <UButton icon="lucide:minus" size="sm" color="neutral" variant="outline" :aria-label="t('pixelStitch.canvas.zoomOut')" :disabled="editor.zoom.value <= 0.25" @click="editor.zoom.value = Math.max(0.25, editor.zoom.value - 0.25)" />
+          </UTooltip>
+          <UTooltip :text="t('pixelStitch.canvas.zoomReset')">
+            <UButton :label="`${Math.round(editor.zoom.value * 100)}%`" size="sm" color="neutral" variant="ghost" :aria-label="t('pixelStitch.canvas.zoomReset')" @click="editor.zoom.value = 1" />
+          </UTooltip>
+          <UTooltip :text="t('pixelStitch.canvas.zoomIn')">
+            <UButton icon="lucide:plus" size="sm" color="neutral" variant="outline" :aria-label="t('pixelStitch.canvas.zoomIn')" :disabled="editor.zoom.value >= 4" @click="editor.zoom.value = Math.min(4, editor.zoom.value + 0.25)" />
+          </UTooltip>
         </div>
-
-        <!-- `warning` is the Make section's colour in the sidebar — PageTitle
-             matches the page to the nav item you clicked. -->
-        <PageTitle
-          :title="t('pixelStitch.title')"
-          :description="t('pixelStitch.subtitle')"
-          color="warning"
-          class="mt-4"
-        />
-
-        <!-- Two columns rather than the original's drag-reorderable panels: the
-             layout is fixed here, so the editing surface keeps the space and the
-             inspectors stay where the artist left them. -->
-        <div class="mt-8 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
-          <div class="flex min-w-0 flex-col gap-4">
-            <PixelStitchCanvasSizeSelector />
-            <PixelStitchToolbar
-              @import-image="importImage"
-              @export-png="exportPng"
-              @export-gif="exportGif"
-              @export-sprite-sheet="openSheetModal('export')"
-              @import-sprite-sheet="openSheetModal('import')"
-              @submit="exportPng"
-            />
-            <PixelStitchCanvas />
-            <PixelStitchFrameStrip />
-          </div>
-
-          <div class="flex flex-col gap-4">
-            <PixelStitchColorPicker />
-            <PixelStitchLayerPanel />
-            <PixelStitchOnionSkinControls />
-            <PixelStitchAnimationPreview />
-          </div>
+        <USeparator orientation="vertical" class="hidden h-7 sm:block" />
+        <div class="flex items-center gap-1">
+          <UTooltip :text="t('pixelStitch.toolbar.undo')"><UButton icon="lucide:undo" size="sm" color="neutral" variant="outline" :disabled="!editor.canUndo.value" :aria-label="t('pixelStitch.toolbar.undo')" @click="editor.undo()" /></UTooltip>
+          <UTooltip :text="t('pixelStitch.toolbar.redo')"><UButton icon="lucide:redo" size="sm" color="neutral" variant="outline" :disabled="!editor.canRedo.value" :aria-label="t('pixelStitch.toolbar.redo')" @click="editor.redo()" /></UTooltip>
         </div>
-      </UContainer>
-    </template>
-  </UDashboardPanel>
+      </div>
+      <div class="flex items-center gap-2">
+        <UDropdownMenu :items="importItems"><UButton :label="t('pixelStitch.toolbar.import')" icon="lucide:upload" color="neutral" variant="outline" size="sm" /></UDropdownMenu>
+        <UDropdownMenu :items="saveItems"><UButton :label="t('pixelStitch.saveProject')" icon="lucide:save" color="primary" size="sm" /></UDropdownMenu>
+      </div>
+    </header>
+
+    <div class="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[208px_minmax(0,1fr)_340px] lg:overflow-hidden">
+      <aside class="flex min-h-0 flex-col border-b border-default bg-slate-100 lg:overflow-y-auto lg:border-b-0 lg:border-r">
+        <div class="p-3"><PixelStitchToolbar /></div>
+        <div class="mt-auto border-t border-default p-3">
+          <UTooltip :text="t('pixelStitch.toolbar.toggleGrid')">
+            <UButton icon="lucide:grid-3x3" :label="t('pixelStitch.toolbar.toggleGrid')" :color="'neutral'" :variant="editor.gridVisible.value ? 'soft' : 'outline'" block :aria-pressed="editor.gridVisible.value" @click="editor.gridVisible.value = !editor.gridVisible.value" />
+          </UTooltip>
+        </div>
+      </aside>
+
+      <main class="min-w-0 bg-slate-50 p-4 sm:p-6 lg:overflow-auto lg:p-8"><PixelStitchCanvas /></main>
+
+      <aside class="border-b border-default bg-slate-100 lg:min-h-0 lg:overflow-y-auto lg:border-b-0 lg:border-l">
+        <div class="p-4"><PixelStitchColorPicker /></div>
+        <USeparator />
+        <div class="p-4"><PixelStitchLayerPanel /></div>
+        <USeparator />
+        <div class="p-4"><PixelStitchOnionSkinControls /></div>
+        <USeparator />
+        <div class="p-4"><PixelStitchAnimationPreview /></div>
+      </aside>
+    </div>
+
+    <footer class="fixed inset-x-0 bottom-0 z-10 h-52 border-t border-default bg-slate-100 p-4">
+      <PixelStitchFrameStrip />
+    </footer>
+  </div>
 
   <PixelStitchSpriteSheetModal
     v-model:open="sheetModalOpen"

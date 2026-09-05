@@ -21,8 +21,11 @@ export const FillToolSelected: Story = {
   decorators: [withEditor({ seed: editor => (editor.currentTool.value = 'fill') })]
 }
 
-// Undo and redo both disable until there's history to walk, which is the state
-// a freshly opened project is in.
-export const NothingToUndo: Story = {
-  decorators: [withEditor({ seed: editor => (editor.gridVisible.value = false) })]
+// The eraser carries its own size, so switching to it shows a different number
+// than the pencil left behind.
+export const EraserAtMaxSize: Story = {
+  decorators: [withEditor({ seed: (editor) => {
+    editor.currentTool.value = 'eraser'
+    editor.eraserSize.value = 8
+  } })]
 }

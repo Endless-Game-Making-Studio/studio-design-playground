@@ -44,7 +44,7 @@ function onDrop(target: number) {
 </script>
 
 <template>
-  <UPageCard variant="outline" :ui="{ root: 'rounded-2xl', container: 'p-4 sm:p-4 gap-3' }">
+  <section class="flex h-full flex-col gap-3">
     <div class="flex items-center justify-between">
       <h3 class="font-heading font-bold text-sm text-highlighted">{{ t('pixelStitch.frames.title') }}</h3>
       <div class="flex gap-1.5">
@@ -121,5 +121,5 @@ function onDrop(target: number) {
         </div>
       </div>
     </div>
-  </UPageCard>
+  </section>
 </template>

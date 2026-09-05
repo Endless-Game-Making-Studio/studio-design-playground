@@ -379,12 +379,6 @@ function trackPasteCursor(event: PointerEvent) {
   }
 }
 
-// ─── Zoom ───────────────────────────────────────────────────────────────────
-
-function zoomBy(delta: number) {
-  editor.zoom.value = Math.min(4, Math.max(0.25, Number((editor.zoom.value + delta).toFixed(2))))
-}
-
 // ─── Lifecycle ──────────────────────────────────────────────────────────────
 
 watch(() => editor.canvasSize.value, () => nextTick(updatePixelSize))
@@ -448,7 +442,7 @@ const selectionHint = computed(() => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-3">
+  <div class="flex min-h-full flex-col gap-3">
     <UAlert
       v-if="selectionHint"
       :description="selectionHint"
@@ -457,42 +451,8 @@ const selectionHint = computed(() => {
       variant="soft"
     />
 
-    <UPageCard variant="outline" :ui="{ root: 'rounded-2xl', container: 'p-3 sm:p-3 gap-3' }">
-      <div class="flex items-center justify-center gap-1">
-        <UTooltip :text="t('pixelStitch.canvas.zoomOut')">
-          <UButton
-            icon="lucide:minus"
-            color="neutral"
-            variant="outline"
-            size="sm"
-            :aria-label="t('pixelStitch.canvas.zoomOut')"
-            @click="zoomBy(-0.25)"
-          />
-        </UTooltip>
-        <UTooltip :text="t('pixelStitch.canvas.zoomReset')">
-          <UButton
-            color="neutral"
-            variant="outline"
-            size="sm"
-            class="min-w-[68px] justify-center tabular-nums"
-            @click="editor.zoom.value = 1"
-          >
-            {{ Math.round(editor.zoom.value * 100) }}%
-          </UButton>
-        </UTooltip>
-        <UTooltip :text="t('pixelStitch.canvas.zoomIn')">
-          <UButton
-            icon="lucide:plus"
-            color="neutral"
-            variant="outline"
-            size="sm"
-            :aria-label="t('pixelStitch.canvas.zoomIn')"
-            @click="zoomBy(0.25)"
-          />
-        </UTooltip>
-      </div>
-
-      <div ref="containerRef" class="flex items-center justify-center overflow-auto rounded-xl bg-elevated p-4">
+    <div class="flex flex-1 flex-col items-center justify-center gap-3">
+      <div ref="containerRef" class="flex min-h-[480px] w-full flex-1 items-center justify-center overflow-auto p-4">
         <!-- `touch-none` stops a drawing drag from scrolling the page on a
              tablet; `image-rendering: pixelated` keeps the zoom crisp instead
              of blurring artwork pixels into each other. -->
@@ -510,6 +470,6 @@ const selectionHint = computed(() => {
           @contextmenu.prevent
         />
       </div>
-    </UPageCard>
+    </div>
   </div>
 </template>

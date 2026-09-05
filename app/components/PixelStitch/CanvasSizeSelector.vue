@@ -2,14 +2,20 @@
 import { CANVAS_SIZES } from '~/composables/pixelStitch/types'
 import { usePixelStitchContext } from '~/composables/usePixelStitchContext'
 
+withDefaults(defineProps<{
+  compact?: boolean
+}>(), {
+  compact: false
+})
+
 const editor = usePixelStitchContext()
 const { t } = useI18n()
 </script>
 
 <template>
-  <UPageCard variant="outline" :ui="{ root: 'rounded-2xl', container: 'p-3 sm:p-3' }">
-    <div class="flex flex-wrap items-center gap-2">
-      <span class="text-sm text-muted mr-1">{{ t('pixelStitch.canvasSize.label') }}</span>
+  <section class="flex flex-col gap-2" :class="{ 'sm:flex-row sm:items-center': compact }">
+      <span class="text-sm font-semibold text-muted">{{ t('pixelStitch.canvasSize.label') }}</span>
+    <div class="grid grid-cols-2 gap-2" :class="{ 'sm:flex sm:flex-wrap': compact }">
       <UTooltip
         v-for="size in CANVAS_SIZES"
         :key="size"
@@ -24,5 +30,5 @@ const { t } = useI18n()
         />
       </UTooltip>
     </div>
-  </UPageCard>
+  </section>
 </template>

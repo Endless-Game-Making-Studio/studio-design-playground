@@ -33,7 +33,7 @@ const ROW_LENGTH = 10
 </script>
 
 <template>
-  <UPageCard variant="outline" :ui="{ root: 'rounded-2xl', container: 'p-4 sm:p-4 gap-4' }">
+  <section class="flex flex-col gap-4">
     <h3 class="font-heading font-bold text-sm text-highlighted">{{ t('pixelStitch.color.title') }}</h3>
 
     <div class="flex items-center gap-3">
@@ -112,5 +112,5 @@ const ROW_LENGTH = 10
         </div>
       </div>
     </div>
-  </UPageCard>
+  </section>
 </template>

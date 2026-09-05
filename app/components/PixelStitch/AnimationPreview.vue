@@ -49,7 +49,7 @@ onBeforeUnmount(stop)
 </script>
 
 <template>
-  <UPageCard variant="outline" :ui="{ root: 'rounded-2xl', container: 'p-4 sm:p-4 gap-3' }">
+  <section class="flex flex-col gap-3">
     <h3 class="font-heading font-bold text-sm text-highlighted">{{ t('pixelStitch.preview.title') }}</h3>
 
     <div class="flex justify-center">
@@ -73,5 +73,5 @@ onBeforeUnmount(stop)
         <USlider v-model="editor.fps.value" :min="1" :max="30" :step="1" size="xs" class="w-full" />
       </UTooltip>
     </div>
-  </UPageCard>
+  </section>
 </template>
