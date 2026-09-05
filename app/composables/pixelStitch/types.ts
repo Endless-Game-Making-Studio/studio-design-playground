@@ -17,13 +17,6 @@ export interface Frame {
   layers: Layer[]
 }
 
-export interface OnionSkinSettings {
-  enabled: boolean
-  previousFrames: number
-  nextFrames: number
-  opacity: number
-}
-
 export type PixelTool = 'pencil' | 'eraser' | 'fill' | 'eyedropper' | 'replace' | 'select'
 
 export type SelectionMode = 'selecting' | 'selected' | 'pasting' | null

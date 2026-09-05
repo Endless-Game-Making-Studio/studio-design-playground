@@ -12,12 +12,13 @@ const canvasRef = ref<HTMLCanvasElement | null>(null)
 const containerRef = ref<HTMLElement | null>(null)
 const boardRef = ref<HTMLElement | null>(null)
 
-// Onion-skin ghosts are tinted rather than drawn in their own colors, so past
-// and future frames stay distinguishable from the frame being drawn. Brand
-// colors instead of the original's magenta/cyan: both read as "not artwork"
-// against the light canvas, and they're already the platform's two accents.
-const GHOST_PREVIOUS = '#f97316'
-const GHOST_NEXT = '#6b8afd'
+// Onion-skin ghosts are tinted rather than drawn in their own colours, so past
+// and future frames stay distinguishable from the frame being drawn. The same
+// two colours border the neighbouring tiles on the frame strip, which is how
+// the strip explains where each shadow came from.
+const GHOST_PREVIOUS = '#6556f0'
+const GHOST_NEXT = '#00bba7'
+const GHOST_OPACITY = 0.3
 
 // Straight hex, no alpha: a pixel here is painted or empty. A half-opaque
 // value would survive on the canvas but not through an export, so it can't be
@@ -123,22 +124,11 @@ function paint() {
   ctx.clearRect(0, 0, canvas.width, canvas.height)
   drawCheckerboard(ctx, canvas.width, canvas.height, scale * 2)
 
-  const onion = editor.onionSkin.value
-  if (onion.enabled) {
-    // Each step further from the current frame fades further, so the nearest
-    // ghost reads as the one to line up against.
-    for (let offset = 1; offset <= onion.previousFrames; offset++) {
-      const frame = editor.frames.value[editor.currentFrameIndex.value - offset]
-      if (!frame) continue
-      const alpha = onion.opacity * (1 - offset / (onion.previousFrames + 1))
-      compositeLayers(ctx, frame.layers, size, scale, GHOST_PREVIOUS, alpha)
-    }
-    for (let offset = 1; offset <= onion.nextFrames; offset++) {
-      const frame = editor.frames.value[editor.currentFrameIndex.value + offset]
-      if (!frame) continue
-      const alpha = onion.opacity * (1 - offset / (onion.nextFrames + 1))
-      compositeLayers(ctx, frame.layers, size, scale, GHOST_NEXT, alpha)
-    }
+  if (editor.onionSkin.value) {
+    const previous = editor.frames.value[editor.currentFrameIndex.value - 1]
+    const next = editor.frames.value[editor.currentFrameIndex.value + 1]
+    if (previous) compositeLayers(ctx, previous.layers, size, scale, GHOST_PREVIOUS, GHOST_OPACITY)
+    if (next) compositeLayers(ctx, next.layers, size, scale, GHOST_NEXT, GHOST_OPACITY)
   }
 
   const layers = editor.currentFrame.value?.layers ?? []

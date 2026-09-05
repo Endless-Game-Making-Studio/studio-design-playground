@@ -430,9 +430,6 @@
     "onion": {
       "title": "Onion skinning",
       "tooltip": "Show ghosts of the neighbouring frames while you draw",
-      "previousFrames": "Previous frames",
-      "nextFrames": "Next frames",
-      "opacity": "Ghost opacity",
       "legendPrevious": "Previous",
       "legendNext": "Next"
     },

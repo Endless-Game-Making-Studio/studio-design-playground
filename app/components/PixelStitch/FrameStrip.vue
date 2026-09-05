@@ -36,6 +36,16 @@ onMounted(() => nextTick(drawAllPreviews))
 // thumbnails needs an index swap, not a physics-animated sortable list.
 const dragIndex = ref<number | null>(null)
 
+// With onion skin on, the two neighbours of the current frame carry the colour
+// of the ghost they draw on the canvas — a border on the tile, not a band
+// inside it, so the thumbnail itself stays readable.
+function ghostRing(index: number) {
+  if (!editor.onionSkin.value) return ''
+  if (index === editor.currentFrameIndex.value - 1) return 'ring-2 ring-cornflower-500'
+  if (index === editor.currentFrameIndex.value + 1) return 'ring-2 ring-teal-500'
+  return ''
+}
+
 function onDrop(target: number) {
   const from = dragIndex.value
   dragIndex.value = null
@@ -51,7 +61,7 @@ function onDrop(target: number) {
         :key="frame.id"
         class="shrink-0 rounded-xl p-2 bg-elevated ring-1 transition-opacity cursor-grab active:cursor-grabbing"
         :class="[
-          editor.currentFrameIndex.value === index ? 'ring-2 ring-primary' : 'ring-default',
+          editor.currentFrameIndex.value === index ? 'ring-2 ring-primary' : ghostRing(index) || 'ring-default',
           dragIndex === index ? 'opacity-50' : ''
         ]"
         draggable="true"

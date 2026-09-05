@@ -1,6 +1,5 @@
 import type {
   Frame,
-  OnionSkinSettings,
   PixelGrid,
   PixelTool,
   Point,
@@ -117,12 +116,11 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
   )
 
   onBeforeUnmount(stopPlayback)
-  const onionSkin = ref<OnionSkinSettings>({
-    enabled: false,
-    previousFrames: 1,
-    nextFrames: 1,
-    opacity: 0.3
-  })
+
+  // On or off, nothing else. Two ghost colours carry one neighbour each way;
+  // reaching further needs either fading the more distant ghosts in the same
+  // colour or more tones on the strip, which is a separate decision.
+  const onionSkin = ref(false)
 
   const selection = ref<Selection | null>(null)
   const clipboard = ref<PixelGrid | null>(null)

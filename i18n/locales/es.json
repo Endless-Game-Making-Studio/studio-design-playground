@@ -430,9 +430,6 @@
     "onion": {
       "title": "Piel de cebolla",
       "tooltip": "Mostrar fantasmas de los fotogramas vecinos mientras dibujas",
-      "previousFrames": "Fotogramas anteriores",
-      "nextFrames": "Fotogramas siguientes",
-      "opacity": "Opacidad del fantasma",
       "legendPrevious": "Anterior",
       "legendNext": "Siguiente"
     },

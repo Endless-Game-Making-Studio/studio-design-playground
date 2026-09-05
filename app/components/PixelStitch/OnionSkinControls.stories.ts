@@ -2,35 +2,27 @@ import type { Meta, StoryObj } from '@nuxtjs/storybook'
 import OnionSkinControls from './OnionSkinControls.vue'
 import { withEditor } from './storyEditor'
 
-const INSPECTOR_WIDTH = 'w-[340px]'
+const CONTROLS_WIDTH = 'w-[224px]'
 
 const meta = {
   title: 'Components/PixelStitch/OnionSkinControls',
   component: OnionSkinControls,
   tags: ['autodocs'],
-  decorators: [withEditor({ width: INSPECTOR_WIDTH })]
+  decorators: [withEditor({ width: CONTROLS_WIDTH })]
 } satisfies Meta<typeof OnionSkinControls>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
-// Collapsed to a single switch until it's turned on — three sliders for a
-// feature most sessions never touch would be noise in the rail.
+// Off, it is a switch and nothing else — how many frames and how strong are no
+// longer things to decide.
 export const Off: Story = {}
 
-// Enabled reveals the range controls and the legend, which is the only thing
-// telling the artist which tint means which direction.
+// On, the key appears. It is the only thing saying which colour is the frame
+// behind and which is the frame ahead, on the canvas and on the strip alike.
 export const Enabled: Story = {
   decorators: [withEditor({
-    width: INSPECTOR_WIDTH,
-    seed: editor => (editor.onionSkin.value = { enabled: true, previousFrames: 2, nextFrames: 1, opacity: 0.4 })
-  })]
-}
-
-// Looking only backwards, at the strongest ghost setting.
-export const PreviousOnly: Story = {
-  decorators: [withEditor({
-    width: INSPECTOR_WIDTH,
-    seed: editor => (editor.onionSkin.value = { enabled: true, previousFrames: 5, nextFrames: 0, opacity: 0.8 })
+    width: CONTROLS_WIDTH,
+    seed: editor => (editor.onionSkin.value = true)
   })]
 }
