@@ -334,6 +334,12 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
 
   // Resizing starts over: pixel art can't be rescaled between grids without
   // either resampling or cropping, and the original chose a clean slate.
+  // Every frame, not just the one on screen — which is the whole point of
+  // asking before a resize.
+  const hasArtwork = computed(() =>
+    frames.value.some(frame => frame.layers.some(layer => layer.data.some(row => row.some(pixel => pixel !== ''))))
+  )
+
   function setCanvasSize(size: number) {
     if (size === canvasSize.value) return
     canvasSize.value = size
@@ -529,6 +535,7 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
     flipHorizontal,
     flipVertical,
     removeBackground,
+    hasArtwork,
     setCanvasSize,
     setPaletteColor,
     // selection

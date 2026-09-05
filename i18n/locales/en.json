@@ -325,7 +325,11 @@
     "exportingGif": "Exporting GIF…",
     "canvasSize": {
       "label": "Canvas",
-      "tooltip": "Set the canvas to {size} pixels"
+      "tooltip": "Set the canvas to {size} pixels",
+      "confirmTitle": "Resize the canvas to {size}?",
+      "confirmBody": "Pixel art cannot be carried across grids, so this clears every frame in the project, not just the one on screen.",
+      "confirmKeep": "Keep {size}",
+      "confirmClear": "Clear and resize to {size}"
     },
     "holdToConfirm": {
       "instruction": "Hold for one second to {action}.",
