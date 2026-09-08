@@ -318,14 +318,14 @@
   },
   "pixelStitch": {
     "title": "Threadbare Pixel Stitch",
-    "subtitle": "Teje arte pixel y animaciones para tus personajes y objetos de Threadbare.",
-    "backToTools": "Herramientas",
     "openProject": "Abrir",
-    "saveProject": "Guardar",
+    "saveProject": "Guardar como archivo .tps",
+    "savePng": "Guardar como PNG",
+    "savePngTooltip": "Descargar el fotograma actual como PNG",
     "exportingGif": "Exportando GIF…",
     "canvasSize": {
       "label": "Lienzo",
-      "tooltip": "Establecer el lienzo en {size} píxeles"
+      "tooltip": "Elige el tamaño del lienzo: esto borra todos los fotogramas"
     },
     "tools": {
       "pencil": "Lápiz",
@@ -351,15 +351,12 @@
       "redo": "Rehacer la última acción",
       "toggleGrid": "Alternar la cuadrícula",
       "importImage": "Importar una imagen al lienzo",
-      "exportPng": "Exportar el fotograma actual como PNG",
       "exportGif": "Exportar la animación como GIF",
       "clearOptions": "Borrar el lienzo",
       "clearCurrentLayer": "Borrar la capa actual",
       "clearAllLayers": "Borrar todas las capas",
       "exportSpriteSheet": "Exportar todos los fotogramas como hoja de sprites",
-      "importSpriteSheet": "Importar una hoja de sprites como fotogramas",
-      "submit": "Guardar y enviar",
-      "submitTooltip": "Descargar el fotograma actual como PNG"
+      "importSpriteSheet": "Importar una hoja de sprites como fotogramas"
     },
     "canvas": {
       "zoomIn": "Acercar",
@@ -371,12 +368,11 @@
       "hintPasting": "Mueve el puntero para colocarlo, haz clic para pegar o pulsa Esc para cancelar."
     },
     "color": {
-      "title": "Color",
-      "dragToSave": "Arrastra a un espacio de la paleta para guardar este color",
-      "pickerTooltip": "Elegir un color",
+      "currentTooltip": "Haz clic para elegir un color o arrástralo a un espacio de la paleta",
       "hexTooltip": "Introduce un código de color hexadecimal",
       "brushOpacity": "Opacidad del pincel",
       "dragToCustomize": "Arrastra colores a los espacios para personalizar la paleta.",
+      "rowLabel": "Fila de la paleta",
       "swatchTooltip": "{color} — haz clic para seleccionar, suelta un color para reemplazarlo",
       "row": {
         "base": "Color",
@@ -409,6 +405,7 @@
     },
     "preview": {
       "title": "Vista previa de la animación",
+      "label": "Vista previa",
       "fps": "FPS",
       "fpsTooltip": "Ajustar la velocidad de reproducción en fotogramas por segundo"
     },
@@ -442,7 +439,6 @@
       "cannotDeleteLastFrame": "No puedes eliminar el último fotograma",
       "frameDeleted": "Fotograma eliminado",
       "frameDuplicated": "Fotograma duplicado",
-      "canvasSizeChanged": "Tamaño del lienzo cambiado a {size}",
       "backgroundRemoved": "Fondo eliminado",
       "nothingToRemove": "No se detectó ningún fondo",
       "flippedHorizontal": "Volteado horizontalmente",

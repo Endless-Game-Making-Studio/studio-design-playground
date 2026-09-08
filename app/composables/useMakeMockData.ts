@@ -178,3 +178,69 @@ export const externalTools: ExternalTool[] = [
     url: 'https://github.com'
   }
 ]
+
+// ─── Where a tool opens ──────────────────────────────────────────────────────
+
+export interface ToolMenuEntry {
+  id: string
+  name: string
+  tag?: string
+  image?: string
+  logo?: string
+  logoBg?: string
+  icon?: string
+  /** `undefined` for a tool with nowhere to go yet — Baby Godot has no build. */
+  href?: string
+  /** Leaves Endless Studios, so the tab it opens carries none of our chrome. */
+  external: boolean
+}
+
+/**
+ * Every tool now opens in a tab of its own, and the ones we can host keep the
+ * platform's bar around them: a tool rebuilt on this stack has a `route`, an
+ * embeddable one gets framed by `/make/tool/<id>`, and anything else stays a
+ * plain outward link.
+ */
+export function toolEntry(tool: ToolCardData): ToolMenuEntry {
+  return {
+    id: tool.id,
+    name: tool.name,
+    tag: tool.tag,
+    image: tool.image,
+    logo: tool.logo,
+    logoBg: tool.logoBg,
+    icon: tool.icon,
+    href: tool.route ?? (tool.embedUrl ? `/make/tool/${tool.id}` : tool.url),
+    external: !tool.route && !tool.embedUrl
+  }
+}
+
+export interface ToolMenuGroup {
+  id: 'engines' | 'tailor' | 'external'
+  label: string
+  tools: ToolMenuEntry[]
+}
+
+/**
+ * The tool switcher's columns — same grouping and order as the Make page, off
+ * the same arrays, so the two lists can't drift apart.
+ */
+export const toolMenuGroups: ToolMenuGroup[] = [
+  { id: 'engines', label: 'Engines', tools: webTools.map(toolEntry) },
+  { id: 'tailor', label: 'Threadbare Tailor', tools: tailorApps.map(toolEntry) },
+  {
+    id: 'external',
+    label: 'More game-making tools',
+    tools: externalTools.map(tool => ({
+      id: tool.id,
+      name: tool.name,
+      logo: tool.logo,
+      logoBg: tool.logoBg,
+      href: tool.url,
+      external: true
+    }))
+  }
+]
+
+/** The tools `/make/tool/<id>` can frame. */
+export const embeddableTools: ToolCardData[] = [...webTools, ...tailorApps].filter(tool => tool.embedUrl)

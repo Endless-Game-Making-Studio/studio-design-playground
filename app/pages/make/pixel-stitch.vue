@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { userName, userAvatar, topbarStatsFor } from '~/composables/useHomeMockData'
-import { useXpBalance } from '~/composables/useXpBalance'
 import { usePixelStitch } from '~/composables/usePixelStitch'
 import { providePixelStitch } from '~/composables/usePixelStitchContext'
 import { emptyGrid } from '~/composables/pixelStitch/project'
@@ -10,11 +8,14 @@ import { frameToBlob } from '~/composables/pixelStitch/render'
 import { exportAsGif } from '~/composables/pixelStitch/gifExport'
 import { exportSpriteSheet, importSpriteSheet } from '~/composables/pixelStitch/spriteSheet'
 
-definePageMeta({ layout: 'dashboard' })
+// The tool layout, not the dashboard one: this page opens in its own tab, with
+// the tool switcher in the bar instead of the platform's sidebar.
+definePageMeta({ layout: 'tool' })
 
 const { t } = useI18n()
-const { total: xpTotal } = useXpBalance()
-const topbarStats = computed(() => topbarStatsFor(true, xpTotal.value))
+
+// The tool has a browser tab of its own now, so it needs a name in it.
+useHead({ title: () => t('pixelStitch.title') })
 
 const editor = usePixelStitch()
 providePixelStitch(editor)
@@ -198,79 +199,65 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
 </script>
 
 <template>
-  <!-- `sm:p-0`/`sm:gap-0` as well as the bare ones — see index.vue for why. -->
-  <UDashboardPanel :ui="{ body: 'p-0 sm:p-0 gap-0 sm:gap-0 overflow-x-auto' }">
-    <template #body>
-      <AppTopbar v-bind="topbarStats" :user-name="userName" :user-avatar="userAvatar" />
-
-      <UContainer class="mt-8 pb-16">
-        <div class="flex flex-wrap items-center gap-4">
-          <UButton
-            to="/make"
-            icon="lucide:arrow-left"
-            :label="t('pixelStitch.backToTools')"
-            color="neutral"
-            variant="ghost"
-            size="sm"
-            class="-ml-2"
-          />
-          <div class="ml-auto flex gap-2">
-            <UButton
-              :label="t('pixelStitch.openProject')"
-              icon="lucide:folder-open"
-              color="neutral"
-              variant="outline"
-              size="sm"
-              @click="loadProject"
-            />
-            <UButton
-              :label="t('pixelStitch.saveProject')"
-              icon="lucide:save"
-              color="neutral"
-              variant="outline"
-              size="sm"
-              @click="saveProjectFile"
-            />
-          </div>
-        </div>
-
-        <!-- `warning` is the Make section's colour in the sidebar — PageTitle
-             matches the page to the nav item you clicked. -->
-        <PageTitle
-          :title="t('pixelStitch.title')"
-          :description="t('pixelStitch.subtitle')"
-          color="warning"
-          class="mt-4"
+  <div class="flex-1 overflow-x-auto">
+    <UContainer class="mt-6 pb-16">
+      <!-- No page title: the switcher in the bar already names the tool. What
+           the title row carried — the file actions — stays in its place, as a
+           thin strip above the workspace. -->
+      <div class="flex flex-wrap items-center justify-end gap-2">
+        <UButton
+          :label="t('pixelStitch.openProject')"
+          icon="lucide:folder-open"
+          color="neutral"
+          variant="outline"
+          size="sm"
+          @click="loadProject"
         />
+        <UButton
+          :label="t('pixelStitch.saveProject')"
+          icon="lucide:save"
+          color="neutral"
+          variant="outline"
+          size="sm"
+          @click="saveProjectFile"
+        />
+        <UTooltip :text="t('pixelStitch.savePngTooltip')">
+          <UButton
+            :label="t('pixelStitch.savePng')"
+            icon="lucide:image-down"
+            color="primary"
+            size="sm"
+            @click="exportPng"
+          />
+        </UTooltip>
+      </div>
 
-        <!-- Two columns rather than the original's drag-reorderable panels: the
-             layout is fixed here, so the editing surface keeps the space and the
-             inspectors stay where the artist left them. -->
-        <div class="mt-8 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
-          <div class="flex min-w-0 flex-col gap-4">
-            <PixelStitchCanvasSizeSelector />
-            <PixelStitchToolbar
-              @import-image="importImage"
-              @export-png="exportPng"
-              @export-gif="exportGif"
-              @export-sprite-sheet="openSheetModal('export')"
-              @import-sprite-sheet="openSheetModal('import')"
-              @submit="exportPng"
-            />
+      <!-- Fixed columns rather than the original's drag-reorderable panels:
+           the tool rail and inspectors stay where the artist left them, and
+           the editing surface keeps everything between them. -->
+      <div class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div class="flex min-w-0 items-start gap-4">
+          <PixelStitchToolbar
+            @import-image="importImage"
+            @export-gif="exportGif"
+            @export-sprite-sheet="openSheetModal('export')"
+            @import-sprite-sheet="openSheetModal('import')"
+          />
+
+          <div class="flex min-w-0 flex-1 flex-col gap-4">
             <PixelStitchCanvas />
             <PixelStitchFrameStrip />
           </div>
-
-          <div class="flex flex-col gap-4">
-            <PixelStitchColorPicker />
-            <PixelStitchLayerPanel />
-            <PixelStitchOnionSkinControls />
-            <PixelStitchAnimationPreview />
-          </div>
         </div>
-      </UContainer>
-    </template>
-  </UDashboardPanel>
+
+        <div class="flex flex-col gap-4">
+          <PixelStitchColorPicker />
+          <PixelStitchLayerPanel />
+          <PixelStitchOnionSkinControls />
+        </div>
+      </div>
+    </UContainer>
+  </div>
 
   <PixelStitchSpriteSheetModal
     v-model:open="sheetModalOpen"

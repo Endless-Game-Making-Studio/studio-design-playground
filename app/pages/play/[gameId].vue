@@ -50,7 +50,7 @@ const CONTRIBUTE_TASKS = [
         <section>
           <SectionTitle :title="t('games.play')" />
           <!-- SYNTHESIZED: neither mock game has a real playable build yet.
-               A real one would embed the same way ToolDrawer.vue already
+               A real one would embed the same way make/tool/[id].vue already
                embeds the Make-page tools — an iframe, not a new mechanism. -->
           <div class="mt-4 aspect-video rounded-2xl bg-midnight-950 flex flex-col items-center justify-center gap-2 text-white/70">
             <Icon name="lucide:gamepad-2" class="size-8" />

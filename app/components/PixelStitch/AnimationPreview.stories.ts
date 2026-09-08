@@ -2,13 +2,14 @@ import type { Meta, StoryObj } from '@nuxtjs/storybook'
 import AnimationPreview from './AnimationPreview.vue'
 import { addFrames, paintSample, withEditor } from './storyEditor'
 
-const INSPECTOR_WIDTH = 'w-[340px]'
+// Renders uncarded inside the frame strip's panel, in a fixed 128px column.
+const PREVIEW_WIDTH = 'w-[160px]'
 
 const meta = {
   title: 'Components/PixelStitch/AnimationPreview',
   component: AnimationPreview,
   tags: ['autodocs'],
-  decorators: [withEditor({ width: INSPECTOR_WIDTH, seed: editor => paintSample(editor) })]
+  decorators: [withEditor({ width: PREVIEW_WIDTH, seed: editor => paintSample(editor) })]
 } satisfies Meta<typeof AnimationPreview>
 
 export default meta
@@ -20,7 +21,7 @@ export const SingleFrame: Story = {}
 // the main canvas all advance together — it isn't a separate player.
 export const Playing: Story = {
   decorators: [withEditor({
-    width: INSPECTOR_WIDTH,
+    width: PREVIEW_WIDTH,
     seed: (editor) => {
       paintSample(editor)
       addFrames(editor, 5)
@@ -31,7 +32,7 @@ export const Playing: Story = {
 
 export const SlowPlayback: Story = {
   decorators: [withEditor({
-    width: INSPECTOR_WIDTH,
+    width: PREVIEW_WIDTH,
     seed: (editor) => {
       paintSample(editor)
       addFrames(editor, 5)

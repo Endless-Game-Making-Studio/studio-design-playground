@@ -43,6 +43,7 @@ function onDrop(target: number) {
 }
 </script>
 
+
 <template>
   <UPageCard variant="outline" :ui="{ root: 'rounded-2xl', container: 'p-4 sm:p-4 gap-3' }">
     <div class="flex items-center justify-between">
@@ -71,52 +72,58 @@ function onDrop(target: number) {
       </div>
     </div>
 
-    <div class="flex gap-2 overflow-x-auto pb-1">
-      <div
-        v-for="(frame, index) in editor.frames.value"
-        :key="frame.id"
-        class="shrink-0 rounded-xl p-2 bg-elevated ring-1 transition-opacity cursor-grab active:cursor-grabbing"
-        :class="[
-          editor.currentFrameIndex.value === index ? 'ring-2 ring-primary' : 'ring-default',
-          dragIndex === index ? 'opacity-50' : ''
-        ]"
-        draggable="true"
-        @click="editor.selectFrame(index)"
-        @dragstart="dragIndex = index"
-        @dragend="dragIndex = null"
-        @dragover.prevent
-        @drop.prevent="onDrop(index)"
-      >
-        <canvas
-          :ref="element => { if (element) previewRefs[index] = element as HTMLCanvasElement }"
-          :width="PREVIEW_SIZE"
-          :height="PREVIEW_SIZE"
-          class="rounded-md"
-          :style="{ imageRendering: 'pixelated' }"
-        />
-        <div class="mt-1.5 flex items-center justify-between gap-1">
-          <span class="text-xs text-dimmed tabular-nums">{{ t('pixelStitch.frames.frame') }} {{ index + 1 }}</span>
-          <div class="flex">
-            <UTooltip :text="t('pixelStitch.frames.duplicate')">
-              <UButton
-                icon="lucide:copy"
-                size="xs"
-                color="neutral"
-                variant="ghost"
-                :aria-label="t('pixelStitch.frames.duplicate')"
-                @click.stop="editor.duplicateFrame(index)"
-              />
-            </UTooltip>
-            <UTooltip :text="t('pixelStitch.frames.delete')">
-              <UButton
-                icon="lucide:trash-2"
-                size="xs"
-                color="neutral"
-                variant="ghost"
-                :aria-label="t('pixelStitch.frames.delete')"
-                @click.stop="editor.deleteFrame(index)"
-              />
-            </UTooltip>
+    <!-- Preview and timeline in one panel: the preview plays the strip next to
+         it, and the FPS slider it carries is what drives that playback. -->
+    <div class="flex gap-3">
+      <PixelStitchAnimationPreview />
+
+      <div class="flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1">
+        <div
+          v-for="(frame, index) in editor.frames.value"
+          :key="frame.id"
+          class="shrink-0 rounded-xl p-2 bg-elevated ring-1 transition-opacity cursor-grab active:cursor-grabbing"
+          :class="[
+            editor.currentFrameIndex.value === index ? 'ring-2 ring-primary' : 'ring-default',
+            dragIndex === index ? 'opacity-50' : ''
+          ]"
+          draggable="true"
+          @click="editor.selectFrame(index)"
+          @dragstart="dragIndex = index"
+          @dragend="dragIndex = null"
+          @dragover.prevent
+          @drop.prevent="onDrop(index)"
+        >
+          <canvas
+            :ref="element => { if (element) previewRefs[index] = element as HTMLCanvasElement }"
+            :width="PREVIEW_SIZE"
+            :height="PREVIEW_SIZE"
+            class="rounded-md"
+            :style="{ imageRendering: 'pixelated' }"
+          />
+          <div class="mt-1.5 flex items-center justify-between gap-1">
+            <span class="text-xs text-dimmed tabular-nums">{{ t('pixelStitch.frames.frame') }} {{ index + 1 }}</span>
+            <div class="flex">
+              <UTooltip :text="t('pixelStitch.frames.duplicate')">
+                <UButton
+                  icon="lucide:copy"
+                  size="xs"
+                  color="neutral"
+                  variant="ghost"
+                  :aria-label="t('pixelStitch.frames.duplicate')"
+                  @click.stop="editor.duplicateFrame(index)"
+                />
+              </UTooltip>
+              <UTooltip :text="t('pixelStitch.frames.delete')">
+                <UButton
+                  icon="lucide:trash-2"
+                  size="xs"
+                  color="neutral"
+                  variant="ghost"
+                  :aria-label="t('pixelStitch.frames.delete')"
+                  @click.stop="editor.deleteFrame(index)"
+                />
+              </UTooltip>
+            </div>
           </div>
         </div>
       </div>
