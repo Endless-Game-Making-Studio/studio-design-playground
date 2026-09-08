@@ -647,6 +647,34 @@
       "notesLabel": "Melody",
       "effectsLabel": "Sound effects",
       "cellLabel": "Note row {row}, step {step}"
+    },
+    "waveform": {
+      "title": "Waveform",
+      "emptyTitle": "No audio yet",
+      "emptyHint": "Import a file, render the sequencer, or record from your microphone.",
+      "hint": "Click to place the cursor, drag to select a range. Scroll to zoom, shift + scroll to pan.",
+      "bufferSummary": "{duration}s · {sampleRate} Hz · {channels} ch",
+      "selectionSummary": "{start}s – {end}s ({length}s)",
+      "scroll": "Scroll the waveform",
+      "import": "Import",
+      "fromSequencer": "From sequencer",
+      "record": "Record",
+      "stopRecording": "Stop",
+      "discardTake": "Discard",
+      "recording": "Recording {seconds}s",
+      "play": "Play",
+      "playSelection": "Play selection",
+      "stop": "Stop",
+      "fit": "Fit the whole take",
+      "zoomLevel": "{zoom}×",
+      "errors": {
+        "micDenied": "Microphone access was denied. Allow it in your browser settings, then try again.",
+        "micNotFound": "No microphone found. Connect one and try again.",
+        "micUnavailable": "This browser can't record audio here. Recording needs a secure (https) page.",
+        "recordFailed": "Recording couldn't start. Try again.",
+        "decodeFailed": "That audio couldn't be read. Try a different file.",
+        "renderFailed": "The sequencer couldn't be rendered. Try again."
+      }
     }
   },
   "onboarding": {

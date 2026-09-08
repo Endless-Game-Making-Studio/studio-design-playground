@@ -647,6 +647,34 @@
       "notesLabel": "Melodía",
       "effectsLabel": "Efectos de sonido",
       "cellLabel": "Fila de nota {row}, paso {step}"
+    },
+    "waveform": {
+      "title": "Forma de onda",
+      "emptyTitle": "Aún no hay audio",
+      "emptyHint": "Importa un archivo, renderiza el secuenciador o graba con tu micrófono.",
+      "hint": "Haz clic para situar el cursor y arrastra para seleccionar un rango. Desplaza para hacer zoom y mayúsculas + desplazamiento para moverte.",
+      "bufferSummary": "{duration}s · {sampleRate} Hz · {channels} can.",
+      "selectionSummary": "{start}s – {end}s ({length}s)",
+      "scroll": "Desplazar la forma de onda",
+      "import": "Importar",
+      "fromSequencer": "Desde el secuenciador",
+      "record": "Grabar",
+      "stopRecording": "Detener",
+      "discardTake": "Descartar",
+      "recording": "Grabando {seconds}s",
+      "play": "Reproducir",
+      "playSelection": "Reproducir la selección",
+      "stop": "Detener",
+      "fit": "Ver la toma completa",
+      "zoomLevel": "{zoom}×",
+      "errors": {
+        "micDenied": "Se denegó el acceso al micrófono. Permítelo en la configuración del navegador y vuelve a intentarlo.",
+        "micNotFound": "No se encontró ningún micrófono. Conecta uno y vuelve a intentarlo.",
+        "micUnavailable": "Este navegador no puede grabar audio aquí. La grabación necesita una página segura (https).",
+        "recordFailed": "No se pudo iniciar la grabación. Vuelve a intentarlo.",
+        "decodeFailed": "No se pudo leer ese audio. Prueba con otro archivo.",
+        "renderFailed": "No se pudo renderizar el secuenciador. Vuelve a intentarlo."
+      }
     }
   },
   "onboarding": {
