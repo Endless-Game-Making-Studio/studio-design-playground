@@ -6,6 +6,18 @@ export interface ClassroomLearner {
   completion: number
 }
 
+export interface ClassroomPost {
+  id: string
+  author: string
+  // Prose label shown as-is ("2 days ago"), deliberately static for the same
+  // reason ChannelPost.time is: deriving it at render would differ between the
+  // server and client passes and trip a hydration mismatch.
+  time: string
+  body: string
+  likes: number
+  isMentor?: boolean
+}
+
 export type MentorClassroomAgeRange = '8-10' | '10-12' | '12-14' | '14-16' | '16-18' | 'mixed'
 
 // A mentor's private classroom is a Cohort (same fields: name, dates, seat
@@ -17,6 +29,7 @@ export interface MentorClassroom extends Cohort {
   programId: string
   createdAt: string
   learners: ClassroomLearner[]
+  posts: ClassroomPost[]
   ageRange: MentorClassroomAgeRange
   // Whether students in this classroom are barred from interacting with other
   // users on the platform — a per-classroom setting, independent of:
@@ -57,6 +70,23 @@ export const mentorClassroomsByPhase: Record<PreviewState, MentorClassroom[]> = 
         { name: 'Nia Fitzgerald', completion: 71 },
         { name: 'Tomas Berg', completion: 20 },
         { name: 'Leila Haddad', completion: 55 }
+      ],
+      posts: [
+        {
+          id: 'night-owls-post-1',
+          author: 'Marisol Vega',
+          time: '2 days ago',
+          body: 'Milestone 2 reviews are done — every StoryQuest scene runs without errors now. Bring a controller Thursday, we are playtesting every build in the group.',
+          likes: 7,
+          isMentor: true
+        },
+        {
+          id: 'night-owls-post-2',
+          author: 'Amara Diallo',
+          time: '4 days ago',
+          body: 'Got my dialogue tree working after rewriting the state machine. Happy to walk anyone through it before class.',
+          likes: 4
+        }
       ]
     },
     {
@@ -78,6 +108,16 @@ export const mentorClassroomsByPhase: Record<PreviewState, MentorClassroom[]> = 
         { name: 'Desmond Cole', completion: 33 },
         { name: 'Hana Kimura', completion: 45 },
         { name: 'Owen Pryce', completion: 12 }
+      ],
+      posts: [
+        {
+          id: 'afterschool-post-1',
+          author: 'Marisol Vega',
+          time: '1 day ago',
+          body: 'Reminder: export your Godot project before Friday so we can put the whole group on one showcase page.',
+          likes: 5,
+          isMentor: true
+        }
       ]
     },
     {
@@ -98,6 +138,15 @@ export const mentorClassroomsByPhase: Record<PreviewState, MentorClassroom[]> = 
         { name: 'Yuki Tanabe', completion: 90 },
         { name: 'Elena Rossi', completion: 64 },
         { name: 'Ines Vargas', completion: 30 }
+      ],
+      posts: [
+        {
+          id: 'summer-workshop-post-1',
+          author: 'Yuki Tanabe',
+          time: '6 days ago',
+          body: 'Finished the last Threadbare chapter. The tilemap collision section was the tricky part — check the layer order first.',
+          likes: 9
+        }
       ]
     }
   ]

@@ -2,6 +2,14 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
 import { useMentorStatus } from '~/composables/useMentorStatus'
 
+const props = withDefaults(defineProps<{
+  showAdmin?: boolean
+}>(), {
+  showAdmin: true
+})
+
+const adminItems = ['Games', 'Programs', 'Resources', 'Intake Form', 'Feed Console', 'Users', 'Institutions', 'Events']
+
 const { isMentor } = useMentorStatus()
 
 const mainItems = computed<NavigationMenuItem[]>(() => [
@@ -18,6 +26,15 @@ const mainItems = computed<NavigationMenuItem[]>(() => [
     trailingIcon: 'lucide:external-link',
     to: '#',
     color: 'rose'
+  }
+])
+
+const adminGroup = computed<NavigationMenuItem[]>(() => [
+  {
+    label: 'Admin',
+    icon: 'lucide:settings',
+    defaultOpen: true,
+    children: adminItems.map(label => ({ label, to: '#' }))
   }
 ])
 
@@ -59,6 +76,18 @@ const navMenuUi = {
           :ui="navMenuUi"
         />
       </div>
+
+      <template v-if="showAdmin">
+        <USeparator class="my-2" />
+
+        <UNavigationMenu
+          :collapsed="collapsed"
+          :items="[adminGroup]"
+          orientation="vertical"
+          color="primary"
+          :ui="navMenuUi"
+        />
+      </template>
     </template>
 
     <template #footer>

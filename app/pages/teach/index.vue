@@ -4,6 +4,7 @@ import { userName, userAvatar, topbarStatsFor } from '~/composables/useHomeMockD
 import { useXpBalance } from '~/composables/useXpBalance'
 import { usePreviewState } from '~/composables/usePreviewState'
 import type { MentorClassroom } from '~/composables/useProgramMockData'
+import { programTemplates } from '~/composables/useProgramMockData'
 import { useMentorClassrooms } from '~/composables/useMentorClassrooms'
 
 definePageMeta({ layout: 'dashboard' })
@@ -31,9 +32,19 @@ const selectedClassroom = computed<MentorClassroom | undefined>(() =>
   classrooms.value.find(c => c.id === selectedClassroomId.value)
 )
 
+const selectedProgramTitle = computed(() =>
+  programTemplates.find(template => template.id === selectedClassroom.value?.programId)?.title ?? ''
+)
+
+// Settings is deliberately not a tab: the tab bar is for the three views of a
+// running classroom, while settings is a rarely-touched edit surface reached
+// from the header.
+const settingsOpen = ref(false)
+
 const TAB_COMPONENTS = {
   progress: defineAsyncComponent(() => import('~/components/TeachClassroomProgressTab.vue')),
-  settings: defineAsyncComponent(() => import('~/components/TeachClassroomSettingsTab.vue'))
+  users: defineAsyncComponent(() => import('~/components/TeachClassroomUsersTab.vue')),
+  feed: defineAsyncComponent(() => import('~/components/TeachClassroomFeedTab.vue'))
 } as const
 type TabId = keyof typeof TAB_COMPONENTS
 
@@ -43,7 +54,8 @@ const activeTab = ref<TabId>('progress')
 
 const tabItems = computed<TabsItem[]>(() => [
   { label: t('teach.hub.tabs.progress'), value: 'progress' },
-  { label: t('teach.hub.tabs.settings'), value: 'settings' }
+  { label: t('teach.hub.tabs.users'), value: 'users' },
+  { label: t('teach.hub.tabs.feed'), value: 'feed' }
 ])
 </script>
 
@@ -84,13 +96,29 @@ const tabItems = computed<TabsItem[]>(() => [
                 <TeachClassroomWelcomeChecklist :classroom="selectedClassroom" :key="selectedClassroom.id" />
               </template>
               <template v-else>
+                <div class="flex items-start justify-between gap-4">
+                  <div class="min-w-0">
+                    <h2 class="font-heading text-2xl font-bold tracking-tight text-highlighted">
+                      {{ selectedClassroom.name }}
+                    </h2>
+                    <p class="mt-1 text-sm text-muted">{{ selectedProgramTitle }}</p>
+                  </div>
+                  <UButton
+                    :label="t('teach.hub.tabs.settings')"
+                    icon="lucide:settings"
+                    color="neutral"
+                    variant="ghost"
+                    @click="settingsOpen = true"
+                  />
+                </div>
+
                 <UTabs
                   :items="tabItems"
                   color="primary"
                   variant="pill"
                   size="xl"
                   :content="false"
-                  class="mt-8"
+                  class="mt-6"
                   :ui="{ root: 'items-start', list: 'w-fit', trigger: 'grow-0' }"
                   v-model="activeTab"
                 />
@@ -113,6 +141,17 @@ const tabItems = computed<TabsItem[]>(() => [
       </UContainer>
     </template>
   </UDashboardPanel>
+
+  <USlideover
+    v-if="selectedClassroom"
+    v-model:open="settingsOpen"
+    :title="t('teach.hub.settings.title')"
+    :description="selectedClassroom.name"
+  >
+    <template #body>
+      <TeachClassroomSettingsPanel :classroom="selectedClassroom" />
+    </template>
+  </USlideover>
 
   <DevPreviewBar />
 </template>

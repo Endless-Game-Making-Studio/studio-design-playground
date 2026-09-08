@@ -18,10 +18,9 @@ const averageCompletion = computed(() => {
 </script>
 
 <template>
+  <!-- No SectionTitle: the tab bar directly above already names this view. -->
   <div class="mt-8">
-    <SectionTitle :title="t('teach.hub.progress.title')" />
-
-    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+    <div class="grid gap-4 sm:grid-cols-2">
       <UPageCard :title="t('teach.hub.progress.avgCompletion')" variant="subtle">
         <span class="font-heading text-3xl font-bold text-highlighted">{{ averageCompletion }}%</span>
       </UPageCard>

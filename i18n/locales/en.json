@@ -639,6 +639,8 @@
       },
       "sidebar": {
         "classrooms": "Classrooms",
+        "program": "Program",
+        "allPrograms": "All programs",
         "newClassroom": "New classroom",
         "mentorTraining": "Mentor training",
         "listEmpty": "No classrooms yet"
@@ -649,13 +651,26 @@
         "cta": "New classroom"
       },
       "tabs": {
-        "progress": "Progress",
+        "progress": "Task progress",
+        "users": "Users",
+        "feed": "Feed",
         "settings": "Settings"
       },
       "progress": {
-        "title": "Progress",
         "avgCompletion": "Average completion",
         "seatsFilled": "Seats filled"
+      },
+      "users": {
+        "count": "{count} student | {count} students",
+        "invite": "Invite students",
+        "mentorRole": "Mentor",
+        "learnerRole": "Student"
+      },
+      "feed": {
+        "empty": {
+          "title": "No posts yet",
+          "body": "Share an update, a question, or a challenge with your classroom."
+        }
       },
       "settings": {
         "title": "Classroom settings",
