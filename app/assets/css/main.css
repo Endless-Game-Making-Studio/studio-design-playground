@@ -275,21 +275,6 @@ body {
   }
 }
 
-/* The transparency checkerboard behind Pixel Stitch's colour swatch. A CSS
-   gradient rather than the canvas helper in `pixelStitch/render.ts`, because
-   this one sits behind a plain <div> — but the two greys are deliberately the
-   same pair, so the swatch and the canvas read as one surface. */
-@utility pixel-checker {
-  background-color: #f8fafc;
-  background-image:
-    linear-gradient(45deg, #e2e8f0 25%, transparent 25%),
-    linear-gradient(-45deg, #e2e8f0 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #e2e8f0 75%),
-    linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
-  background-size: 12px 12px;
-  background-position: 0 0, 0 6px, 6px -6px, -6px 0;
-}
-
 /* Ambient brand glow on the dashboard page canvas — see app.config.ts
    `dashboardPanel.root`. A background-image (not -color) so it layers under
    a page's own `bg-slate-50` instead of being replaced by it. */
