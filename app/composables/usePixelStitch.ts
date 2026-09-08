@@ -1,5 +1,6 @@
 import type {
   Frame,
+  Layer,
   PixelGrid,
   PixelTool,
   Point,
@@ -237,14 +238,36 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
     if (layer) layer.name = name
   }
 
-  // Absolute rather than a one-step nudge: both the drag and the arrow keys
-  // know the position they want to land on.
+  // Absolute rather than a one-step nudge: the arrow keys on the grip know the
+  // position they want to land on.
   function reorderLayer(from: number, to: number) {
     const layers = currentFrame.value?.layers
     if (!layers || from === to || to < 0 || to >= layers.length) return
     const [moved] = layers.splice(from, 1)
     layers.splice(to, 0, moved!)
     currentLayerIndex.value = to
+  }
+
+  // The drag reports the order it arrived at rather than a pair of indices, and
+  // it reports it continuously while the pointer moves. Selection follows the
+  // layer itself, not its old position, so the row someone is holding stays the
+  // selected one as it travels.
+  function setLayerOrder(next: Layer[]) {
+    const frame = currentFrame.value
+    if (!frame) return
+
+    // A reorder is a permutation and nothing else. The drag reports the order
+    // its own layout measurements know about, and a row added moments earlier
+    // may not have been measured yet — taking that array at face value dropped
+    // the unmeasured layer from the project.
+    const ids = new Set(frame.layers.map(layer => layer.id))
+    const isPermutation = next.length === ids.size && next.every(layer => ids.has(layer.id))
+    if (!isPermutation) return
+
+    const selected = frame.layers[currentLayerIndex.value]
+    frame.layers = next
+    const found = selected ? next.findIndex(layer => layer.id === selected.id) : -1
+    if (found !== -1) currentLayerIndex.value = found
   }
 
   function clearLayer() {
@@ -584,6 +607,7 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
     setLayerOpacity,
     renameLayer,
     reorderLayer,
+    setLayerOrder,
     clearLayer,
     clearAllLayers,
     // frames
