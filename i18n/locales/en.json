@@ -585,6 +585,41 @@
       "tryAgain": "Try another email"
     }
   },
+  "patchworkshop": {
+    "title": "Threadbare PatchWorkShop",
+    "library": {
+      "searchPlaceholder": "Search assets…",
+      "allAssets": "All assets",
+      "noResults": "No assets match your search.",
+      "addAriaLabel": "Add {name} to canvas"
+    }
+  },
+  "melodyLoom": {
+    "title": "Threadbare Melody Loom",
+    "controls": {
+      "play": "Play",
+      "pause": "Pause",
+      "stop": "Stop",
+      "bpm": "BPM",
+      "volume": "Volume",
+      "reverb": "Reverb",
+      "deleteMode": "Delete mode",
+      "clear": "Clear the grid"
+    },
+    "presets": {
+      "label": "Preset",
+      "8bit": "8-Bit",
+      "arcade": "Arcade",
+      "chiptune": "Chiptune",
+      "retro": "Retro",
+      "custom": "Custom"
+    },
+    "grid": {
+      "notesLabel": "Melody",
+      "effectsLabel": "Sound effects",
+      "cellLabel": "Note row {row}, step {step}"
+    }
+  },
   "onboarding": {
     "checklist": {
       "title": "Getting started",
