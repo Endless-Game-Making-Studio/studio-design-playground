@@ -16,11 +16,34 @@ const gripRefs = ref<HTMLElement[]>([])
 const dragIndex = ref<number | null>(null)
 const dropIndex = ref<number | null>(null)
 
+// A `:ref` callback is never told about the element it used to hold, so a
+// deleted layer would leave its row behind and the midpoint scan would keep
+// measuring a rectangle that is no longer on screen.
+watch(() => layers.value.length, (count) => {
+  rowRefs.value.length = count
+  gripRefs.value.length = count
+})
+
+// The listeners go on the window rather than the grip, and pointer capture is
+// no use here: the first reactive update of the drag replaces the row being
+// held with the dashed gap, which takes the grip — capture holder and handlers
+// alike — out of the DOM. Bound to the grip, the gesture froze on frame one and
+// never committed the move.
 function startDrag(index: number, event: PointerEvent) {
   event.preventDefault()
   dragIndex.value = index
   dropIndex.value = index
-  ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
+  window.addEventListener('pointermove', onDragMove)
+  window.addEventListener('pointerup', endDrag)
+  window.addEventListener('pointercancel', cancelDrag)
+  window.addEventListener('blur', cancelDrag)
+}
+
+function stopListening() {
+  window.removeEventListener('pointermove', onDragMove)
+  window.removeEventListener('pointerup', endDrag)
+  window.removeEventListener('pointercancel', cancelDrag)
+  window.removeEventListener('blur', cancelDrag)
 }
 
 function onDragMove(event: PointerEvent) {
@@ -41,12 +64,23 @@ function onDragMove(event: PointerEvent) {
 }
 
 function endDrag() {
+  stopListening()
   if (dragIndex.value !== null && dropIndex.value !== null) {
     editor.reorderLayer(dragIndex.value, dropIndex.value)
   }
   dragIndex.value = null
   dropIndex.value = null
 }
+
+// A cancelled gesture puts the row back where it was rather than dropping it
+// wherever the pointer happened to die.
+function cancelDrag() {
+  stopListening()
+  dragIndex.value = null
+  dropIndex.value = null
+}
+
+onBeforeUnmount(stopListening)
 
 // Without the chevrons, reordering needs another way in that isn't a pointer.
 // The grip keeps focus across the move so a run of presses walks the layer up
@@ -134,9 +168,6 @@ const openTrackFor = ref<number | null>(null)
             @click.stop
             @keydown="onGripKeyDown(index, $event)"
             @pointerdown="startDrag(index, $event)"
-            @pointermove="onDragMove"
-            @pointerup="endDrag"
-            @pointercancel="endDrag"
           >
             <Icon name="lucide:grip-vertical" class="size-4" />
           </button>
