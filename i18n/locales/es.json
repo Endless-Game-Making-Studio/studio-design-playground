@@ -327,9 +327,10 @@
       "label": "Lienzo",
       "tooltip": "Establecer el lienzo en {size} píxeles",
       "confirmTitle": "¿Cambiar el lienzo a {size}?",
-      "confirmBody": "El pixel art no se puede trasladar de una cuadrícula a otra, así que esto borra todos los fotogramas del proyecto, no solo el que está en pantalla.",
+      "confirmBody": "Se borrará todo lo dibujado en el fotograma. | Se borrará todo lo dibujado en los {count} fotogramas.",
       "confirmKeep": "Mantener {size}",
-      "confirmClear": "Borrar y cambiar a {size}"
+      "confirmClear": "Borrar y cambiar",
+      "confirmReason": "Un dibujo hecho para una cuadrícula de {size} no se puede trasladar a otra sin volver a dibujarlo."
     },
     "holdToConfirm": {
       "instruction": "Mantén pulsado durante un segundo para {action}.",
@@ -385,17 +386,22 @@
     "color": {
       "title": "Color",
       "dragToSave": "Arrastra a un espacio de la paleta para guardar este color",
-      "pickerTooltip": "Elegir un color",
       "hexTooltip": "Introduce un código de color hexadecimal",
-      "moreShades": "Más tonos",
-      "dragToCustomize": "Arrastra colores a los espacios para personalizar la paleta.",
       "swatchTooltip": "{color} — haz clic para seleccionar, suelta un color para reemplazarlo",
       "row": {
         "base": "Color",
         "shade1": "Tono 1",
         "shade2": "Tono 2",
         "highlight": "Resaltado"
-      }
+      },
+      "hueTooltip": "Tono",
+      "formatTooltip": "Formato de color",
+      "channel": {
+        "red": "Rojo",
+        "green": "Verde",
+        "blue": "Azul"
+      },
+      "pickerTooltip": "Elegir un color"
     },
     "layers": {
       "title": "Capas",
@@ -413,17 +419,19 @@
     "frames": {
       "count": "{count} fotograma | {count} fotogramas",
       "collapse": "Cerrar el panel de animación",
-      "title": "Fotogramas de animación",
+      "title": "Animación",
       "frame": "Fotograma",
       "add": "Añadir",
       "addTooltip": "Crear un fotograma nuevo",
       "play": "Reproducir la animación",
       "pause": "Pausar la animación",
       "duplicate": "Duplicar este fotograma",
-      "delete": "Eliminar este fotograma"
+      "delete": "Eliminar este fotograma",
+      "openHint": "Clic para abrir la línea de tiempo",
+      "closeHint": "Clic para plegarlo"
     },
     "preview": {
-      "title": "Vista previa de la animación",
+      "title": "Vista previa",
       "fps": "FPS",
       "fpsTooltip": "Ajustar la velocidad de reproducción en fotogramas por segundo"
     },
@@ -477,6 +485,20 @@
       "copiedMoveToPos": "Copiado. Mueve el puntero y haz clic para pegar",
       "cutMoveToPos": "Cortado. Mueve el puntero y haz clic para pegar",
       "moveMouseToPaste": "Mueve el puntero a su posición y haz clic para pegar"
+    },
+    "save": "Guardar",
+    "files": {
+      "project": "Proyecto",
+      "projectHint": "archivo .tps",
+      "image": "Imagen",
+      "imageHint": "PNG o JPG, se convierte en píxeles",
+      "sheet": "Hoja de sprites",
+      "sheetImportHint": "una hoja se convierte en fotogramas",
+      "sheetExportHint": "todos los fotogramas en una hoja",
+      "png": "PNG",
+      "pngHint": "el fotograma actual",
+      "gif": "GIF",
+      "gifHint": "toda la animación"
     }
   },
   "auth": {

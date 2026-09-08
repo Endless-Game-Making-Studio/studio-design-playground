@@ -6,6 +6,9 @@ import { usePixelStitchContext } from '~/composables/usePixelStitchContext'
 const editor = usePixelStitchContext()
 const { t } = useI18n()
 
+// Icon-only, one per row, in the order the rail inventory settled on: the five
+// drawing tools, the three that transform a layer, clear, and the grid switch
+// apart at the bottom.
 const TOOLS: { id: PixelTool, icon: string }[] = [
   { id: 'pencil', icon: 'lucide:pencil' },
   { id: 'eraser', icon: 'lucide:eraser' },
@@ -14,13 +17,23 @@ const TOOLS: { id: PixelTool, icon: string }[] = [
   { id: 'select', icon: 'lucide:box-select' }
 ]
 
+const TRANSFORMS: { key: string, icon: string, run: () => void }[] = [
+  { key: 'removeBackground', icon: 'lucide:scissors', run: () => editor.removeBackground() },
+  { key: 'flipHorizontal', icon: 'lucide:flip-horizontal', run: () => editor.flipHorizontal() },
+  { key: 'flipVertical', icon: 'lucide:flip-vertical', run: () => editor.flipVertical() }
+]
+
+const clearItems = computed<DropdownMenuItem[]>(() => [
+  { label: t('pixelStitch.toolbar.clearCurrentLayer'), icon: 'lucide:layers', onSelect: () => editor.clearLayer() },
+  { label: t('pixelStitch.toolbar.clearAllLayers'), icon: 'lucide:trash-2', onSelect: () => editor.clearAllLayers() }
+])
+
 // Only the pencil and eraser paint an area, so the size belongs to those two —
 // and to each of them separately, so the eraser remembers hers.
-const SIZED_TOOLS = ['pencil', 'eraser'] as const
-type SizedTool = typeof SIZED_TOOLS[number]
-
 const MIN_BRUSH = 1
 const MAX_BRUSH = 8
+
+type SizedTool = 'pencil' | 'eraser'
 
 function isSized(id: PixelTool): id is SizedTool {
   return id === 'pencil' || id === 'eraser'
@@ -49,77 +62,106 @@ function onToolClick(id: PixelTool) {
   editor.currentTool.value = id
 }
 
-const clearItems = computed<DropdownMenuItem[]>(() => [
-  { label: t('pixelStitch.toolbar.clearCurrentLayer'), icon: 'lucide:layers', onSelect: () => editor.clearLayer() },
-  { label: t('pixelStitch.toolbar.clearAllLayers'), icon: 'lucide:trash-2', onSelect: () => editor.clearAllLayers() }
-])
+const RAIL_BUTTON = 'size-[34px] justify-center rounded-md'
 </script>
 
 <template>
-  <section class="flex flex-col gap-3">
-    <div class="grid grid-cols-3 gap-1.5">
-      <UPopover
-        v-for="tool in TOOLS"
-        :key="tool.id"
-        :open="openSizeFor === tool.id"
-        @update:open="value => { if (!value) openSizeFor = null }"
-      >
-        <UTooltip :text="t(`pixelStitch.tools.${tool.id}Tooltip`)">
+  <section class="flex min-h-0 flex-col gap-1.5 overflow-y-auto p-3">
+    <UPopover
+      v-for="tool in TOOLS"
+      :key="tool.id"
+      :open="openSizeFor === tool.id"
+      :content="{ side: 'right', align: 'start' }"
+      @update:open="value => { if (!value) openSizeFor = null }"
+    >
+      <UTooltip :text="t(`pixelStitch.tools.${tool.id}Tooltip`)" :content="{ side: 'right' }">
+        <UButton
+          :icon="tool.icon"
+          :aria-label="t(`pixelStitch.tools.${tool.id}`)"
+          :color="editor.currentTool.value === tool.id ? 'primary' : 'neutral'"
+          :variant="editor.currentTool.value === tool.id ? 'solid' : 'outline'"
+          :class="RAIL_BUTTON"
+          @click="onToolClick(tool.id)"
+        />
+      </UTooltip>
+      <template v-if="isSized(tool.id)" #content>
+        <!-- Just the number between the two buttons. What really shows the size
+             is the cursor over the canvas, so a swatch here would be the same
+             thing said twice. -->
+        <div class="flex w-32 items-center gap-1.5 p-2">
           <UButton
-            :icon="tool.icon"
-            :aria-label="t(`pixelStitch.tools.${tool.id}`)"
-            :color="editor.currentTool.value === tool.id ? 'primary' : 'neutral'"
-            :variant="editor.currentTool.value === tool.id ? 'solid' : 'outline'"
-            block
-            @click="onToolClick(tool.id)"
+            icon="lucide:minus"
+            color="neutral"
+            variant="outline"
+            :disabled="sizeOf(tool.id) <= MIN_BRUSH"
+            :aria-label="t('pixelStitch.toolbar.decreaseSize')"
+            class="size-7 shrink-0 justify-center rounded-md"
+            @click="resizeBrush(tool.id, -1)"
           />
-        </UTooltip>
-        <template v-if="isSized(tool.id)" #content>
-          <!-- Just the number: a preview square in a 1×1-to-8×8 range says
-               less than the cursor already showing on the canvas. -->
-          <div class="flex items-center gap-1 p-1">
-            <UButton
-              icon="lucide:minus"
-              size="xs"
-              color="neutral"
-              variant="ghost"
-              :disabled="sizeOf(tool.id) <= MIN_BRUSH"
-              :aria-label="t('pixelStitch.toolbar.decreaseSize')"
-              @click="resizeBrush(tool.id, -1)"
-            />
-            <span class="min-w-10 text-center text-xs tabular-nums text-default">{{ sizeOf(tool.id) }}×{{ sizeOf(tool.id) }}</span>
-            <UButton
-              icon="lucide:plus"
-              size="xs"
-              color="neutral"
-              variant="ghost"
-              :disabled="sizeOf(tool.id) >= MAX_BRUSH"
-              :aria-label="t('pixelStitch.toolbar.increaseSize')"
-              @click="resizeBrush(tool.id, 1)"
-            />
-          </div>
-        </template>
-      </UPopover>
-    </div>
+          <span class="grow text-center text-[13px] font-semibold tabular-nums text-highlighted">
+            {{ sizeOf(tool.id) }}×{{ sizeOf(tool.id) }}
+          </span>
+          <UButton
+            icon="lucide:plus"
+            color="neutral"
+            variant="outline"
+            :disabled="sizeOf(tool.id) >= MAX_BRUSH"
+            :aria-label="t('pixelStitch.toolbar.increaseSize')"
+            class="size-7 shrink-0 justify-center rounded-md"
+            @click="resizeBrush(tool.id, 1)"
+          />
+        </div>
+      </template>
+    </UPopover>
 
-    <USeparator />
+    <USeparator class="my-0.5" />
 
-    <div class="grid grid-cols-3 gap-1.5">
-      <UTooltip :text="t('pixelStitch.toolbar.removeBackground')">
-        <UButton icon="lucide:scissors" color="neutral" variant="outline" :aria-label="t('pixelStitch.toolbar.removeBackground')" @click="editor.removeBackground()" />
+    <UTooltip
+      v-for="action in TRANSFORMS"
+      :key="action.key"
+      :text="t(`pixelStitch.toolbar.${action.key}`)"
+      :content="{ side: 'right' }"
+    >
+      <UButton
+        :icon="action.icon"
+        color="neutral"
+        variant="outline"
+        :aria-label="t(`pixelStitch.toolbar.${action.key}`)"
+        :class="RAIL_BUTTON"
+        @click="action.run()"
+      />
+    </UTooltip>
+
+    <USeparator class="my-0.5" />
+
+    <UDropdownMenu :items="clearItems" :content="{ side: 'right', align: 'start' }">
+      <UTooltip :text="t('pixelStitch.toolbar.clearOptions')" :content="{ side: 'right' }">
+        <UButton
+          icon="lucide:trash-2"
+          color="neutral"
+          variant="outline"
+          :aria-label="t('pixelStitch.toolbar.clearOptions')"
+          :class="RAIL_BUTTON"
+        />
       </UTooltip>
-      <UTooltip :text="t('pixelStitch.toolbar.flipHorizontal')">
-        <UButton icon="lucide:flip-horizontal" color="neutral" variant="outline" :aria-label="t('pixelStitch.toolbar.flipHorizontal')" @click="editor.flipHorizontal()" />
-      </UTooltip>
-      <UTooltip :text="t('pixelStitch.toolbar.flipVertical')">
-        <UButton icon="lucide:flip-vertical" color="neutral" variant="outline" :aria-label="t('pixelStitch.toolbar.flipVertical')" @click="editor.flipVertical()" />
-      </UTooltip>
-    </div>
-
-    <USeparator />
-
-    <UDropdownMenu :items="clearItems">
-      <UButton icon="lucide:trash-2" trailing-icon="lucide:chevron-down" color="neutral" variant="outline" block :label="t('pixelStitch.toolbar.clearOptions')" />
     </UDropdownMenu>
+
+    <USeparator class="my-0.5" />
+
+    <!-- The grid came down from the top bar and sits apart: it is what you look
+         through while you draw, not something you do to the file. Its on state
+         is a grey fill rather than the orange one — in this rail orange means
+         "this is the tool in your hand", and the grid is not a tool. -->
+    <UTooltip :text="t('pixelStitch.toolbar.toggleGrid')" :content="{ side: 'right' }">
+      <UButton
+        icon="lucide:grid-3x3"
+        color="neutral"
+        :variant="editor.gridVisible.value ? 'subtle' : 'outline'"
+        :aria-label="t('pixelStitch.toolbar.toggleGrid')"
+        :aria-pressed="editor.gridVisible.value"
+        :class="[RAIL_BUTTON, editor.gridVisible.value ? 'bg-slate-100 ring-slate-200 text-highlighted' : '']"
+        @click="editor.gridVisible.value = !editor.gridVisible.value"
+      />
+    </UTooltip>
   </section>
 </template>

@@ -3,13 +3,22 @@ import type { DropdownMenuItem } from '@nuxt/ui'
 
 // Guests get the same band, so the page below doesn't shift depending on who's
 // looking — only the right-hand side changes, and the account props go unused.
-defineProps<{
+const props = defineProps<{
   guest?: boolean
   xpLabel?: string
   streakDays?: number
   userName?: string
   userAvatar?: string
   notificationCount?: number
+  // The maker tools own the whole window rather than sitting in the dashboard's
+  // page container, so their bar spans it edge to edge and carries the logo and
+  // the tool switcher itself. The account cluster stays shared either way.
+  fullBleed?: boolean
+}>()
+
+defineSlots<{
+  left?: () => unknown
+  center?: () => unknown
 }>()
 
 const { locale, locales, setLocale } = useI18n()
@@ -56,7 +65,21 @@ const accountMenuItems = computed<DropdownMenuItem[][]>(() => [
        stay inside the page container so they line up with the content below
        instead of hugging the viewport edge. -->
   <div class="w-full bg-default/65 backdrop-blur border-b border-default">
-    <UDashboardNavbar :ui="{ root: 'w-full max-w-(--ui-container) mx-auto px-4 sm:px-6 lg:px-8 border-b-0', right: 'gap-3.5' }">
+    <UDashboardNavbar
+      :ui="{
+        root: props.fullBleed ? 'w-full px-4 sm:px-5 border-b-0' : 'w-full max-w-(--ui-container) mx-auto px-4 sm:px-6 lg:px-8 border-b-0',
+        left: 'gap-6',
+        right: 'gap-3.5'
+      }"
+    >
+      <template v-if="$slots.left" #left>
+        <slot name="left" />
+      </template>
+
+      <template v-if="$slots.center" #default>
+        <slot name="center" />
+      </template>
+
       <template #right>
         <!-- The language control comes along because a guest reading the
              Spanish copy has no other way to switch. -->

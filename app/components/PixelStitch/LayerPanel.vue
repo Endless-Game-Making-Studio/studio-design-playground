@@ -9,27 +9,22 @@ const layers = computed(() => editor.currentFrame.value?.layers ?? [])
 // ─── Drag to reorder ────────────────────────────────────────────────────────
 
 // Pointer-driven rather than HTML5 drag-and-drop: the gesture has to show the
-// lifted row, the gap it left and the landing mark at once, and the native API
+// row in hand, the gap it left and the landing mark at once, and the native API
 // hands over a drag image instead.
 const rowRefs = ref<HTMLElement[]>([])
 const gripRefs = ref<HTMLElement[]>([])
 const dragIndex = ref<number | null>(null)
 const dropIndex = ref<number | null>(null)
-const liftPosition = ref({ x: 0, y: 0 })
-
-const draggedLayer = computed(() => (dragIndex.value === null ? null : layers.value[dragIndex.value]))
 
 function startDrag(index: number, event: PointerEvent) {
   event.preventDefault()
   dragIndex.value = index
   dropIndex.value = index
-  liftPosition.value = { x: event.clientX, y: event.clientY }
   ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
 }
 
 function onDragMove(event: PointerEvent) {
   if (dragIndex.value === null) return
-  liftPosition.value = { x: event.clientX, y: event.clientY }
 
   // The row whose vertical midpoint the pointer has passed is the one being
   // displaced, which is what the landing mark sits above.
@@ -66,19 +61,25 @@ async function onGripKeyDown(index: number, event: KeyboardEvent) {
   await nextTick()
   gripRefs.value[target]?.focus()
 }
+
+// The eye's own state while its track is open, so the button reads as the thing
+// the popover belongs to.
+const openTrackFor = ref<number | null>(null)
 </script>
 
 <template>
-  <section class="flex flex-col gap-3">
-    <div class="flex items-center justify-between">
-      <h3 class="font-heading font-bold text-sm text-highlighted">{{ t('pixelStitch.layers.title') }}</h3>
+  <section class="relative flex flex-col gap-2 p-3.5">
+    <div class="flex items-center">
+      <p class="grow text-[11px] font-semibold uppercase tracking-[0.06em] text-dimmed">
+        {{ t('pixelStitch.layers.title') }}
+      </p>
       <UTooltip :text="t('pixelStitch.layers.addTooltip')">
         <UButton
           :label="t('pixelStitch.layers.add')"
           icon="lucide:plus"
-          size="xs"
           color="neutral"
           variant="outline"
+          class="h-[30px] gap-1.5 rounded-md px-2.5 text-[13px]"
           @click="editor.addLayer()"
         />
       </UTooltip>
@@ -86,117 +87,134 @@ async function onGripKeyDown(index: number, event: KeyboardEvent) {
 
     <!-- Listed bottom-up, matching the compositing order: the first entry is
          the layer everything else paints over. -->
-    <div class="flex max-h-96 flex-col gap-2 overflow-y-auto">
-      <template v-for="(layer, index) in layers" :key="layer.id">
-        <!-- The landing mark, drawn in the gap the row would drop into. -->
-        <div v-if="dragIndex !== null && dropIndex === index" class="h-0.5 rounded-full bg-primary" />
-
+    <template v-for="(layer, index) in layers" :key="layer.id">
+      <!-- Where it would land, and the row in hand sitting on that mark:
+           lifted off the list, tilted just enough to read as held. -->
+      <template v-if="dragIndex !== null && dropIndex === index">
+        <div class="-my-0.5 flex items-center gap-1.5">
+          <span class="size-2 rounded-full bg-primary" />
+          <span class="h-0.5 grow rounded-sm bg-primary" />
+        </div>
         <div
-          :ref="element => { if (element) rowRefs[index] = element as HTMLElement }"
-          :class="[
-            editor.currentLayerIndex.value === index ? 'ring-2 ring-primary' : 'ring-1 ring-default',
-            dragIndex === index ? 'border-2 border-dashed border-default bg-transparent opacity-40' : 'bg-slate-50'
-          ]"
-          class="flex cursor-pointer flex-col rounded-xl p-2.5"
-          @click="editor.currentLayerIndex.value = index"
+          class="flex cursor-grabbing items-center gap-1.5 rounded-[10px] border border-primary bg-default p-1.5 shadow-lg"
+          style="transform: rotate(-0.6deg) translateX(6px)"
         >
-          <div class="flex items-center gap-1">
-            <UTooltip :text="t('pixelStitch.layers.reorder')">
-              <button
-                :ref="element => { if (element) gripRefs[index] = element as HTMLElement }"
-                type="button"
-                class="shrink-0 cursor-grab rounded-md p-1 text-dimmed transition-colors hover:text-default focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:cursor-grabbing"
-                :aria-label="t('pixelStitch.layers.reorderLabel', { name: layer.name })"
-                @click.stop
-                @keydown="onGripKeyDown(index, $event)"
-                @pointerdown="startDrag(index, $event)"
-                @pointermove="onDragMove"
-                @pointerup="endDrag"
-                @pointercancel="endDrag"
-              >
-                <Icon name="lucide:grip-vertical" class="size-4" />
-              </button>
-            </UTooltip>
-
-            <UTooltip :text="t('pixelStitch.layers.rename')" class="min-w-0 flex-1">
-              <UInput
-                :model-value="layer.name"
-                size="xs"
-                :aria-label="t('pixelStitch.layers.rename')"
-                class="w-full"
-                @click.stop
-                @update:model-value="value => editor.renameLayer(index, String(value))"
-              />
-            </UTooltip>
-
-            <!-- Only below 100%: a list with no numbers is a list where every
-                 layer is whole. -->
-            <span v-if="layer.opacity < 1" class="shrink-0 text-xs tabular-nums text-dimmed">
-              {{ Math.round(layer.opacity * 100) }}%
-            </span>
-
-            <UPopover>
-              <UTooltip :text="t('pixelStitch.layers.opacity')">
-                <UButton
-                  :icon="layer.opacity > 0 ? 'lucide:eye' : 'lucide:eye-off'"
-                  size="xs"
-                  color="neutral"
-                  variant="ghost"
-                  :aria-label="t('pixelStitch.layers.opacityLabel', { name: layer.name })"
-                  @click.stop
-                />
-              </UTooltip>
-              <template #content>
-                <!-- The button at the left end is the zero, so hiding and 0%
-                     are the same gesture as well as the same state. -->
-                <div class="flex w-56 items-center gap-2 p-3" @click.stop>
-                  <UButton
-                    :icon="layer.opacity > 0 ? 'lucide:eye' : 'lucide:eye-off'"
-                    size="xs"
-                    color="neutral"
-                    :variant="layer.opacity > 0 ? 'ghost' : 'soft'"
-                    :aria-label="layer.opacity > 0 ? t('pixelStitch.layers.hide') : t('pixelStitch.layers.show')"
-                    :aria-pressed="layer.opacity === 0"
-                    @click="editor.toggleLayerHidden(index)"
-                  />
-                  <USlider
-                    :model-value="layer.opacity"
-                    :min="0"
-                    :max="1"
-                    :step="0.05"
-                    size="xs"
-                    class="flex-1"
-                    :aria-label="t('pixelStitch.layers.opacity')"
-                    @update:model-value="value => editor.setLayerOpacity(index, Number(value))"
-                  />
-                  <span class="w-10 shrink-0 text-right text-xs tabular-nums text-dimmed">
-                    {{ Math.round(layer.opacity * 100) }}%
-                  </span>
-                </div>
-              </template>
-            </UPopover>
-            <UTooltip :text="t('pixelStitch.layers.delete')">
-              <HoldToConfirm
-                :label="t('pixelStitch.layers.delete')"
-                :disabled="layers.length === 1"
-                @confirm="editor.deleteLayer(index)"
-              />
-            </UTooltip>
-          </div>
+          <span class="flex h-8 w-[22px] shrink-0 items-center justify-center text-dimmed">
+            <Icon name="lucide:grip-vertical" class="size-4" />
+          </span>
+          <span class="min-w-0 grow truncate px-1.5 text-sm font-medium text-highlighted">
+            {{ layers[dragIndex]?.name }}
+          </span>
         </div>
       </template>
-    </div>
 
-    <!-- The lifted row. Fixed rather than in the list, so it can follow the
-         pointer past the panel's own scroll area. -->
-    <Teleport to="body">
+      <!-- The gap the row left behind. -->
       <div
-        v-if="draggedLayer"
-        class="pointer-events-none fixed z-50 -translate-x-4 -translate-y-1/2 rounded-xl bg-default px-3 py-2 text-sm shadow-lg ring-1 ring-default"
-        :style="{ left: `${liftPosition.x}px`, top: `${liftPosition.y}px` }"
+        v-if="dragIndex === index"
+        :ref="element => { if (element) rowRefs[index] = element as HTMLElement }"
+        class="h-11 rounded-[10px] border border-dashed border-slate-200 bg-slate-100"
+      />
+
+      <div
+        v-else
+        :ref="element => { if (element) rowRefs[index] = element as HTMLElement }"
+        class="flex cursor-pointer items-center gap-1.5 rounded-[10px] border p-1.5"
+        :class="[
+          editor.currentLayerIndex.value === index ? 'border-primary bg-default' : 'border-transparent',
+          layer.opacity === 0 ? 'opacity-45' : ''
+        ]"
+        @click="editor.currentLayerIndex.value = index"
       >
-        {{ draggedLayer.name }}
+        <UTooltip :text="t('pixelStitch.layers.reorder')">
+          <button
+            :ref="element => { if (element) gripRefs[index] = element as HTMLElement }"
+            type="button"
+            class="flex h-8 w-[22px] shrink-0 cursor-grab items-center justify-center rounded-md text-dimmed transition-colors hover:text-default focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:cursor-grabbing"
+            :aria-label="t('pixelStitch.layers.reorderLabel', { name: layer.name })"
+            @click.stop
+            @keydown="onGripKeyDown(index, $event)"
+            @pointerdown="startDrag(index, $event)"
+            @pointermove="onDragMove"
+            @pointerup="endDrag"
+            @pointercancel="endDrag"
+          >
+            <Icon name="lucide:grip-vertical" class="size-4" />
+          </button>
+        </UTooltip>
+
+        <UTooltip :text="t('pixelStitch.layers.rename')" class="min-w-0 grow">
+          <UInput
+            :model-value="layer.name"
+            :aria-label="t('pixelStitch.layers.rename')"
+            class="w-full"
+            :ui="{ base: 'h-8 rounded-md border-transparent bg-transparent ring-0 px-1.5 hover:bg-elevated focus:bg-default focus:ring-1 focus:ring-default' }"
+            @click.stop
+            @update:model-value="value => editor.renameLayer(index, String(value))"
+          />
+        </UTooltip>
+
+        <!-- Only below 100%: a list with no numbers is a list where every layer
+             is whole. -->
+        <span
+          v-if="layer.opacity < 1"
+          class="min-w-[34px] shrink-0 rounded-[5px] bg-slate-200 px-1.5 py-0.5 text-center text-[11px] font-semibold tabular-nums text-muted"
+        >
+          {{ Math.round(layer.opacity * 100) }}%
+        </span>
+
+        <UPopover
+          :open="openTrackFor === index"
+          :content="{ align: 'end', side: 'bottom' }"
+          @update:open="value => { openTrackFor = value ? index : null }"
+        >
+          <UTooltip :text="t('pixelStitch.layers.opacity')">
+            <UButton
+              :icon="layer.opacity > 0 ? 'lucide:eye' : 'lucide:eye-off'"
+              color="neutral"
+              :variant="openTrackFor === index ? 'outline' : 'ghost'"
+              :aria-label="t('pixelStitch.layers.opacityLabel', { name: layer.name })"
+              class="size-8 shrink-0 justify-center rounded-md"
+              :class="openTrackFor === index ? 'ring-primary bg-default' : ''"
+              @click.stop
+            />
+          </UTooltip>
+          <template #content>
+            <!-- The button at the left end is the zero, so hiding and 0% are the
+                 same gesture as well as the same state. -->
+            <div class="flex w-[262px] items-center gap-2.5 px-3 py-2.5" @click.stop>
+              <UButton
+                :icon="layer.opacity > 0 ? 'lucide:eye' : 'lucide:eye-off'"
+                :color="layer.opacity > 0 ? 'neutral' : 'primary'"
+                :variant="layer.opacity > 0 ? 'outline' : 'solid'"
+                :aria-label="layer.opacity > 0 ? t('pixelStitch.layers.hide') : t('pixelStitch.layers.show')"
+                :aria-pressed="layer.opacity === 0"
+                class="size-[30px] shrink-0 justify-center rounded-md"
+                @click="editor.toggleLayerHidden(index)"
+              />
+              <USlider
+                :model-value="layer.opacity"
+                :min="0"
+                :max="1"
+                :step="0.05"
+                class="grow"
+                :aria-label="t('pixelStitch.layers.opacity')"
+                @update:model-value="value => editor.setLayerOpacity(index, Number(value))"
+              />
+              <span class="min-w-[38px] shrink-0 text-right text-xs font-semibold tabular-nums text-highlighted">
+                {{ Math.round(layer.opacity * 100) }}%
+              </span>
+            </div>
+          </template>
+        </UPopover>
+
+        <UTooltip :text="t('pixelStitch.layers.delete')">
+          <HoldToConfirm
+            :label="t('pixelStitch.layers.delete')"
+            :disabled="layers.length === 1"
+            @confirm="editor.deleteLayer(index)"
+          />
+        </UTooltip>
       </div>
-    </Teleport>
+    </template>
   </section>
 </template>

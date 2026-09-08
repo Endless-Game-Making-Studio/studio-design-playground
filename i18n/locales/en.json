@@ -326,10 +326,11 @@
     "canvasSize": {
       "label": "Canvas",
       "tooltip": "Set the canvas to {size} pixels",
-      "confirmTitle": "Resize the canvas to {size}?",
-      "confirmBody": "Pixel art cannot be carried across grids, so this clears every frame in the project, not just the one on screen.",
+      "confirmTitle": "Change the canvas to {size}?",
+      "confirmBody": "Everything drawn on the frame will be cleared. | Everything drawn on all {count} frames will be cleared.",
       "confirmKeep": "Keep {size}",
-      "confirmClear": "Clear and resize to {size}"
+      "confirmClear": "Clear and resize",
+      "confirmReason": "A drawing made for a {size} grid cannot be carried over to another one without redrawing it."
     },
     "holdToConfirm": {
       "instruction": "Hold for one second to {action}.",
@@ -385,17 +386,22 @@
     "color": {
       "title": "Colour",
       "dragToSave": "Drag onto a palette slot to save this colour",
-      "pickerTooltip": "Pick a colour",
       "hexTooltip": "Enter a hex colour code",
-      "moreShades": "More shades",
-      "dragToCustomize": "Drag colours onto slots to customise the palette.",
       "swatchTooltip": "{color} — click to select, drop a colour to replace",
       "row": {
         "base": "Colour",
         "shade1": "Shade 1",
         "shade2": "Shade 2",
         "highlight": "Highlight"
-      }
+      },
+      "hueTooltip": "Hue",
+      "formatTooltip": "Colour format",
+      "channel": {
+        "red": "Red",
+        "green": "Green",
+        "blue": "Blue"
+      },
+      "pickerTooltip": "Pick a colour"
     },
     "layers": {
       "title": "Layers",
@@ -413,17 +419,19 @@
     "frames": {
       "count": "{count} frame | {count} frames",
       "collapse": "Close the animation panel",
-      "title": "Animation frames",
+      "title": "Animation",
       "frame": "Frame",
       "add": "Add",
       "addTooltip": "Create a new animation frame",
       "play": "Play the animation",
       "pause": "Pause the animation",
       "duplicate": "Duplicate this frame",
-      "delete": "Delete this frame"
+      "delete": "Delete this frame",
+      "openHint": "Click to open the timeline",
+      "closeHint": "Click to fold it away"
     },
     "preview": {
-      "title": "Animation preview",
+      "title": "Preview",
       "fps": "FPS",
       "fpsTooltip": "Adjust the playback speed in frames per second"
     },
@@ -477,6 +485,20 @@
       "copiedMoveToPos": "Copied. Move the pointer and click to paste",
       "cutMoveToPos": "Cut. Move the pointer and click to paste",
       "moveMouseToPaste": "Move the pointer into position and click to paste"
+    },
+    "save": "Save",
+    "files": {
+      "project": "Project",
+      "projectHint": ".tps file",
+      "image": "Image",
+      "imageHint": "PNG or JPG, becomes pixels",
+      "sheet": "Sprite sheet",
+      "sheetImportHint": "a sheet becomes frames",
+      "sheetExportHint": "every frame on one sheet",
+      "png": "PNG",
+      "pngHint": "the current frame",
+      "gif": "GIF",
+      "gifHint": "the whole animation"
     }
   },
   "auth": {

@@ -3,9 +3,13 @@ const props = withDefaults(defineProps<{
   label: string
   disabled?: boolean
   holdDuration?: number
+  // The frame tiles are tighter than the layer rows, so the same control comes
+  // in the two sizes the design uses rather than being scaled by a wrapper.
+  size?: 'sm' | 'md'
 }>(), {
   disabled: false,
-  holdDuration: 1000
+  holdDuration: 1000,
+  size: 'md'
 })
 
 const emit = defineEmits<{ confirm: [] }>()
@@ -116,7 +120,13 @@ onBeforeUnmount(() => {
     :disabled="disabled"
     :aria-label="label"
     :aria-describedby="instructionId"
-    class="relative inline-grid size-9 shrink-0 place-items-center rounded-lg text-muted transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50"
+    class="relative inline-grid shrink-0 place-items-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50"
+    :class="[
+      size === 'sm' ? 'size-6 rounded-[5px]' : 'size-8 rounded-md',
+      // The tint only appears once the hold is under way: idle, this is a plain
+      // ghost bin like every other row button.
+      holding || completed ? 'bg-error/8 text-error' : 'text-muted hover:text-default'
+    ]"
     @click.stop.prevent
     @pointerdown="onPointerDown"
     @pointerup="cancel('pointer')"
@@ -126,24 +136,20 @@ onBeforeUnmount(() => {
     @keydown="onKeyDown"
     @keyup="onKeyUp"
   >
-    <svg class="pointer-events-none absolute inset-0 size-full -rotate-90" viewBox="0 0 40 40" aria-hidden="true">
+    <!-- The progress follows the button's own shape — a rounded square, like
+         every other control in this app, not a ring around one. -->
+    <svg
+      v-if="holding || completed"
+      class="pointer-events-none absolute inset-0 size-full -rotate-90"
+      viewBox="0 0 32 32"
+      aria-hidden="true"
+    >
       <rect
-        x="2"
-        y="2"
-        width="36"
-        height="36"
-        rx="8"
-        pathLength="100"
-        fill="none"
-        class="stroke-default"
-        stroke-width="2"
-      />
-      <rect
-        x="2"
-        y="2"
-        width="36"
-        height="36"
-        rx="8"
+        x="1"
+        y="1"
+        width="30"
+        height="30"
+        :rx="size === 'sm' ? 4 : 5"
         pathLength="100"
         fill="none"
         class="stroke-error transition-[stroke-dashoffset] duration-75"
@@ -152,7 +158,7 @@ onBeforeUnmount(() => {
         :stroke-dashoffset="progressOffset"
       />
     </svg>
-    <Icon name="lucide:trash-2" class="size-4" aria-hidden="true" />
+    <Icon name="lucide:trash-2" :class="size === 'sm' ? 'size-3.5' : 'size-4'" aria-hidden="true" />
     <span :id="instructionId" class="sr-only">{{ instruction }}</span>
     <span class="sr-only" role="status" aria-live="polite">{{ status }}</span>
   </button>

@@ -561,68 +561,55 @@ const selectionHint = computed(() => {
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 flex-col gap-3">
+  <!-- The artboard sits alone on the grey ground with nothing framing it; the
+       hint is the one thing allowed to float over it, and only while the select
+       tool has something to explain. -->
+  <div ref="containerRef" class="relative grid h-full min-h-0 w-full place-items-center overflow-auto bg-slate-50 p-7" :class="spaceHeld ? (panning ? 'cursor-grabbing' : 'cursor-grab') : ''" @wheel="onWheel" @pointerdown="onPanStart" @pointermove="onPanMove" @pointerup="onPanEnd" @pointercancel="onPanEnd">
+    <!-- Two nested boxes: the outer one carries the scaled size so the scroll
+         area knows how big the board actually is (a transform alone does not
+         affect layout), the inner one carries the transform so the brush cursor
+         scales with the artwork and can still be placed in plain artboard
+         pixels. -->
+    <div :style="{ width: `${scaledSize}px`, height: `${scaledSize}px` }">
+      <div
+        ref="boardRef"
+        class="relative rounded ring-1 ring-default shadow-xs"
+        :style="{ width: `${canvasPixels}px`, height: `${canvasPixels}px`, transform: `scale(${editor.zoom.value})`, transformOrigin: 'top left' }"
+      >
+        <!-- `touch-none` stops a drawing drag from scrolling the page on a
+             tablet; `image-rendering: pixelated` keeps the zoom crisp instead
+             of blurring artwork pixels into each other. -->
+        <canvas
+          ref="canvasRef"
+          :width="canvasPixels"
+          :height="canvasPixels"
+          class="block touch-none rounded"
+          :class="showsBrushCursor ? 'cursor-none' : 'cursor-crosshair'"
+          :style="{ imageRendering: 'pixelated' }"
+          @pointerdown="onPointerDown"
+          @pointermove="onPointerMove"
+          @pointerup="onPointerUp"
+          @pointercancel="onPointerUp"
+          @pointerleave="onPointerLeave"
+          @contextmenu.prevent
+        />
+        <!-- White outside, dark inside: one stroke alone vanishes over the
+             pixel it happens to be covering. -->
+        <div
+          v-if="showsBrushCursor && brushCursorStyle"
+          class="pointer-events-none absolute"
+          :style="{ ...brushCursorStyle, boxShadow: '0 0 0 1px #ffffff, inset 0 0 0 1px #18181b' }"
+        />
+      </div>
+    </div>
+
     <UAlert
       v-if="selectionHint"
       :description="selectionHint"
       icon="lucide:box-select"
       color="secondary"
       variant="soft"
+      class="pointer-events-none absolute inset-x-7 top-4 w-auto max-w-lg justify-self-center"
     />
-
-    <div class="flex min-h-0 flex-1 flex-col gap-3">
-      <!-- `grid place-items-center` rather than flex: it keeps a board smaller
-           than the area centred while still letting a bigger one scroll off
-           both edges, which flex clips at the start. The wheel is claimed here
-           and nowhere else, so the side panels keep theirs. -->
-      <div
-        ref="containerRef"
-        class="grid min-h-0 w-full flex-1 place-items-center overflow-auto p-4"
-        :class="spaceHeld ? (panning ? 'cursor-grabbing' : 'cursor-grab') : ''"
-        @wheel="onWheel"
-        @pointerdown="onPanStart"
-        @pointermove="onPanMove"
-        @pointerup="onPanEnd"
-        @pointercancel="onPanEnd"
-      >
-        <!-- `touch-none` stops a drawing drag from scrolling the page on a
-             tablet; `image-rendering: pixelated` keeps the zoom crisp instead
-             of blurring artwork pixels into each other. -->
-        <!-- Two nested boxes: the outer one carries the scaled size so the
-             scroll area knows how big the board actually is (a transform alone
-             does not affect layout), the inner one carries the transform so
-             the brush cursor scales with the artwork and can still be placed
-             in plain artboard pixels. -->
-        <div :style="{ width: `${scaledSize}px`, height: `${scaledSize}px` }">
-          <div
-            ref="boardRef"
-            class="relative"
-            :style="{ width: `${canvasPixels}px`, height: `${canvasPixels}px`, transform: `scale(${editor.zoom.value})`, transformOrigin: 'top left' }"
-          >
-          <canvas
-            ref="canvasRef"
-            :width="canvasPixels"
-            :height="canvasPixels"
-            class="block touch-none rounded-sm ring-1 ring-default"
-            :class="showsBrushCursor ? 'cursor-none' : 'cursor-crosshair'"
-            :style="{ imageRendering: 'pixelated' }"
-            @pointerdown="onPointerDown"
-            @pointermove="onPointerMove"
-            @pointerup="onPointerUp"
-            @pointercancel="onPointerUp"
-            @pointerleave="onPointerLeave"
-            @contextmenu.prevent
-          />
-          <!-- White outside, dark inside: one stroke alone vanishes over the
-               pixel it happens to be covering. -->
-            <div
-              v-if="showsBrushCursor && brushCursorStyle"
-              class="pointer-events-none absolute"
-              :style="{ ...brushCursorStyle, boxShadow: '0 0 0 1px #ffffff, inset 0 0 0 1px #18181b' }"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>

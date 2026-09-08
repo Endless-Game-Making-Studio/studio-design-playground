@@ -9,12 +9,22 @@ import { frameToBlob } from '~/composables/pixelStitch/render'
 import { exportAsGif } from '~/composables/pixelStitch/gifExport'
 import { exportSpriteSheet, importSpriteSheet } from '~/composables/pixelStitch/spriteSheet'
 import { MAX_ZOOM, MIN_ZOOM, ZOOM_PRESETS } from '~/composables/pixelStitch/types'
+import { topbarStatsFor, userAvatar, userName } from '~/composables/useHomeMockData'
+import { usePreviewState } from '~/composables/usePreviewState'
+import { useXpBalance } from '~/composables/useXpBalance'
 
 definePageMeta({ layout: false })
 
 const { t } = useI18n()
 const editor = usePixelStitch()
 providePixelStitch(editor)
+
+// The tool owns the window, but the account cluster in its top bar is the
+// platform's — the same component and the same counters as every dashboard
+// page, so a fix there lands here too.
+const { isLoggedIn, isOnboarded } = usePreviewState()
+const { total: xpTotal } = useXpBalance()
+const topbarStats = computed(() => topbarStatsFor(isOnboarded.value, xpTotal.value))
 
 // ─── Zoom ───────────────────────────────────────────────────────────────────
 
@@ -192,17 +202,22 @@ async function loadProject() {
   editor.notify('projectLoaded')
 }
 
-const importItems = computed<DropdownMenuItem[]>(() => [
-  { label: t('pixelStitch.openProject'), icon: 'lucide:folder-open', onSelect: loadProject },
-  { label: t('pixelStitch.toolbar.importImage'), icon: 'lucide:image-plus', onSelect: importImage },
-  { label: t('pixelStitch.toolbar.importSpriteSheet'), icon: 'lucide:grid-2x2-check', onSelect: () => openSheetModal('import') }
+type FileItem = DropdownMenuItem & { hint?: string }
+
+const importItems = computed<FileItem[]>(() => [
+  { label: t('pixelStitch.files.project'), hint: t('pixelStitch.files.projectHint'), icon: 'lucide:folder-open', onSelect: loadProject },
+  { label: t('pixelStitch.files.image'), hint: t('pixelStitch.files.imageHint'), icon: 'lucide:image-plus', onSelect: importImage },
+  { label: t('pixelStitch.files.sheet'), hint: t('pixelStitch.files.sheetImportHint'), icon: 'lucide:grid-2x2-check', onSelect: () => openSheetModal('import') }
 ])
 
-const saveItems = computed<DropdownMenuItem[]>(() => [
-  { label: t('pixelStitch.saveProject'), icon: 'lucide:save', onSelect: saveProjectFile },
-  { label: t('pixelStitch.toolbar.exportPng'), icon: 'lucide:image-down', onSelect: exportPng },
-  { label: t('pixelStitch.toolbar.exportGif'), icon: 'lucide:file-image', onSelect: exportGif },
-  { label: t('pixelStitch.toolbar.exportSpriteSheet'), icon: 'lucide:grid-2x2-plus', onSelect: () => openSheetModal('export') }
+// The project file comes first: that is what someone is looking for when they
+// click Save. PNG, GIF and the sheet follow, because they are the same
+// gesture — writing a file.
+const saveItems = computed<FileItem[]>(() => [
+  { label: t('pixelStitch.files.project'), hint: t('pixelStitch.files.projectHint'), icon: 'lucide:save', onSelect: saveProjectFile },
+  { label: t('pixelStitch.files.png'), hint: t('pixelStitch.files.pngHint'), icon: 'lucide:image-down', onSelect: exportPng },
+  { label: t('pixelStitch.files.gif'), hint: t('pixelStitch.files.gifHint'), icon: 'lucide:file-image', onSelect: exportGif },
+  { label: t('pixelStitch.files.sheet'), hint: t('pixelStitch.files.sheetExportHint'), icon: 'lucide:grid-2x2-plus', onSelect: () => openSheetModal('export') }
 ])
 
 // ─── Keyboard ───────────────────────────────────────────────────────────────
@@ -238,58 +253,157 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
 </script>
 
 <template>
-  <div class="flex min-h-dvh flex-col bg-slate-50 lg:h-dvh lg:overflow-hidden" :class="editor.animationPanelOpen.value ? 'pb-52' : 'pb-14'">
-    <header class="flex flex-wrap items-center justify-between gap-3 border-b border-default bg-slate-100 px-3 py-2 sm:px-4">
-      <div class="flex min-w-0 flex-wrap items-center gap-3">
-        <UButton to="/make" icon="lucide:arrow-left" :label="t('pixelStitch.backToTools')" color="neutral" variant="ghost" size="sm" />
-        <USeparator orientation="vertical" class="hidden h-7 sm:block" />
-        <PixelStitchCanvasSizeSelector compact />
-        <USeparator orientation="vertical" class="hidden h-7 sm:block" />
-        <div class="flex items-center gap-1">
-          <UTooltip :text="t('pixelStitch.canvas.zoomOut')">
-            <UButton icon="lucide:minus" size="sm" color="neutral" variant="outline" :aria-label="t('pixelStitch.canvas.zoomOut')" :disabled="editor.zoom.value <= MIN_ZOOM" @click="stepZoom(-1)" />
-          </UTooltip>
-          <!-- The middle is a third control, not a label between two: it opens
-               the sizes worth going to directly. -->
-          <UDropdownMenu :items="zoomItems">
-            <UButton :label="`${Math.round(editor.zoom.value * 100)}%`" size="sm" color="neutral" variant="ghost" class="min-w-16 justify-center tabular-nums" :aria-label="t('pixelStitch.canvas.zoomPresets')" />
-          </UDropdownMenu>
-          <UTooltip :text="t('pixelStitch.canvas.zoomIn')">
-            <UButton icon="lucide:plus" size="sm" color="neutral" variant="outline" :aria-label="t('pixelStitch.canvas.zoomIn')" :disabled="editor.zoom.value >= MAX_ZOOM" @click="stepZoom(1)" />
-          </UTooltip>
-        </div>
-        <USeparator orientation="vertical" class="hidden h-7 sm:block" />
-        <div class="flex items-center gap-1">
-          <UTooltip :text="t('pixelStitch.toolbar.undo')"><UButton icon="lucide:undo" size="sm" color="neutral" variant="outline" :disabled="!editor.canUndo.value" :aria-label="t('pixelStitch.toolbar.undo')" @click="editor.undo()" /></UTooltip>
-          <UTooltip :text="t('pixelStitch.toolbar.redo')"><UButton icon="lucide:redo" size="sm" color="neutral" variant="outline" :disabled="!editor.canRedo.value" :aria-label="t('pixelStitch.toolbar.redo')" @click="editor.redo()" /></UTooltip>
-        </div>
-      </div>
-      <div class="flex items-center gap-2">
-        <UDropdownMenu :items="importItems"><UButton :label="t('pixelStitch.toolbar.import')" icon="lucide:upload" color="neutral" variant="outline" size="sm" /></UDropdownMenu>
-        <UDropdownMenu :items="saveItems"><UButton :label="t('pixelStitch.saveProject')" icon="lucide:save" color="primary" size="sm" /></UDropdownMenu>
-      </div>
-    </header>
+  <div class="flex h-dvh flex-col overflow-hidden bg-slate-50">
+    <!-- The platform's bar, full-bleed: the logo and the tool switcher on the
+         left and in the middle, the account cluster it already owns on the
+         right. -->
+    <AppTopbar
+      v-if="isLoggedIn"
+      v-bind="topbarStats"
+      full-bleed
+      :user-name="userName"
+      :user-avatar="userAvatar"
+    >
+      <template #left>
+        <NuxtLink to="/make" :aria-label="t('pixelStitch.backToTools')">
+          <img src="/images/endless-logo-horizontal.svg" alt="Endless Studios" width="114" height="31">
+        </NuxtLink>
+      </template>
+      <template #center>
+        <PixelStitchToolSwitcher tool-id="pixel-stitch" icon="lucide:pencil" />
+      </template>
+    </AppTopbar>
+    <AppTopbar v-else guest full-bleed>
+      <template #left>
+        <NuxtLink to="/make" :aria-label="t('pixelStitch.backToTools')">
+          <img src="/images/endless-logo-horizontal.svg" alt="Endless Studios" width="114" height="31">
+        </NuxtLink>
+      </template>
+      <template #center>
+        <PixelStitchToolSwitcher tool-id="pixel-stitch" icon="lucide:pencil" />
+      </template>
+    </AppTopbar>
 
-    <div class="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[208px_minmax(0,1fr)_340px] lg:overflow-hidden">
-      <aside class="flex min-h-0 flex-col border-b border-default bg-slate-100 lg:overflow-y-auto lg:border-b-0 lg:border-r">
-        <div class="p-3"><PixelStitchToolbar /></div>
-        <div class="mt-auto border-t border-default p-3">
-          <UTooltip :text="t('pixelStitch.toolbar.toggleGrid')">
-            <UButton icon="lucide:grid-3x3" :label="t('pixelStitch.toolbar.toggleGrid')" :color="'neutral'" :variant="editor.gridVisible.value ? 'soft' : 'outline'" block :aria-pressed="editor.gridVisible.value" @click="editor.gridVisible.value = !editor.gridVisible.value" />
-          </UTooltip>
-        </div>
+    <!-- What frames the canvas on the left, what reads or writes a file on the
+         right. -->
+    <div class="relative z-10 flex h-[52px] shrink-0 items-center gap-2.5 border-b border-default bg-slate-50 px-4">
+      <PixelStitchCanvasSizeSelector />
+
+      <div class="flex h-[34px] items-center gap-0.5 rounded-md border border-default bg-default px-1">
+        <UTooltip :text="t('pixelStitch.canvas.zoomOut')">
+          <UButton
+            icon="lucide:minus"
+            color="neutral"
+            variant="ghost"
+            :aria-label="t('pixelStitch.canvas.zoomOut')"
+            :disabled="editor.zoom.value <= MIN_ZOOM"
+            class="size-[26px] justify-center rounded"
+            @click="stepZoom(-1)"
+          />
+        </UTooltip>
+        <!-- The middle is a third control, not a label between two: it opens
+             the sizes worth going to directly. -->
+        <UDropdownMenu :items="zoomItems" :ui="{ content: 'w-[206px]' }">
+          <UButton
+            color="neutral"
+            variant="ghost"
+            trailing-icon="lucide:chevron-down"
+            class="h-[26px] gap-1 rounded px-1.5 text-[13px] tabular-nums"
+            :aria-label="t('pixelStitch.canvas.zoomPresets')"
+          >
+            {{ Math.round(editor.zoom.value * 100) }}%
+          </UButton>
+        </UDropdownMenu>
+        <UTooltip :text="t('pixelStitch.canvas.zoomIn')">
+          <UButton
+            icon="lucide:plus"
+            color="neutral"
+            variant="ghost"
+            :aria-label="t('pixelStitch.canvas.zoomIn')"
+            :disabled="editor.zoom.value >= MAX_ZOOM"
+            class="size-[26px] justify-center rounded"
+            @click="stepZoom(1)"
+          />
+        </UTooltip>
+      </div>
+
+      <div class="flex h-[34px] items-center gap-0.5 rounded-md border border-default bg-default px-1">
+        <UTooltip :text="t('pixelStitch.toolbar.undo')">
+          <UButton
+            icon="lucide:undo"
+            color="neutral"
+            variant="ghost"
+            :disabled="!editor.canUndo.value"
+            :aria-label="t('pixelStitch.toolbar.undo')"
+            class="size-[26px] justify-center rounded"
+            @click="editor.undo()"
+          />
+        </UTooltip>
+        <UTooltip :text="t('pixelStitch.toolbar.redo')">
+          <UButton
+            icon="lucide:redo"
+            color="neutral"
+            variant="ghost"
+            :disabled="!editor.canRedo.value"
+            :aria-label="t('pixelStitch.toolbar.redo')"
+            class="size-[26px] justify-center rounded"
+            @click="editor.redo()"
+          />
+        </UTooltip>
+      </div>
+
+      <div class="grow" />
+
+      <!-- Both menus drop from the bar, anchored to the button that opened
+           them. Save is the primary one: writing the file is the gesture
+           someone came to this end of the bar for. -->
+      <UDropdownMenu :items="importItems" :content="{ align: 'end' }" :ui="{ content: 'w-[280px]' }">
+        <UButton
+          :label="t('pixelStitch.toolbar.import')"
+          icon="lucide:download"
+          trailing-icon="lucide:chevron-down"
+          color="neutral"
+          variant="outline"
+          class="h-[34px] gap-1.5 rounded-md px-2.5 text-[13px]"
+        />
+
+        <template #item-trailing="{ item }">
+          <span class="text-xs text-dimmed">{{ (item as FileItem).hint }}</span>
+        </template>
+      </UDropdownMenu>
+      <UDropdownMenu :items="saveItems" :content="{ align: 'end' }" :ui="{ content: 'w-[280px]' }">
+        <UButton
+          :label="t('pixelStitch.save')"
+          icon="lucide:upload"
+          trailing-icon="lucide:chevron-down"
+          color="primary"
+          class="h-[34px] gap-1.5 rounded-md px-2.5 text-[13px]"
+        />
+
+        <template #item-trailing="{ item }">
+          <span class="text-xs text-dimmed">{{ (item as FileItem).hint }}</span>
+        </template>
+      </UDropdownMenu>
+    </div>
+
+    <div class="flex min-h-0 grow">
+      <!-- Both side panels are treated alike: the grey ground, one border
+           facing the canvas, and their content sitting straight on the surface
+           rather than in nested cards. -->
+      <aside class="flex min-h-0 shrink-0 flex-col border-r border-default bg-slate-50">
+        <PixelStitchToolbar />
       </aside>
 
-      <main class="flex min-h-[480px] min-w-0 flex-col bg-slate-50 lg:min-h-0 lg:overflow-hidden"><PixelStitchCanvas /></main>
+      <main class="min-w-0 grow"><PixelStitchCanvas /></main>
 
-      <aside class="border-b border-default bg-slate-100 lg:min-h-0 lg:overflow-y-auto lg:border-b-0 lg:border-l">
-        <div class="p-4"><PixelStitchColorPicker /></div>
+      <aside class="flex w-[328px] shrink-0 flex-col overflow-y-auto border-l border-default bg-slate-50">
+        <PixelStitchColorPicker />
         <USeparator />
-        <div class="p-4"><PixelStitchLayerPanel /></div>
+        <PixelStitchLayerPanel />
       </aside>
     </div>
 
-    <footer class="fixed inset-x-0 bottom-0 z-10 border-t border-default bg-slate-100">
+    <footer class="shrink-0 border-t border-default bg-default">
       <PixelStitchAnimationPanel />
     </footer>
   </div>

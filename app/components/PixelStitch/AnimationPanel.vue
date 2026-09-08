@@ -4,50 +4,9 @@ import { usePixelStitchContext } from '~/composables/usePixelStitchContext'
 const editor = usePixelStitchContext()
 const { t } = useI18n()
 
-const MIN_FPS = 1
-const MAX_FPS = 30
-
 const playLabel = computed(() =>
   editor.isPlaying.value ? t('pixelStitch.frames.pause') : t('pixelStitch.frames.play')
 )
-
-// A drag rather than a field, so the speed can be moved while the animation is
-// running and heard immediately. The playback timer watches `fps`, so a change
-// mid-run retimes it rather than waiting for the next play.
-const fpsRef = ref<HTMLElement | null>(null)
-const draggingFps = ref(false)
-let dragOrigin = { x: 0, fps: 8 }
-
-function startFpsDrag(event: PointerEvent) {
-  draggingFps.value = true
-  dragOrigin = { x: event.clientX, fps: editor.fps.value }
-  fpsRef.value?.setPointerCapture(event.pointerId)
-}
-
-function onFpsDrag(event: PointerEvent) {
-  if (!draggingFps.value) return
-  // 6px per frame per second: fine enough to land on a value, coarse enough
-  // that the whole 1–30 range is a comfortable drag rather than a flick.
-  const next = dragOrigin.fps + Math.round((event.clientX - dragOrigin.x) / 6)
-  editor.fps.value = Math.min(MAX_FPS, Math.max(MIN_FPS, next))
-}
-
-function endFpsDrag() {
-  draggingFps.value = false
-}
-
-function stepFps(delta: number) {
-  editor.fps.value = Math.min(MAX_FPS, Math.max(MIN_FPS, editor.fps.value + delta))
-}
-
-function onFpsKeyDown(event: KeyboardEvent) {
-  const delta = event.key === 'ArrowRight' || event.key === 'ArrowUp'
-    ? 1
-    : event.key === 'ArrowLeft' || event.key === 'ArrowDown' ? -1 : 0
-  if (delta === 0) return
-  event.preventDefault()
-  stepFps(delta)
-}
 </script>
 
 <template>
@@ -55,7 +14,7 @@ function onFpsKeyDown(event: KeyboardEvent) {
        opens it, so there is no separate toggle control to find. -->
   <section
     v-if="!editor.animationPanelOpen.value"
-    class="flex h-14 cursor-pointer items-center gap-3 px-4"
+    class="flex h-[52px] cursor-pointer items-center gap-3.5 px-4"
     role="button"
     tabindex="0"
     :aria-expanded="false"
@@ -66,82 +25,105 @@ function onFpsKeyDown(event: KeyboardEvent) {
     <UTooltip :text="playLabel">
       <UButton
         :icon="editor.isPlaying.value ? 'lucide:pause' : 'lucide:play'"
-        size="sm"
         color="neutral"
         variant="outline"
         :aria-label="playLabel"
+        class="size-8 shrink-0 justify-center rounded-md"
         @click.stop="editor.isPlaying.value = !editor.isPlaying.value"
       />
     </UTooltip>
     <h3 class="font-heading text-sm font-bold text-highlighted">{{ t('pixelStitch.frames.title') }}</h3>
-    <span class="text-sm tabular-nums text-dimmed">
+    <span class="text-xs tabular-nums text-dimmed">
       {{ t('pixelStitch.frames.count', editor.frames.value.length) }}
     </span>
-    <Icon name="lucide:chevron-up" class="ml-auto size-4 text-dimmed" />
+    <div class="flex grow items-center justify-center gap-2">
+      <Icon name="lucide:chevron-up" class="size-4 text-dimmed" />
+      <span class="text-xs text-dimmed">{{ t('pixelStitch.frames.openHint') }}</span>
+    </div>
   </section>
 
-  <section v-else class="flex h-52 flex-col">
-    <div class="flex items-center gap-3 px-4 py-2">
+  <section v-else class="flex h-[180px] flex-col gap-2.5 px-4 pb-3.5 pt-2.5">
+    <div
+      class="flex cursor-pointer items-center gap-3.5"
+      role="button"
+      tabindex="0"
+      :aria-expanded="true"
+      @click="editor.animationPanelOpen.value = false"
+      @keydown.enter.prevent="editor.animationPanelOpen.value = false"
+      @keydown.space.prevent="editor.animationPanelOpen.value = false"
+    >
       <UTooltip :text="playLabel">
         <UButton
           :icon="editor.isPlaying.value ? 'lucide:pause' : 'lucide:play'"
-          size="sm"
           color="neutral"
           variant="outline"
           :aria-label="playLabel"
-          @click="editor.isPlaying.value = !editor.isPlaying.value"
+          class="size-8 shrink-0 justify-center rounded-md"
+          @click.stop="editor.isPlaying.value = !editor.isPlaying.value"
         />
       </UTooltip>
       <h3 class="font-heading text-sm font-bold text-highlighted">{{ t('pixelStitch.frames.title') }}</h3>
-      <UButton
-        icon="lucide:chevron-down"
-        size="sm"
-        color="neutral"
-        variant="ghost"
-        class="ml-auto"
-        :aria-label="t('pixelStitch.frames.collapse')"
-        :aria-expanded="true"
-        @click="editor.animationPanelOpen.value = false"
-      />
+      <div class="flex grow items-center justify-center gap-2">
+        <Icon name="lucide:chevron-down" class="size-4 text-dimmed" />
+        <span class="text-xs text-dimmed">{{ t('pixelStitch.frames.closeHint') }}</span>
+      </div>
     </div>
 
-    <USeparator />
-
-    <div class="flex min-h-0 flex-1 items-stretch gap-4 px-4 py-3">
-      <div class="shrink-0"><PixelStitchAnimationPreview /></div>
+    <div class="flex min-h-0 grow gap-3.5">
+      <div class="flex flex-col gap-1">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.06em] text-dimmed">
+          {{ t('pixelStitch.preview.title') }}
+        </p>
+        <PixelStitchAnimationPreview />
+      </div>
 
       <USeparator orientation="vertical" />
 
-      <div class="min-w-0 flex-1"><PixelStitchFrameStrip /></div>
+      <div class="min-w-0 grow"><PixelStitchFrameStrip /></div>
 
       <USeparator orientation="vertical" />
 
-      <div class="flex w-56 shrink-0 flex-col gap-3 overflow-y-auto">
-        <div class="flex items-center gap-2">
-          <span class="text-xs text-dimmed">{{ t('pixelStitch.preview.fps') }}</span>
-          <UTooltip :text="t('pixelStitch.preview.fpsTooltip')">
-            <div
-              ref="fpsRef"
-              role="slider"
-              tabindex="0"
-              class="cursor-ew-resize select-none rounded-md px-2 py-0.5 text-sm tabular-nums ring-1 ring-default focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              :class="draggingFps ? 'bg-elevated' : ''"
-              :aria-label="t('pixelStitch.preview.fpsTooltip')"
-              :aria-valuemin="MIN_FPS"
-              :aria-valuemax="MAX_FPS"
-              :aria-valuenow="editor.fps.value"
-              @pointerdown="startFpsDrag"
-              @pointermove="onFpsDrag"
-              @pointerup="endFpsDrag"
-              @pointercancel="endFpsDrag"
-              @keydown="onFpsKeyDown"
-            >
-              {{ editor.fps.value }}
-            </div>
+      <div class="flex w-[184px] shrink-0 flex-col justify-center gap-3">
+        <div class="flex items-center gap-2.5">
+          <span class="grow text-sm text-muted">{{ t('pixelStitch.onion.title') }}</span>
+          <UTooltip :text="t('pixelStitch.onion.tooltip')">
+            <USwitch v-model="editor.onionSkin.value" :aria-label="t('pixelStitch.onion.title')" />
           </UTooltip>
         </div>
 
-        <PixelStitchOnionSkinControls />
+        <!-- The key is what lets the strip explain itself: the same two colours
+             border the neighbouring tiles and tint the ghosts on the canvas. -->
+        <div v-if="editor.onionSkin.value" class="flex gap-3">
+          <span class="flex items-center gap-1.5">
+            <span class="size-2.5 rounded-[3px] bg-cornflower-500" />
+            <span class="text-xs text-dimmed">{{ t('pixelStitch.onion.legendPrevious') }}</span>
+          </span>
+          <span class="flex items-center gap-1.5">
+            <span class="size-2.5 rounded-[3px] bg-teal-500" />
+            <span class="text-xs text-dimmed">{{ t('pixelStitch.onion.legendNext') }}</span>
+          </span>
+        </div>
+
+        <div>
+          <div class="flex items-baseline justify-between">
+            <span class="text-sm text-muted">{{ t('pixelStitch.preview.fps') }}</span>
+            <span class="text-xs font-semibold tabular-nums text-highlighted">{{ editor.fps.value }}</span>
+          </div>
+          <!-- A drag rather than a field, so the speed can be moved while the
+               animation runs: the playback timer watches `fps`, so a change
+               mid-run retimes it instead of waiting for the next play. -->
+          <UTooltip :text="t('pixelStitch.preview.fpsTooltip')">
+            <USlider
+              v-model="editor.fps.value"
+              :min="1"
+              :max="30"
+              :step="1"
+              size="xs"
+              class="mt-1.5"
+              :aria-label="t('pixelStitch.preview.fpsTooltip')"
+            />
+          </UTooltip>
+        </div>
       </div>
     </div>
   </section>
