@@ -368,9 +368,8 @@
       "hintPasting": "Mueve el puntero para colocarlo, haz clic para pegar o pulsa Esc para cancelar."
     },
     "color": {
-      "currentTooltip": "Haz clic para elegir un color o arrástralo a un espacio de la paleta",
+      "currentTooltip": "Arrastra a un espacio de la paleta para guardar este color",
       "hexTooltip": "Introduce un código de color hexadecimal",
-      "brushOpacity": "Opacidad del pincel",
       "dragToCustomize": "Arrastra colores a los espacios para personalizar la paleta.",
       "rowLabel": "Fila de la paleta",
       "swatchTooltip": "{color} — haz clic para seleccionar, suelta un color para reemplazarlo",

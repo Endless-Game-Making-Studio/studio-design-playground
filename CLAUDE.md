@@ -69,3 +69,17 @@ root: 'rounded-3xl'
 ## Self-update protocol
 
 When the user corrects an approach or gives non-obvious guidance mid-task, ask: is this specific to the current change, or would it apply to any future work in this repo? If it generalizes, propose adding it to this file (in the section it best fits, or a new one) rather than letting it live only in that conversation. Before proposing, scan this file end-to-end for an existing rule that already covers the same ground — tighten that rule instead of adding a duplicate. Show the proposed addition and where it lands before writing it, unless the user already asked for the edit directly.
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues on `Endless-Game-Making-Studio/studio-design-playground`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical roles, each label string equal to its name. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` and `docs/adr/` at the repo root, both created lazily. See `docs/agents/domain.md`.
