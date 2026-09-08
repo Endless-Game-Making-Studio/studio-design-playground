@@ -1,10 +1,25 @@
 import type { SequenceRenderInput } from '~/composables/melodyLoom/offlineRender'
+import type { SampleRange } from '~/composables/melodyLoom/bufferEdits'
 import type { TimeWindow } from '~/composables/melodyLoom/waveformView'
 import { renderSequenceToBuffer } from '~/composables/melodyLoom/offlineRender'
 import { getSharedAudioContext } from '~/composables/melodyLoom/audioContext'
 import { decodeAudioBlob, mixBufferAt, pickRecordingMimeType } from '~/composables/melodyLoom/audioBuffers'
+import {
+  ECHO_TAPS,
+  REVERB_TAPS,
+  applyDelayTaps,
+  fadeRange,
+  normalizeRange,
+  pitchShiftRange,
+  sampleAt,
+  scaleRange,
+  sliceRange,
+  spliceIn,
+  spliceOut
+} from '~/composables/melodyLoom/bufferEdits'
+import { encodeWav } from '~/composables/melodyLoom/wavEncoder'
 import { MIN_ZOOM, clampPan, clampZoom, maxPan, timeWindow, zoomAroundTime } from '~/composables/melodyLoom/waveformView'
-import { pickFile } from '~/composables/files'
+import { downloadBlob, pickFile } from '~/composables/files'
 
 /**
  * Failures the block has to own up to, as codes rather than sentences — the
@@ -22,6 +37,29 @@ export interface TimeSelection {
   start: number
   end: number
 }
+
+/** The one-click effects the toolbar menu offers, in the order it lists them. */
+export type WaveformEffect = 'normalize' | 'amplify' | 'reduce' | 'fadeIn' | 'fadeOut' | 'echo' | 'reverb'
+
+export const WAVEFORM_EFFECTS: WaveformEffect[] = [
+  'normalize',
+  'amplify',
+  'reduce',
+  'fadeIn',
+  'fadeOut',
+  'echo',
+  'reverb'
+]
+
+/** Fading needs two edges to ramp between, so these are the ones the menu greys out without a selection. */
+export const SELECTION_ONLY_EFFECTS: WaveformEffect[] = ['fadeIn', 'fadeOut']
+
+const AMPLIFY_FACTOR = 1.5
+const REDUCE_FACTOR = 0.6
+
+// Undo snapshots are whole buffers, so what caps the history is memory rather
+// than taste — a minute of 48 kHz stereo is about 23 MB per entry.
+const HISTORY_LIMIT = 25
 
 function recordingErrorCode(error: unknown): WaveformErrorCode {
   if (!(error instanceof DOMException)) return 'recordFailed'
@@ -160,6 +198,7 @@ export function useWaveformEditor() {
   /** A fresh take, as opposed to an edit of the current one — start of the buffer, whole thing in view. */
   function loadBuffer(next: AudioBuffer) {
     setBuffer(next)
+    resetHistory(next)
     resetView()
     cursor.value = 0
     playhead.value = 0
@@ -174,10 +213,52 @@ export function useWaveformEditor() {
   async function insertBufferAt(clip: AudioBuffer, atSeconds: number) {
     isBusy.value = true
     try {
-      setBuffer(await mixBufferAt(buffer.value, clip, atSeconds))
+      commitEdit(await mixBufferAt(buffer.value, clip, atSeconds))
     } finally {
       isBusy.value = false
     }
+  }
+
+  // ─── Undo history ─────────────────────────────────────────────────────────
+
+  // Null is a real state here: deleting everything empties the block, and that
+  // has to be undoable like any other edit.
+  const history = shallowRef<(AudioBuffer | null)[]>([])
+  const historyIndex = ref(-1)
+
+  const canUndo = computed(() => historyIndex.value > 0)
+  const canRedo = computed(() => historyIndex.value < history.value.length - 1)
+
+  /**
+   * A take that arrives whole — imported, recorded, rendered from the grid —
+   * starts its own history. It replaced what was there rather than editing it,
+   * so there is nothing behind it worth stepping back to.
+   */
+  function resetHistory(next: AudioBuffer | null) {
+    history.value = [next]
+    historyIndex.value = 0
+  }
+
+  /** Every edit lands here: swap the buffer, record it, and drop any redo branch. */
+  function commitEdit(next: AudioBuffer | null) {
+    setBuffer(next)
+
+    const kept = history.value.slice(0, historyIndex.value + 1)
+    kept.push(next)
+    history.value = kept.slice(-HISTORY_LIMIT)
+    historyIndex.value = history.value.length - 1
+  }
+
+  function undo() {
+    if (!canUndo.value) return
+    historyIndex.value -= 1
+    setBuffer(history.value[historyIndex.value] ?? null)
+  }
+
+  function redo() {
+    if (!canRedo.value) return
+    historyIndex.value += 1
+    setBuffer(history.value[historyIndex.value] ?? null)
   }
 
   async function importFile() {
@@ -353,6 +434,113 @@ export function useWaveformEditor() {
     pan.value = 0
   }
 
+  // ─── Clipboard ────────────────────────────────────────────────────────────
+
+  // The block's own clipboard rather than the system one: `navigator.clipboard`
+  // carries text and images, not a stretch of decoded audio.
+  const clipboard = shallowRef<AudioBuffer | null>(null)
+  const hasClipboard = computed(() => clipboard.value !== null)
+  const hasSelection = computed(() => selection.value !== null)
+
+  /** The selection in samples, or the whole take when nothing is selected. */
+  function editRange(current: AudioBuffer): SampleRange {
+    const range = selection.value
+    if (!range) return { start: 0, end: current.length }
+    return { start: sampleAt(current, range.start), end: sampleAt(current, range.end) }
+  }
+
+  function copySelection() {
+    const current = buffer.value
+    if (!current || !selection.value) return
+    clipboard.value = sliceRange(current, editRange(current))
+  }
+
+  /** Removes the selection and closes the gap — the take gets shorter. */
+  function deleteSelection() {
+    const current = buffer.value
+    if (!current || !selection.value) return
+
+    const range = editRange(current)
+    const seam = range.start / current.sampleRate
+    commitEdit(spliceOut(current, range))
+    clearSelection()
+    setCursor(seam)
+  }
+
+  function cutSelection() {
+    copySelection()
+    deleteSelection()
+  }
+
+  /**
+   * Splices the clipboard in at the cursor, pushing everything after it later —
+   * `insertBufferAt` is the other half of this pair, mixing a clip over the
+   * take without moving anything.
+   */
+  function pasteClipboard() {
+    const clip = clipboard.value
+    if (!clip) return
+
+    const current = buffer.value
+    if (!current) return commitEdit(clip)
+
+    const at = sampleAt(current, cursor.value)
+    commitEdit(spliceIn(current, clip, at))
+    clearSelection()
+    // Parked past what was just pasted, so pasting twice lays the second copy
+    // after the first rather than inside it.
+    setCursor((at + clip.length) / current.sampleRate)
+  }
+
+  // ─── Effects ──────────────────────────────────────────────────────────────
+
+  const EFFECTS: Record<WaveformEffect, (current: AudioBuffer, range: SampleRange) => AudioBuffer> = {
+    normalize: normalizeRange,
+    amplify: (current, range) => scaleRange(current, range, AMPLIFY_FACTOR),
+    reduce: (current, range) => scaleRange(current, range, REDUCE_FACTOR),
+    fadeIn: (current, range) => fadeRange(current, range, 'in'),
+    fadeOut: (current, range) => fadeRange(current, range, 'out'),
+    echo: (current, range) => applyDelayTaps(current, range, ECHO_TAPS),
+    reverb: (current, range) => applyDelayTaps(current, range, REVERB_TAPS)
+  }
+
+  function applyEffect(effect: WaveformEffect) {
+    const current = buffer.value
+    if (!current) return
+    if (!selection.value && SELECTION_ONLY_EFFECTS.includes(effect)) return
+    commitEdit(EFFECTS[effect](current, editRange(current)))
+  }
+
+  /** Resamples the selection, or the whole take, by `semitones` — its length changes with its pitch. */
+  function applyPitchShift(semitones: number) {
+    const current = buffer.value
+    if (!current || semitones === 0) return
+
+    const shifted = pitchShiftRange(current, editRange(current), semitones)
+    commitEdit(shifted.buffer)
+    // The stretch is a different length now, so the selection follows it rather
+    // than being left pointing at whatever moved in behind it.
+    if (selection.value) {
+      setSelection({
+        start: shifted.range.start / current.sampleRate,
+        end: shifted.range.end / current.sampleRate
+      })
+    }
+  }
+
+  /** `percent` is the slider's own 0–200 scale, where 100 leaves the level alone. */
+  function applyVolume(percent: number) {
+    const current = buffer.value
+    if (!current || percent === 100) return
+    commitEdit(scaleRange(current, editRange(current), percent / 100))
+  }
+
+  /** The take as it stands, edits and all — not a re-render of the sequencer grid. */
+  function exportWav(fileName = 'melody-loom-waveform.wav') {
+    if (!buffer.value) return
+    downloadBlob(encodeWav(buffer.value), fileName)
+  }
+
   onBeforeUnmount(() => {
     stop()
     cancelRecording()
@@ -374,9 +562,23 @@ export function useWaveformEditor() {
     recordingSeconds,
     isBusy,
     error,
+    hasSelection,
+    hasClipboard,
+    canUndo,
+    canRedo,
     dismissError,
     setBuffer,
     insertBufferAt,
+    undo,
+    redo,
+    copySelection,
+    cutSelection,
+    pasteClipboard,
+    deleteSelection,
+    applyEffect,
+    applyPitchShift,
+    applyVolume,
+    exportWav,
     importFile,
     loadFromSequence,
     play,
