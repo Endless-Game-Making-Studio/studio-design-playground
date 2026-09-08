@@ -427,6 +427,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
   <UModal
     v-model:open="isExporting"
     :title="t('pixelStitch.exportingGif')"
+    :close="false"
     :dismissible="false"
   >
     <template #body>
