@@ -16,6 +16,18 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
 
+// Below full opacity the preview swatch shows the checkerboard through the
+// brush colour — the palette itself still stores opaque hex.
+export const TranslucentBrush: Story = {
+  decorators: [withEditor({
+    width: INSPECTOR_WIDTH,
+    seed: (editor) => {
+      editor.brushOpacity.value = 0.35
+      editor.currentColor.value = '#1E00FF'
+    }
+  })]
+}
+
 // Picking a palette colour rings that swatch, so the artist can see where in
 // the ramp they are.
 export const PaletteColourSelected: Story = {

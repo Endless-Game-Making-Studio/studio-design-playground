@@ -18,6 +18,7 @@ const TOOLS: { id: PixelTool, icon: string }[] = [
   { id: 'eraser', icon: 'lucide:eraser' },
   { id: 'fill', icon: 'lucide:paint-bucket' },
   { id: 'replace', icon: 'lucide:paintbrush-vertical' },
+  { id: 'eyedropper', icon: 'lucide:pipette' },
   { id: 'select', icon: 'lucide:box-select' }
 ]
 

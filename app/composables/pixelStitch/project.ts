@@ -34,6 +34,11 @@ export function hexToRgb(hex: string): [number, number, number] | null {
   return [(parsed >> 16) & 255, (parsed >> 8) & 255, parsed & 255]
 }
 
+export function hexToRgba(hex: string, alpha: number): string {
+  const rgb = hexToRgb(hex)
+  return rgb ? `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})` : hex
+}
+
 export function isHexColor(color: string): boolean {
   return /^#[0-9a-f]{6}$/i.test(color)
 }

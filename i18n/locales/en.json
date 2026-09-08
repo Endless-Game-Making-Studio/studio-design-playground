@@ -368,8 +368,9 @@
       "hintPasting": "Move the pointer to position it, click to paste, or press Esc to cancel."
     },
     "color": {
-      "currentTooltip": "Drag onto a palette slot to save this colour",
+      "currentTooltip": "Click to pick a colour, or drag it onto a palette slot",
       "hexTooltip": "Enter a hex colour code",
+      "brushOpacity": "Brush opacity",
       "dragToCustomize": "Drag colours onto slots to customise the palette.",
       "rowLabel": "Palette row",
       "swatchTooltip": "{color} — click to select, drop a colour to replace",

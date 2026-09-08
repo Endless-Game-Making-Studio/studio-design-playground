@@ -1,11 +1,26 @@
 <script setup lang="ts">
-import { hexToRgb, isHexColor } from '~/composables/pixelStitch/project'
+import { hexToRgb, hexToRgba, isHexColor } from '~/composables/pixelStitch/project'
 import { usePixelStitchContext } from '~/composables/usePixelStitchContext'
 
 const editor = usePixelStitchContext()
 const { t } = useI18n()
 
+// The picker reads and writes whole percents; the editor stores 0-1 because
+// that's what canvas globalAlpha takes.
+const opacityPercent = computed({
+  get: () => Math.round(editor.brushOpacity.value * 100),
+  set: percent => (editor.brushOpacity.value = (Array.isArray(percent) ? percent[0]! : percent) / 100)
+})
+
 const rgb = computed(() => hexToRgb(editor.currentColor.value) ?? [0, 0, 0])
+
+// The swatch preview shows the brush as it will actually paint, opacity
+// included — the palette itself always stores opaque hex.
+const previewColor = computed(() =>
+  editor.brushOpacity.value < 1 && isHexColor(editor.currentColor.value)
+    ? hexToRgba(editor.currentColor.value, editor.brushOpacity.value)
+    : editor.currentColor.value
+)
 
 const draggedColor = ref<string | null>(null)
 
@@ -43,18 +58,64 @@ const activeSwatches = computed(() =>
 <template>
   <UPageCard variant="outline" :ui="{ root: 'rounded-2xl', container: 'p-4 sm:p-4 gap-4' }">
     <div class="flex items-center gap-3">
-      <UTooltip :text="t('pixelStitch.color.currentTooltip')">
-        <!-- Just the brush as it will actually paint, and the handle you drag
-             onto a palette slot. Height matches the hex field beside it rather
-             than the old oversized square. -->
-        <div
-          class="h-7 w-14 shrink-0 rounded-xl ring-1 ring-default cursor-grab active:cursor-grabbing"
-          draggable="true"
-          :style="{ backgroundColor: editor.currentColor.value }"
-          @dragstart="onDragStart($event, editor.currentColor.value)"
-          @dragend="draggedColor = null"
-        />
-      </UTooltip>
+      <UPopover>
+        <UTooltip :text="t('pixelStitch.color.currentTooltip')">
+          <!-- The swatch is the picker's trigger, and still draggable so a mixed
+               colour can be dropped into a palette slot. The checker sits behind
+               it so a translucent brush reads as translucent rather than as a
+               lighter solid. -->
+          <button
+            type="button"
+            class="size-14 shrink-0 rounded-xl ring-1 ring-default active:cursor-grabbing pixel-checker"
+            draggable="true"
+            :aria-label="t('pixelStitch.color.currentTooltip')"
+            @dragstart="onDragStart($event, editor.currentColor.value)"
+            @dragend="draggedColor = null"
+          >
+            <span class="block size-full rounded-xl" :style="{ backgroundColor: previewColor }" />
+          </button>
+        </UTooltip>
+
+        <template #content>
+          <div class="flex flex-col gap-2 p-2">
+            <div class="flex gap-3">
+              <UColorPicker v-model="editor.currentColor.value" />
+
+              <!-- Opacity as a third track beside hue: same 8px width and
+                   white-ringed thumb as UColorPicker's own tracks, over the
+                   checker so the gradient reads as transparency rather than as
+                   a fade to white. -->
+              <div class="pixel-checker w-2 shrink-0 rounded-md">
+                <div
+                  class="size-full rounded-md"
+                  :style="{ backgroundImage: `linear-gradient(to top, transparent, ${editor.currentColor.value})` }"
+                >
+                  <!-- `neutral` for a white thumb with a dark ring: the track
+                       runs from the picked colour to bare checker, so neither a
+                       white nor a coloured ring stays visible along all of it. -->
+                  <USlider
+                    v-model="opacityPercent"
+                    orientation="vertical"
+                    color="neutral"
+                    :ui="{ track: 'bg-transparent', range: 'bg-transparent' }"
+                    :aria-label="t('pixelStitch.color.brushOpacity')"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Under the square rather than over it, as in the reference: white
+                 readout text on the swatch itself stops being legible as soon as
+                 the picked colour is pale. -->
+            <div class="text-center">
+              <p class="font-mono text-sm font-semibold text-highlighted">{{ editor.currentColor.value.toUpperCase() }}</p>
+              <p class="font-mono text-xs tabular-nums text-dimmed">
+                R{{ rgb[0] }} G{{ rgb[1] }} B{{ rgb[2] }} A{{ opacityPercent }}%
+              </p>
+            </div>
+          </div>
+        </template>
+      </UPopover>
 
       <UTooltip :text="t('pixelStitch.color.hexTooltip')" class="flex-1 min-w-0">
         <UInput
@@ -66,34 +127,6 @@ const activeSwatches = computed(() =>
           :aria-label="t('pixelStitch.color.hexTooltip')"
         />
       </UTooltip>
-
-      <!-- Moved in from the tool rail: the picker is where someone is when
-           they want to sample a colour off the canvas. -->
-      <UTooltip :text="t('pixelStitch.tools.eyedropperTooltip')">
-        <UButton
-          icon="lucide:pipette"
-          size="sm"
-          :color="editor.currentTool.value === 'eyedropper' ? 'primary' : 'neutral'"
-          :variant="editor.currentTool.value === 'eyedropper' ? 'solid' : 'outline'"
-          :aria-label="t('pixelStitch.tools.eyedropper')"
-          @click="editor.currentTool.value = 'eyedropper'"
-        />
-      </UTooltip>
-    </div>
-
-    <!-- The picker sits open in the panel rather than behind a click: picking a
-         colour is the thing you do most in here. `selector` is widened off its
-         fixed theme size so the square fills the panel. -->
-    <div class="flex flex-col gap-2">
-      <UColorPicker
-        v-model="editor.currentColor.value"
-        class="w-full"
-        :ui="{ selector: 'w-full h-40', track: 'h-40' }"
-      />
-
-      <p class="text-center font-mono text-xs tabular-nums text-dimmed">
-        R{{ rgb[0] }} G{{ rgb[1] }} B{{ rgb[2] }}
-      </p>
     </div>
 
     <div class="flex flex-col gap-2">

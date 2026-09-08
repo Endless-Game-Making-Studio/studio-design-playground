@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PixelGrid, Point } from '~/composables/pixelStitch/types'
-import { cloneGrid } from '~/composables/pixelStitch/project'
+import { cloneGrid, hexToRgba, isHexColor } from '~/composables/pixelStitch/project'
 import { compositeLayers, drawCheckerboard } from '~/composables/pixelStitch/render'
 import { usePixelStitchContext } from '~/composables/usePixelStitchContext'
 
@@ -16,6 +16,14 @@ const containerRef = ref<HTMLElement | null>(null)
 // against the light canvas, and they're already the platform's two accents.
 const GHOST_PREVIOUS = '#f97316'
 const GHOST_NEXT = '#6b8afd'
+
+// Opacity is applied when painting, not stored, so the palette keeps clean hex
+// values while a translucent brush still lays down translucent pixels.
+const drawColor = computed(() =>
+  editor.brushOpacity.value < 1 && isHexColor(editor.currentColor.value)
+    ? hexToRgba(editor.currentColor.value, editor.brushOpacity.value)
+    : editor.currentColor.value
+)
 
 // ─── Sizing ─────────────────────────────────────────────────────────────────
 
@@ -194,7 +202,7 @@ function paintAt(point: Point, erase = false) {
   const layer = editor.currentLayer.value
   if (!layer) return
   const radius = erase || editor.currentTool.value === 'eraser' ? editor.eraserSize.value : editor.brushSize.value
-  const color = erase || editor.currentTool.value === 'eraser' ? '' : editor.currentColor.value
+  const color = erase || editor.currentTool.value === 'eraser' ? '' : drawColor.value
   const data = cloneGrid(layer.data)
 
   if (lastPoint.value) strokeLine(data, lastPoint.value, point, radius, color)
@@ -208,7 +216,7 @@ function floodFill(start: Point) {
   const layer = editor.currentLayer.value
   if (!layer) return
   const target = layer.data[start.y]?.[start.x] ?? ''
-  if (target === editor.currentColor.value) return
+  if (target === drawColor.value) return
 
   const size = editor.canvasSize.value
   const data = cloneGrid(layer.data)
@@ -218,7 +226,7 @@ function floodFill(start: Point) {
     const { x, y } = stack.pop()!
     if (x < 0 || x >= size || y < 0 || y >= size) continue
     if (data[y]![x] !== target) continue
-    data[y]![x] = editor.currentColor.value
+    data[y]![x] = drawColor.value
     stack.push({ x: x + 1, y }, { x: x - 1, y }, { x, y: y + 1 }, { x, y: y - 1 })
   }
 
@@ -229,9 +237,9 @@ function replaceColor(start: Point) {
   const layer = editor.currentLayer.value
   if (!layer) return
   const target = layer.data[start.y]?.[start.x] ?? ''
-  if (target === editor.currentColor.value) return
+  if (target === drawColor.value) return
   editor.setLayerData(
-    layer.data.map(row => row.map(color => (color === target ? editor.currentColor.value : color))),
+    layer.data.map(row => row.map(color => (color === target ? drawColor.value : color))),
     true
   )
 }
