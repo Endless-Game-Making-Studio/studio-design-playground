@@ -1,12 +1,14 @@
 import {
   mentorClassroomsByPhase,
   type ClassroomLearner,
+  type ClassroomPost,
   type MentorClassroom,
   type MentorClassroomAgeRange
 } from '~/composables/programData/mentorClassrooms'
 import type { PreviewState } from '~/composables/usePreviewState'
 
 const STORAGE_KEY = 'mentor-classrooms-created'
+const DRAFT_POSTS_KEY = 'mentor-classroom-draft-posts'
 
 // One hydration per session — same reasoning as useOnboardingIntent.ts.
 let hydrated = false
@@ -38,6 +40,13 @@ function generateClassroomId(): string {
  */
 export function useMentorClassrooms() {
   const created = useState<MentorClassroom[]>(STORAGE_KEY, () => [])
+
+  // Posts written during the session, keyed by classroom. Unlike `created`
+  // these are deliberately not persisted: the seeded classrooms in
+  // mentorClassrooms.ts have no localStorage layer of their own, and one
+  // session-only overlay for every classroom beats two different lifetimes
+  // depending on who made the classroom. Same call as ProgramTabCommunity.vue.
+  const draftPosts = useState<Record<string, ClassroomPost[]>>(DRAFT_POSTS_KEY, () => ({}))
 
   onMounted(() => {
     if (hydrated || !import.meta.client) return
@@ -82,6 +91,7 @@ export function useMentorClassrooms() {
       accessCode: generateAccessCode(),
       createdAt: new Date().toISOString(),
       learners: [],
+      posts: [],
       ageRange: input.ageRange,
       siloed: input.siloed
     }
@@ -99,5 +109,16 @@ export function useMentorClassrooms() {
     persist()
   }
 
-  return { classroomsFor, createClassroom, addLearners }
+  function postsFor(classroom: MentorClassroom): ClassroomPost[] {
+    return [...(draftPosts.value[classroom.id] ?? []), ...classroom.posts]
+  }
+
+  function addPost(classroomId: string, post: ClassroomPost) {
+    draftPosts.value = {
+      ...draftPosts.value,
+      [classroomId]: [post, ...(draftPosts.value[classroomId] ?? [])]
+    }
+  }
+
+  return { classroomsFor, createClassroom, addLearners, postsFor, addPost }
 }

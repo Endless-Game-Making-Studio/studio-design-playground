@@ -1,20 +1,10 @@
 <script setup lang="ts">
-import { webTools, tailorApps, externalTools, type ToolCardData } from '~/composables/useMakeMockData'
+import { webTools, tailorApps, externalTools } from '~/composables/useMakeMockData'
 import { userName, userAvatar, topbarStatsFor } from '~/composables/useHomeMockData'
 import { useXpBalance } from '~/composables/useXpBalance'
 import { usePreviewState } from '~/composables/usePreviewState'
 
 definePageMeta({ layout: 'dashboard' })
-
-// One drawer for the whole page rather than one per card — the cards only report
-// which tool was launched. Only tools carrying an `embedUrl` ever emit.
-const activeTool = ref<ToolCardData | null>(null)
-const toolDrawerOpen = ref(false)
-
-function launchTool(tool: ToolCardData) {
-  activeTool.value = tool
-  toolDrawerOpen.value = true
-}
 
 const { isLoggedIn, isOnboarded } = usePreviewState()
 const { total: xpTotal } = useXpBalance()
@@ -55,7 +45,7 @@ const topbarStats = computed(() => topbarStatsFor(isOnboarded.value, xpTotal.val
 
         <section class="mt-10">
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <ToolCard v-for="tool in webTools" :key="tool.id" :tool="tool" @launch="launchTool" />
+            <ToolCard v-for="tool in webTools" :key="tool.id" :tool="tool" />
           </div>
         </section>
 
@@ -67,7 +57,7 @@ const topbarStats = computed(() => topbarStatsFor(isOnboarded.value, xpTotal.val
             subtitle="A suite of creation apps for the Threadbare world — make assets and drop them straight into a quest."
           />
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-            <ToolCard v-for="tool in tailorApps" :key="tool.id" :tool="tool" @launch="launchTool" />
+            <ToolCard v-for="tool in tailorApps" :key="tool.id" :tool="tool" />
           </div>
         </section>
 
@@ -100,11 +90,6 @@ const topbarStats = computed(() => topbarStatsFor(isOnboarded.value, xpTotal.val
       </UContainer>
     </template>
   </UDashboardPanel>
-
-  <!-- A page-level overlay, so it sits beside the panel rather than inside the
-       content container — it only renders correctly nested because the drawer
-       portals itself to <body>. -->
-  <ToolDrawer v-model:open="toolDrawerOpen" :tool="activeTool" />
 
   <DevPreviewBar />
 </template>

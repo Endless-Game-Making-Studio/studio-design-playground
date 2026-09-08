@@ -18,24 +18,24 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-// A tool rebuilt natively on this stack. `route` outranks `embedUrl` and `url`,
-// so the footer becomes an in-app link with a forward arrow.
+// A tool rebuilt natively on this stack: it opens its own tab on one of our
+// routes, which is what the tab-arrow icon marks.
 export const NativeRoute: Story = {
   args: {
     tool: tool('pixel-stitch')
   }
 }
 
-// Framed in-platform: the footer stays a real button and the card emits
-// `launch` for the page's shared drawer to pick up.
+// Framed rather than rebuilt: the tab lands on `/make/tool/<id>`, which keeps
+// the platform's bar above the frame — so it gets the same tab-arrow icon.
 export const Embeddable: Story = {
   args: {
     tool: tool('patchworkshop')
   }
 }
 
-// No embed, so the card keeps its outward link and the icon marks that the
-// learner is leaving the platform.
+// No embed, so the tab goes straight to the tool's own site — the external-link
+// icon is what marks that the learner is leaving the platform.
 export const ExternalLink: Story = {
   args: {
     tool: tool('godot-web')

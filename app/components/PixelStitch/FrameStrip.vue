@@ -55,6 +55,7 @@ function tileBorder(index: number) {
 }
 </script>
 
+
 <template>
   <!-- 10px between tiles. `items-stretch` so every tile, and the dashed one
        that adds a frame, is exactly as tall as the row. -->

@@ -318,10 +318,10 @@
   },
   "pixelStitch": {
     "title": "Threadbare Pixel Stitch",
-    "subtitle": "Teje arte pixel y animaciones para tus personajes y objetos de Threadbare.",
-    "backToTools": "Herramientas",
     "openProject": "Abrir",
-    "saveProject": "Guardar",
+    "saveProject": "Guardar como archivo .tps",
+    "savePng": "Guardar como PNG",
+    "savePngTooltip": "Descargar el fotograma actual como PNG",
     "exportingGif": "Exportando GIF…",
     "canvasSize": {
       "label": "Lienzo",
@@ -362,7 +362,6 @@
       "redo": "Rehacer la última acción",
       "toggleGrid": "Alternar la cuadrícula",
       "importImage": "Importar una imagen al lienzo",
-      "exportPng": "Exportar el fotograma actual como PNG",
       "exportGif": "Exportar la animación como GIF",
       "clearOptions": "Borrar el lienzo",
       "clearCurrentLayer": "Borrar la capa actual",
@@ -466,7 +465,6 @@
       "cannotDeleteLastFrame": "No puedes eliminar el último fotograma",
       "frameDeleted": "Fotograma eliminado",
       "frameDuplicated": "Fotograma duplicado",
-      "canvasSizeChanged": "Tamaño del lienzo cambiado a {size}",
       "backgroundRemoved": "Fondo eliminado",
       "nothingToRemove": "No se detectó ningún fondo",
       "flippedHorizontal": "Volteado horizontalmente",
@@ -677,6 +675,8 @@
       },
       "sidebar": {
         "classrooms": "Salones",
+        "program": "Programa",
+        "allPrograms": "Todos los programas",
         "newClassroom": "Nuevo salón",
         "mentorTraining": "Capacitación para mentores",
         "listEmpty": "Todavía no tienes salones"
@@ -687,13 +687,26 @@
         "cta": "Nuevo salón"
       },
       "tabs": {
-        "progress": "Progreso",
+        "progress": "Progreso de tareas",
+        "users": "Usuarios",
+        "feed": "Publicaciones",
         "settings": "Ajustes"
       },
       "progress": {
-        "title": "Progreso",
         "avgCompletion": "Progreso promedio",
         "seatsFilled": "Cupos ocupados"
+      },
+      "users": {
+        "count": "{count} estudiante | {count} estudiantes",
+        "invite": "Invitar estudiantes",
+        "mentorRole": "Mentor",
+        "learnerRole": "Estudiante"
+      },
+      "feed": {
+        "empty": {
+          "title": "Todavía no hay publicaciones",
+          "body": "Comparte una novedad, una pregunta o un reto con tu salón."
+        }
       },
       "settings": {
         "title": "Ajustes del salón",

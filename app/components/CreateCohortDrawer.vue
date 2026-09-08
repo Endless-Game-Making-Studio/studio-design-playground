@@ -61,7 +61,7 @@ function onPrimaryCta() {
 </script>
 
 <template>
-  <!-- Same full-screen-override technique as ProgramStepDrawer.vue/ToolDrawer.vue
+  <!-- Same full-screen-override technique as ProgramStepDrawer.vue
        — this theme has no dedicated fullscreen variant, so `content`/`overlay`
        are forced to `h-[100dvh]` (not a `%`, which would resolve against the
        large viewport and hide the bottom edge under mobile browser chrome) at

@@ -318,10 +318,10 @@
   },
   "pixelStitch": {
     "title": "Threadbare Pixel Stitch",
-    "subtitle": "Weave pixel art and animations for your Threadbare characters and props.",
-    "backToTools": "Maker Tools",
     "openProject": "Open",
-    "saveProject": "Save",
+    "saveProject": "Save as .tps file",
+    "savePng": "Save as PNG",
+    "savePngTooltip": "Download the current frame as a PNG",
     "exportingGif": "Exporting GIF…",
     "canvasSize": {
       "label": "Canvas",
@@ -362,7 +362,6 @@
       "redo": "Redo the last action",
       "toggleGrid": "Toggle the grid overlay",
       "importImage": "Import an image onto the canvas",
-      "exportPng": "Export the current frame as a PNG",
       "exportGif": "Export the animation as a GIF",
       "clearOptions": "Clear the canvas",
       "clearCurrentLayer": "Clear current layer",
@@ -466,7 +465,6 @@
       "cannotDeleteLastFrame": "You can't delete the last frame",
       "frameDeleted": "Frame deleted",
       "frameDuplicated": "Frame duplicated",
-      "canvasSizeChanged": "Canvas size changed to {size}",
       "backgroundRemoved": "Background removed",
       "nothingToRemove": "No background detected",
       "flippedHorizontal": "Flipped horizontally",
@@ -677,6 +675,8 @@
       },
       "sidebar": {
         "classrooms": "Classrooms",
+        "program": "Program",
+        "allPrograms": "All programs",
         "newClassroom": "New classroom",
         "mentorTraining": "Mentor training",
         "listEmpty": "No classrooms yet"
@@ -687,13 +687,26 @@
         "cta": "New classroom"
       },
       "tabs": {
-        "progress": "Progress",
+        "progress": "Task progress",
+        "users": "Users",
+        "feed": "Feed",
         "settings": "Settings"
       },
       "progress": {
-        "title": "Progress",
         "avgCompletion": "Average completion",
         "seatsFilled": "Seats filled"
+      },
+      "users": {
+        "count": "{count} student | {count} students",
+        "invite": "Invite students",
+        "mentorRole": "Mentor",
+        "learnerRole": "Student"
+      },
+      "feed": {
+        "empty": {
+          "title": "No posts yet",
+          "body": "Share an update, a question, or a challenge with your classroom."
+        }
       },
       "settings": {
         "title": "Classroom settings",
