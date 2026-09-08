@@ -25,6 +25,45 @@ const hidden = computed(() => props.layer.opacity === 0)
 
 const trackOpen = ref(false)
 
+// ─── Renaming ───────────────────────────────────────────────────────────────
+
+// The name is text until asked for: a permanent field on every row made a
+// single click on the name land in an edit box, when a single click on the row
+// is how a layer gets selected. Editing starts on a double click, or on Enter
+// or F2 from the keyboard — the name carries focus of its own, so renaming
+// never needed a pointer.
+const editing = ref(false)
+const draft = ref('')
+const nameInput = ref<{ inputRef?: HTMLInputElement } | null>(null)
+
+async function startEditing() {
+  draft.value = props.layer.name
+  editing.value = true
+  await nextTick()
+  const field = nameInput.value?.inputRef
+  field?.focus()
+  field?.select()
+}
+
+function commitName() {
+  if (!editing.value) return
+  editing.value = false
+  const name = draft.value.trim()
+  if (name && name !== props.layer.name) editor.renameLayer(props.index, name)
+}
+
+// Escape leaves the name as it was, which is the only way back out of a
+// mistyped rename.
+function cancelName() {
+  editing.value = false
+}
+
+function onNameKeyDown(event: KeyboardEvent) {
+  if (event.key !== 'Enter' && event.key !== 'F2') return
+  event.preventDefault()
+  startEditing()
+}
+
 // Reordering has to work without a pointer too. The parent moves the layer and
 // hands focus back to this grip so a run of presses walks it up the list.
 const gripRef = ref<HTMLElement | null>(null)
@@ -52,12 +91,13 @@ defineExpose({ focusGrip: () => gripRef.value?.focus() })
     :drag-momentum="false"
     :while-drag="{ scale: 1.02, rotate: -0.6, zIndex: 30, boxShadow: '0 12px 24px rgba(2, 6, 24, 0.18)' }"
     :transition="{ type: 'spring', stiffness: 520, damping: 34 }"
+    :exit="{ opacity: 0, height: 0, marginTop: 0, transition: { duration: 0.16 } }"
     class="relative list-none"
   >
     <div
-      class="flex cursor-pointer items-center gap-1.5 rounded-[10px] border p-1.5"
+      class="flex cursor-pointer items-center gap-1.5 rounded-[10px] border p-1.5 transition-colors"
       :class="[
-        selected ? 'border-primary bg-default' : 'border-transparent',
+        selected ? 'border-primary bg-default' : 'border-transparent hover:bg-elevated',
         hidden ? 'opacity-45' : ''
       ]"
       @click="editor.currentLayerIndex.value = index"
@@ -76,15 +116,29 @@ defineExpose({ focusGrip: () => gripRef.value?.focus() })
         </button>
       </UTooltip>
 
-      <UTooltip :text="t('pixelStitch.layers.rename')" class="min-w-0 grow">
-        <UInput
-          :model-value="layer.name"
-          :aria-label="t('pixelStitch.layers.rename')"
-          class="w-full"
-          :ui="{ base: 'h-8 rounded-md border-transparent bg-transparent ring-0 px-1.5 hover:bg-elevated focus:bg-default focus:ring-1 focus:ring-default' }"
-          @click.stop
-          @update:model-value="value => editor.renameLayer(index, String(value))"
-        />
+      <UInput
+        v-if="editing"
+        ref="nameInput"
+        v-model="draft"
+        :aria-label="t('pixelStitch.layers.rename')"
+        class="min-w-0 grow"
+        :ui="{ base: 'h-8 rounded-md px-1.5' }"
+        @click.stop
+        @blur="commitName"
+        @keydown.enter.prevent="commitName"
+        @keydown.esc.prevent="cancelName"
+      />
+      <UTooltip v-else :text="t('pixelStitch.layers.renameHint')" class="min-w-0 grow">
+        <span
+          role="button"
+          tabindex="0"
+          class="block cursor-pointer truncate rounded-md px-1.5 py-1.5 text-sm text-highlighted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          :aria-label="t('pixelStitch.layers.renameLabel', { name: layer.name })"
+          @dblclick.stop="startEditing"
+          @keydown="onNameKeyDown"
+        >
+          {{ layer.name }}
+        </span>
       </UTooltip>
 
       <!-- Only below 100%: a list with no numbers is a list where every layer

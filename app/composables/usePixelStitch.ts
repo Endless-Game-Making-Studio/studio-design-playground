@@ -49,11 +49,41 @@ export interface PixelStitchOptions {
 export function usePixelStitch(options: PixelStitchOptions = {}) {
   const { persist = true } = options
   const { t } = useI18n()
-  const toast = useToast()
+
+  // ─── Notices ──────────────────────────────────────────────────────────────
+
+  /**
+   * The editor's own notice line, shown along the foot of the canvas area
+   * rather than as a toast. A toast for every layer added and colour saved is
+   * a lot of stacked cards over the drawing for events the artist just caused;
+   * one discreet line that replaces itself says the same thing without taking
+   * the screen.
+   */
+  const notice = ref<{ id: number, text: string, color: 'success' | 'error' | 'info' } | null>(null)
+  let noticeTimer: ReturnType<typeof setTimeout> | null = null
+  let noticeSerial = 0
+
+  // Long enough to read, short enough that the line is usually empty. Errors
+  // stay longer: they are the ones worth catching up on.
+  const NOTICE_MS = 2600
+  const NOTICE_ERROR_MS = 5000
+
+  function showNotice(text: string, color: 'success' | 'error' | 'info' = 'success') {
+    if (noticeTimer) clearTimeout(noticeTimer)
+    notice.value = { id: ++noticeSerial, text, color }
+    noticeTimer = setTimeout(() => {
+      notice.value = null
+      noticeTimer = null
+    }, color === 'error' ? NOTICE_ERROR_MS : NOTICE_MS)
+  }
 
   function notify(key: string, color: 'success' | 'error' | 'info' = 'success') {
-    toast.add({ title: t(`pixelStitch.toast.${key}`), color })
+    showNotice(t(`pixelStitch.toast.${key}`), color)
   }
+
+  onBeforeUnmount(() => {
+    if (noticeTimer) clearTimeout(noticeTimer)
+  })
 
   // ─── Document state ───────────────────────────────────────────────────────
 
@@ -83,7 +113,7 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
   function setZoom(value: number) {
     zoom.value = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value))
   }
-  const palette = ref<string[]>([...DEFAULT_PALETTE])
+  const palette = ref<string[][]>(DEFAULT_PALETTE.map(row => [...row]))
 
   const isPlaying = ref(false)
 
@@ -195,7 +225,17 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
   function addLayer() {
     const frame = currentFrame.value
     if (!frame) return
-    frame.layers.push(createLayer(canvasSize.value, Date.now()))
+
+    // Names count up from the highest "Layer N" already in the stack, so
+    // deleting the middle of a list does not hand the next layer a number that
+    // is already taken. The id is separate and only has to be unique.
+    const highestNumber = frame.layers.reduce((highest, layer) => {
+      const match = /^Layer (\d+)$/.exec(layer.name)
+      return match ? Math.max(highest, Number(match[1])) : highest
+    }, frame.layers.length)
+    const nextId = frame.layers.reduce((highest, layer) => Math.max(highest, layer.id), 0) + 1
+
+    frame.layers.push(createLayer(canvasSize.value, nextId, `Layer ${highestNumber + 1}`))
     currentLayerIndex.value = frame.layers.length - 1
     notify('layerAdded')
   }
@@ -418,13 +458,25 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
       for (const layer of frame.layers) layer.data = emptyGrid(size)
     }
     resetHistory(currentLayer.value?.data ?? emptyGrid(size))
-    toast.add({ title: t('pixelStitch.toast.canvasSizeChanged', { size: `${size}×${size}` }), color: 'success' })
+    showNotice(t('pixelStitch.toast.canvasSizeChanged', { size: `${size}×${size}` }))
   }
 
   // ─── Palette ──────────────────────────────────────────────────────────────
 
-  function setPaletteColor(index: number, color: string) {
-    palette.value[index] = color
+  function setPaletteColor(rowIndex: number, slotIndex: number, color: string) {
+    const row = palette.value[rowIndex]
+    if (!row) return
+    row[slotIndex] = color
+    notify('colorAddedToPalette')
+  }
+
+  // The trailing slot on every row is empty, so a colour can be put somewhere
+  // rather than only over something. Appending refills it, which is what keeps
+  // an empty slot at the end however long the row gets.
+  function addPaletteColor(rowIndex: number, color: string) {
+    const row = palette.value[rowIndex]
+    if (!row) return
+    row.push(color)
     notify('colorAddedToPalette')
   }
 
@@ -559,7 +611,7 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
   }, { deep: true })
 
   watch(palette, (value) => {
-    if (persist) savePalette([...value])
+    if (persist) savePalette(value.map(row => [...row]))
   }, { deep: true })
 
   onBeforeUnmount(() => {
@@ -567,6 +619,10 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
   })
 
   return {
+    // notices
+    notice,
+    notify,
+    showNotice,
     // document
     canvasSize,
     frames,
@@ -623,6 +679,7 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
     hasArtwork,
     setCanvasSize,
     setPaletteColor,
+    addPaletteColor,
     // selection
     cancelSelection,
     copySelection,

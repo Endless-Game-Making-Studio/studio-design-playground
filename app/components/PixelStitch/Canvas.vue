@@ -564,7 +564,7 @@ const selectionHint = computed(() => {
   <!-- The artboard sits alone on the grey ground with nothing framing it; the
        hint is the one thing allowed to float over it, and only while the select
        tool has something to explain. -->
-  <div ref="containerRef" class="relative grid h-full min-h-0 w-full place-items-center overflow-auto bg-slate-50 p-7" :class="spaceHeld ? (panning ? 'cursor-grabbing' : 'cursor-grab') : ''" @wheel="onWheel" @pointerdown="onPanStart" @pointermove="onPanMove" @pointerup="onPanEnd" @pointercancel="onPanEnd">
+  <div ref="containerRef" class="relative grid min-h-0 w-full flex-1 place-items-center overflow-auto bg-slate-50 p-7" :class="spaceHeld ? (panning ? 'cursor-grabbing' : 'cursor-grab') : ''" @wheel="onWheel" @pointerdown="onPanStart" @pointermove="onPanMove" @pointerup="onPanEnd" @pointercancel="onPanEnd">
     <!-- Two nested boxes: the outer one carries the scaled size so the scroll
          area knows how big the board actually is (a transform alone does not
          affect layout), the inner one carries the transform so the brush cursor

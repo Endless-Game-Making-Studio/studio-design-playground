@@ -22,6 +22,11 @@ const completed = ref(false)
 let activeSource: 'pointer' | 'keyboard' | null = null
 let animationFrame: number | null = null
 let startedAt = 0
+let settleTimer: ReturnType<typeof setTimeout> | null = null
+
+// How long the closed outline stays on screen before the action runs. Long
+// enough to read as finished, short enough not to feel like lag.
+const COMPLETED_HOLD = 160
 
 const instructionId = useId()
 const instruction = computed(() => t('pixelStitch.holdToConfirm.instruction', { action: props.label }))
@@ -40,11 +45,18 @@ function stopAnimation() {
   animationFrame = null
 }
 
+function stopSettling() {
+  if (settleTimer !== null) clearTimeout(settleTimer)
+  settleTimer = null
+}
+
 function reset() {
+  // Releasing after the hold landed must not wipe the finished outline before
+  // its beat is up — the action is already on its way.
+  if (completed.value) return
   stopAnimation()
   activeSource = null
   holding.value = false
-  completed.value = false
   progress.value = 0
 }
 
@@ -54,7 +66,15 @@ function advance(now: number) {
   if (progress.value === 1) {
     completed.value = true
     stopAnimation()
-    emit('confirm')
+
+    // The outline closing is the whole point of the hold, and emitting in the
+    // same frame it closed meant the row went before the browser had painted
+    // it: the artist saw the progress stop short. Hold the finished state for
+    // a beat, then fire.
+    settleTimer = setTimeout(() => {
+      settleTimer = null
+      emit('confirm')
+    }, COMPLETED_HOLD)
     return
   }
 
@@ -111,6 +131,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('blur', reset)
   document.removeEventListener('visibilitychange', onVisibilityChange)
   stopAnimation()
+  stopSettling()
 })
 </script>
 

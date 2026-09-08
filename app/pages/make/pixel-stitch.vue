@@ -177,15 +177,14 @@ async function onImportSheet(file: File, columns: number, rows: number) {
     editor.currentFrameIndex.value = 0
     editor.currentLayerIndex.value = 0
     editor.resetHistory(imported[0]!.layers[0]!.data)
-    toastImported(imported.length)
+    noticeImported(imported.length)
   } catch {
     editor.notify('failedToImportSpriteSheet', 'error')
   }
 }
 
-const toast = useToast()
-function toastImported(count: number) {
-  toast.add({ title: t('pixelStitch.toast.importedFrames', { count }), color: 'success' })
+function noticeImported(count: number) {
+  editor.showNotice(t('pixelStitch.toast.importedFrames', { count }))
 }
 
 // ─── Project file ───────────────────────────────────────────────────────────
@@ -394,10 +393,17 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
         <PixelStitchToolbar />
       </aside>
 
-      <main class="min-w-0 grow"><PixelStitchCanvas /></main>
+      <!-- The notice line sits under the artboard rather than over it, which
+           is why the canvas column is a column. -->
+      <main class="flex min-w-0 grow flex-col bg-slate-50">
+        <PixelStitchCanvas />
+        <PixelStitchNoticeBar />
+      </main>
 
-      <aside class="flex w-[328px] shrink-0 flex-col overflow-y-auto border-l border-default bg-slate-50">
-        <PixelStitchColorPicker />
+      <!-- The colour section keeps its height and the layers take the rest,
+           so only the stack scrolls. -->
+      <aside class="flex w-[328px] shrink-0 flex-col overflow-hidden border-l border-default bg-slate-50">
+        <div class="shrink-0"><PixelStitchColorPicker /></div>
         <USeparator />
         <PixelStitchLayerPanel />
       </aside>

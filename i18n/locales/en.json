@@ -370,7 +370,8 @@
       "exportSpriteSheet": "Export every frame as a sprite sheet",
       "importSpriteSheet": "Import a sprite sheet as frames",
       "submit": "Save & submit",
-      "submitTooltip": "Download the current frame as a PNG"
+      "submitTooltip": "Download the current frame as a PNG",
+      "actualSize": "Preview at actual size"
     },
     "canvas": {
       "zoomFit": "Fit to window",
@@ -401,7 +402,8 @@
         "green": "Green",
         "blue": "Blue"
       },
-      "pickerTooltip": "Pick a colour"
+      "pickerTooltip": "Pick a colour",
+      "addSwatch": "Add this colour to the palette"
     },
     "layers": {
       "title": "Layers",
@@ -414,7 +416,9 @@
       "reorderLabel": "Reorder {name}",
       "delete": "Delete this layer",
       "opacity": "Opacity",
-      "opacityLabel": "Opacity of {name}"
+      "opacityLabel": "Opacity of {name}",
+      "renameHint": "Double-click to rename",
+      "renameLabel": "Rename {name}"
     },
     "frames": {
       "count": "{count} frame | {count} frames",

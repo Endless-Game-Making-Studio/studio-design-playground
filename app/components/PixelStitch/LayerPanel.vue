@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ReorderGroup } from 'motion-v'
+import { AnimatePresence, ReorderGroup } from 'motion-v'
 import type { Layer } from '~/composables/pixelStitch/types'
 import { usePixelStitchContext } from '~/composables/usePixelStitchContext'
 
@@ -35,8 +35,11 @@ async function onKeyboardReorder(from: number, to: number) {
 </script>
 
 <template>
-  <section class="flex flex-col gap-2 p-3.5">
-    <div class="flex items-center">
+  <!-- A column that fills what the colour panel leaves: the header stays put
+       and the list takes the rest, so a long stack scrolls on its own instead
+       of pushing the panel past the window. -->
+  <section class="flex min-h-0 flex-1 flex-col gap-2 p-3.5">
+    <div class="flex shrink-0 items-center">
       <p class="grow text-[11px] font-semibold uppercase tracking-[0.06em] text-dimmed">
         {{ t('pixelStitch.layers.title') }}
       </p>
@@ -55,19 +58,22 @@ async function onKeyboardReorder(from: number, to: number) {
     <!-- Listed bottom-up, matching the compositing order: the first entry is
          the layer everything else paints over.
 
-         The list clips what leaves it. `ReorderItem` sets its own
-         `dragSnapToOrigin`, which overrides any `dragConstraints` box passed
-         in, so a hard pull upward would otherwise carry the row out of the
-         panel and leave it floating over the colour picker. The padding is
-         there to keep the lifted row's shadow from being cut with it; the
-         opacity track is unaffected, being teleported out of this subtree. -->
-    <div class="-m-2 overflow-hidden p-2">
-      <ReorderGroup
-        v-model:values="order"
-        as="ul"
-        axis="y"
-        class="flex list-none flex-col gap-2 p-0"
-      >
+         The scroller is the list itself rather than a wrapper around it, so
+         motion's auto-scroll finds it when a row is dragged to the edge. It
+         doubles as the clip: `ReorderItem` sets its own `dragSnapToOrigin`,
+         which overrides any `dragConstraints` box passed in, so a hard pull
+         upward would otherwise carry the row clear of the panel and leave it
+         floating over the colour picker. The opacity track is unaffected,
+         being teleported out of this subtree. -->
+    <ReorderGroup
+      v-model:values="order"
+      as="ul"
+      axis="y"
+      class="-mx-1 flex min-h-0 flex-1 list-none flex-col gap-2 overflow-y-auto px-1 py-0.5"
+    >
+      <!-- A deleted row collapses out rather than popping: without this the
+           hold finishes and the row is simply gone the same frame. -->
+      <AnimatePresence>
         <PixelStitchLayerRow
           v-for="(layer, index) in order"
           :ref="element => { if (element) rowRefs[index] = element as unknown as { focusGrip: () => void } }"
@@ -77,7 +83,7 @@ async function onKeyboardReorder(from: number, to: number) {
           :count="order.length"
           @reorder="onKeyboardReorder"
         />
-      </ReorderGroup>
-    </div>
+      </AnimatePresence>
+    </ReorderGroup>
   </section>
 </template>

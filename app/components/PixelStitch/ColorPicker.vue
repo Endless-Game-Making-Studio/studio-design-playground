@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { DropdownMenuItem } from '@nuxt/ui'
-import { hexToRgb, isHexColor } from '~/composables/pixelStitch/project'
+import { hexToRgb, isHexColor, PALETTE_ROW_LENGTH } from '~/composables/pixelStitch/project'
 import { rgbToHex, type Rgb } from '~/composables/pixelStitch/color'
 import { usePixelStitchContext } from '~/composables/usePixelStitchContext'
 
@@ -34,28 +34,28 @@ function setChannel(index: 0 | 1 | 2, value: string | number) {
 
 // ─── Palette ────────────────────────────────────────────────────────────────
 
-// Four rows of ten: the base hue ramp, two darker shades, and a pastel
-// highlight row. One row is on screen and the dropdown above it chooses which —
-// forty swatches at once was most of the panel for something an artist scans
-// rather than reads.
+// Four rows: the base hue ramp, two darker shades, and a pastel highlight row.
+// One row is on screen and the dropdown above it chooses which — forty swatches
+// at once was most of the panel for something an artist scans rather than
+// reads. Rows grow, so a row is however long the artist has made it.
 const ROWS = ['base', 'shade1', 'shade2', 'highlight'] as const
-const ROW_LENGTH = 10
 const activeRow = ref<typeof ROWS[number]>('base')
+const rowIndex = computed(() => ROWS.indexOf(activeRow.value))
+const swatches = computed(() => editor.palette.value[rowIndex.value] ?? [])
 
+// Each option carries its own row of colours: the four names alone
+// ("Colour", "Shade 1"…) leave the artist guessing what is actually in each
+// one, and the swatches are the thing being chosen.
 const rowItems = computed<DropdownMenuItem[]>(() =>
-  ROWS.map(row => ({
+  ROWS.map((row, index) => ({
     label: t(`pixelStitch.color.row.${row}`),
     type: 'checkbox' as const,
     checked: activeRow.value === row,
+    slot: 'row' as const,
+    colours: (editor.palette.value[index] ?? []).slice(0, PALETTE_ROW_LENGTH),
     onSelect: () => (activeRow.value = row)
   }))
 )
-
-const rowOffset = computed(() => ROWS.indexOf(activeRow.value) * ROW_LENGTH)
-
-function swatchAt(slot: number) {
-  return editor.palette.value[rowOffset.value + slot - 1]
-}
 
 const draggedColor = ref<string | null>(null)
 
@@ -64,10 +64,24 @@ function onDragStart(event: DragEvent, color: string) {
   if (event.dataTransfer) event.dataTransfer.effectAllowed = 'copy'
 }
 
-function onDrop(slot: number) {
+// Dropping on a swatch replaces it; dropping on the empty slot at the end adds
+// one. Both gestures are the same reach, so both have to land somewhere.
+function onDropOnSwatch(slot: number) {
   const color = draggedColor.value
   draggedColor.value = null
-  if (color && isHexColor(color)) editor.setPaletteColor(rowOffset.value + slot - 1, color)
+  if (color && isHexColor(color)) editor.setPaletteColor(rowIndex.value, slot, color)
+}
+
+function onDropOnEmpty() {
+  const color = draggedColor.value
+  draggedColor.value = null
+  if (color && isHexColor(color)) editor.addPaletteColor(rowIndex.value, color)
+}
+
+// Clicking the empty slot saves what is in hand, which is the shorter way to
+// the same result as dragging the swatch onto it.
+function addCurrentColor() {
+  if (isHexColor(editor.currentColor.value)) editor.addPaletteColor(rowIndex.value, editor.currentColor.value)
 }
 
 // ─── Eyedropper ─────────────────────────────────────────────────────────────
@@ -155,7 +169,7 @@ const FIELD = 'h-8 rounded-md'
       </UTooltip>
     </div>
 
-    <UDropdownMenu :items="rowItems" :ui="{ content: 'w-full' }">
+    <UDropdownMenu :items="rowItems" :ui="{ content: 'w-[264px]' }">
       <UButton
         color="neutral"
         variant="outline"
@@ -165,24 +179,53 @@ const FIELD = 'h-8 rounded-md'
       >
         {{ t(`pixelStitch.color.row.${activeRow}`) }}
       </UButton>
+      <template #row="{ item }">
+        <span class="flex min-w-0 flex-1 flex-col gap-1.5 py-0.5">
+          <span class="text-[13px]">{{ item.label }}</span>
+          <span class="flex gap-1">
+            <span
+              v-for="(colour, slot) in (item as { colours: string[] }).colours"
+              :key="slot"
+              class="size-3 shrink-0 rounded-[3px] ring-1 ring-default"
+              :style="{ backgroundColor: colour }"
+            />
+          </span>
+        </span>
+      </template>
     </UDropdownMenu>
 
+    <!-- `grid-cols-10` with one slot more than there are colours: on a full row
+         the empty one wraps onto a new line, which is where the next colour
+         lands. -->
     <div class="grid grid-cols-10 gap-1.5">
       <UTooltip
-        v-for="slot in ROW_LENGTH"
-        :key="slot"
-        :text="t('pixelStitch.color.swatchTooltip', { color: swatchAt(slot) ?? '' })"
+        v-for="(color, slot) in swatches"
+        :key="`${activeRow}-${slot}`"
+        :text="t('pixelStitch.color.swatchTooltip', { color })"
       >
         <button
           type="button"
           class="aspect-square w-full rounded-md ring-1 ring-default transition-transform duration-150 hover:scale-110"
-          :class="editor.currentColor.value === swatchAt(slot) ? 'ring-2 ring-primary' : ''"
-          :style="{ backgroundColor: swatchAt(slot) }"
-          :aria-label="swatchAt(slot)"
-          @click="editor.currentColor.value = swatchAt(slot) ?? '#000000'"
+          :class="editor.currentColor.value === color ? 'ring-2 ring-primary' : ''"
+          :style="{ backgroundColor: color }"
+          :aria-label="color"
+          @click="editor.currentColor.value = color"
           @dragover.prevent
-          @drop.prevent="onDrop(slot)"
+          @drop.prevent="onDropOnSwatch(slot)"
         />
+      </UTooltip>
+
+      <UTooltip :text="t('pixelStitch.color.addSwatch')">
+        <button
+          type="button"
+          class="grid aspect-square w-full cursor-pointer place-items-center rounded-md border border-dashed border-default text-dimmed transition-colors hover:border-primary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          :aria-label="t('pixelStitch.color.addSwatch')"
+          @click="addCurrentColor"
+          @dragover.prevent
+          @drop.prevent="onDropOnEmpty"
+        >
+          <Icon name="lucide:plus" class="size-3.5" />
+        </button>
       </UTooltip>
     </div>
   </section>

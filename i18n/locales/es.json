@@ -370,7 +370,8 @@
       "exportSpriteSheet": "Exportar todos los fotogramas como hoja de sprites",
       "importSpriteSheet": "Importar una hoja de sprites como fotogramas",
       "submit": "Guardar y enviar",
-      "submitTooltip": "Descargar el fotograma actual como PNG"
+      "submitTooltip": "Descargar el fotograma actual como PNG",
+      "actualSize": "Vista previa a tamaño real"
     },
     "canvas": {
       "zoomFit": "Ajustar a la ventana",
@@ -401,7 +402,8 @@
         "green": "Verde",
         "blue": "Azul"
       },
-      "pickerTooltip": "Elegir un color"
+      "pickerTooltip": "Elegir un color",
+      "addSwatch": "Añadir este color a la paleta"
     },
     "layers": {
       "title": "Capas",
@@ -414,7 +416,9 @@
       "reorderLabel": "Reordenar {name}",
       "delete": "Eliminar esta capa",
       "opacity": "Opacidad",
-      "opacityLabel": "Opacidad de {name}"
+      "opacityLabel": "Opacidad de {name}",
+      "renameHint": "Doble clic para renombrar",
+      "renameLabel": "Renombrar {name}"
     },
     "frames": {
       "count": "{count} fotograma | {count} fotogramas",

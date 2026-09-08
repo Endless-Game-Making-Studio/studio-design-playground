@@ -62,6 +62,10 @@ function onToolClick(id: PixelTool) {
   editor.currentTool.value = id
 }
 
+// The actual-size preview is a toggle rather than a hover: it is something to
+// leave open while drawing and glance at, not something to reach for.
+const previewOpen = ref(false)
+
 const RAIL_BUTTON = 'size-[34px] justify-center rounded-md'
 </script>
 
@@ -146,22 +150,40 @@ const RAIL_BUTTON = 'size-[34px] justify-center rounded-md'
       </UTooltip>
     </UDropdownMenu>
 
-    <USeparator class="my-0.5" />
+    <!-- The two view switches sit apart at the foot of the rail: they change
+         what you see, not what you draw. Their on state is a grey fill rather
+         than the orange one — in this rail orange means "this is the tool in
+         your hand", and neither of these is a tool. -->
+    <div class="mt-auto flex flex-col gap-1.5 pt-1.5">
+      <USeparator class="my-0.5" />
 
-    <!-- The grid came down from the top bar and sits apart: it is what you look
-         through while you draw, not something you do to the file. Its on state
-         is a grey fill rather than the orange one — in this rail orange means
-         "this is the tool in your hand", and the grid is not a tool. -->
-    <UTooltip :text="t('pixelStitch.toolbar.toggleGrid')" :content="{ side: 'right' }">
-      <UButton
-        icon="lucide:grid-3x3"
-        color="neutral"
-        :variant="editor.gridVisible.value ? 'subtle' : 'outline'"
-        :aria-label="t('pixelStitch.toolbar.toggleGrid')"
-        :aria-pressed="editor.gridVisible.value"
-        :class="[RAIL_BUTTON, editor.gridVisible.value ? 'bg-slate-100 ring-slate-200 text-highlighted' : '']"
-        @click="editor.gridVisible.value = !editor.gridVisible.value"
-      />
-    </UTooltip>
+      <UTooltip :text="t('pixelStitch.toolbar.toggleGrid')" :content="{ side: 'right' }">
+        <UButton
+          icon="lucide:grid-3x3"
+          color="neutral"
+          :variant="editor.gridVisible.value ? 'subtle' : 'outline'"
+          :aria-label="t('pixelStitch.toolbar.toggleGrid')"
+          :aria-pressed="editor.gridVisible.value"
+          :class="[RAIL_BUTTON, editor.gridVisible.value ? 'bg-slate-100 ring-slate-200 text-highlighted' : '']"
+          @click="editor.gridVisible.value = !editor.gridVisible.value"
+        />
+      </UTooltip>
+
+      <UPopover v-model:open="previewOpen" :content="{ side: 'right', align: 'end' }">
+        <UTooltip :text="t('pixelStitch.toolbar.actualSize')" :content="{ side: 'right' }">
+          <UButton
+            icon="lucide:image"
+            color="neutral"
+            :variant="previewOpen ? 'subtle' : 'outline'"
+            :aria-label="t('pixelStitch.toolbar.actualSize')"
+            :aria-pressed="previewOpen"
+            :class="[RAIL_BUTTON, previewOpen ? 'bg-slate-100 ring-slate-200 text-highlighted' : '']"
+          />
+        </UTooltip>
+        <template #content>
+          <PixelStitchActualSizePreview />
+        </template>
+      </UPopover>
+    </div>
   </section>
 </template>

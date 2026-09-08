@@ -54,7 +54,7 @@ export function importSpriteSheet(
 
     frames.push({
       id: Date.now() + index,
-      layers: [{ ...createLayer(canvasSize, Date.now() + index), data }]
+      layers: [{ ...createLayer(canvasSize, Date.now() + index, 'Layer 1'), data }]
     })
   }
 
