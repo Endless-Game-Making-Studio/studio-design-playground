@@ -1,13 +1,22 @@
 <script setup lang="ts">
 // Guests get the same band, so the page below doesn't shift depending on who's
 // looking — only the right-hand side changes, and the account props go unused.
-defineProps<{
+const props = defineProps<{
   guest?: boolean
   xpLabel?: string
   streakDays?: number
   userName?: string
   userAvatar?: string
   notificationCount?: number
+  // The maker tools own the whole window rather than sitting in the dashboard's
+  // page container, so their bar spans it edge to edge and carries the logo and
+  // the tool switcher itself. The account cluster stays shared either way.
+  fullBleed?: boolean
+}>()
+
+defineSlots<{
+  left?: () => unknown
+  center?: () => unknown
 }>()
 </script>
 

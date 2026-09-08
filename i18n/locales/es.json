@@ -325,7 +325,17 @@
     "exportingGif": "Exportando GIF…",
     "canvasSize": {
       "label": "Lienzo",
-      "tooltip": "Elige el tamaño del lienzo: esto borra todos los fotogramas"
+      "tooltip": "Establecer el lienzo en {size} píxeles",
+      "confirmTitle": "¿Cambiar el lienzo a {size}?",
+      "confirmBody": "Se borrará todo lo dibujado en el fotograma. | Se borrará todo lo dibujado en los {count} fotogramas.",
+      "confirmKeep": "Mantener {size}",
+      "confirmClear": "Borrar y cambiar",
+      "confirmReason": "Un dibujo hecho para una cuadrícula de {size} no se puede trasladar a otra sin volver a dibujarlo."
+    },
+    "holdToConfirm": {
+      "instruction": "Mantén pulsado durante un segundo para {action}.",
+      "holding": "Manteniendo",
+      "completed": "Confirmado"
     },
     "tools": {
       "pencil": "Lápiz",
@@ -342,6 +352,7 @@
       "selectTooltip": "Selecciona un área para copiar (Ctrl+C) o cortar (Ctrl+X), y luego pegar (Ctrl+V)"
     },
     "toolbar": {
+      "import": "Importar",
       "removeBackground": "Eliminar el fondo de la capa actual",
       "flipHorizontal": "Voltear horizontalmente",
       "flipVertical": "Voltear verticalmente",
@@ -356,9 +367,14 @@
       "clearCurrentLayer": "Borrar la capa actual",
       "clearAllLayers": "Borrar todas las capas",
       "exportSpriteSheet": "Exportar todos los fotogramas como hoja de sprites",
-      "importSpriteSheet": "Importar una hoja de sprites como fotogramas"
+      "importSpriteSheet": "Importar una hoja de sprites como fotogramas",
+      "submit": "Guardar y enviar",
+      "submitTooltip": "Descargar el fotograma actual como PNG",
+      "actualSize": "Vista previa a tamaño real"
     },
     "canvas": {
+      "zoomFit": "Ajustar a la ventana",
+      "zoomPresets": "Ajustes de zoom",
       "zoomIn": "Acercar",
       "zoomOut": "Alejar",
       "zoomReset": "Restablecer el zoom al 100%",
@@ -368,18 +384,25 @@
       "hintPasting": "Mueve el puntero para colocarlo, haz clic para pegar o pulsa Esc para cancelar."
     },
     "color": {
-      "currentTooltip": "Haz clic para elegir un color o arrástralo a un espacio de la paleta",
+      "title": "Color",
+      "dragToSave": "Arrastra a un espacio de la paleta para guardar este color",
       "hexTooltip": "Introduce un código de color hexadecimal",
-      "brushOpacity": "Opacidad del pincel",
-      "dragToCustomize": "Arrastra colores a los espacios para personalizar la paleta.",
-      "rowLabel": "Fila de la paleta",
       "swatchTooltip": "{color} — haz clic para seleccionar, suelta un color para reemplazarlo",
       "row": {
         "base": "Color",
         "shade1": "Tono 1",
         "shade2": "Tono 2",
         "highlight": "Resaltado"
-      }
+      },
+      "hueTooltip": "Tono",
+      "formatTooltip": "Formato de color",
+      "channel": {
+        "red": "Rojo",
+        "green": "Verde",
+        "blue": "Azul"
+      },
+      "pickerTooltip": "Elegir un color",
+      "addSwatch": "Añadir este color a la paleta"
     },
     "layers": {
       "title": "Capas",
@@ -388,33 +411,36 @@
       "hide": "Ocultar esta capa",
       "show": "Mostrar esta capa",
       "rename": "Renombrar esta capa",
-      "moveUp": "Subir esta capa",
-      "moveDown": "Bajar esta capa",
+      "reorder": "Arrastra para reordenar, o usa las flechas",
+      "reorderLabel": "Reordenar {name}",
       "delete": "Eliminar esta capa",
-      "opacity": "Opacidad"
+      "opacity": "Opacidad",
+      "opacityLabel": "Opacidad de {name}",
+      "renameHint": "Doble clic para renombrar",
+      "renameLabel": "Renombrar {name}"
     },
     "frames": {
-      "title": "Fotogramas de animación",
+      "count": "{count} fotograma | {count} fotogramas",
+      "collapse": "Cerrar el panel de animación",
+      "title": "Animación",
       "frame": "Fotograma",
       "add": "Añadir",
       "addTooltip": "Crear un fotograma nuevo",
       "play": "Reproducir la animación",
       "pause": "Pausar la animación",
       "duplicate": "Duplicar este fotograma",
-      "delete": "Eliminar este fotograma"
+      "delete": "Eliminar este fotograma",
+      "openHint": "Clic para abrir la línea de tiempo",
+      "closeHint": "Clic para plegarlo"
     },
     "preview": {
-      "title": "Vista previa de la animación",
-      "label": "Vista previa",
+      "title": "Vista previa",
       "fps": "FPS",
       "fpsTooltip": "Ajustar la velocidad de reproducción en fotogramas por segundo"
     },
     "onion": {
       "title": "Piel de cebolla",
       "tooltip": "Mostrar fantasmas de los fotogramas vecinos mientras dibujas",
-      "previousFrames": "Fotogramas anteriores",
-      "nextFrames": "Fotogramas siguientes",
-      "opacity": "Opacidad del fantasma",
       "legendPrevious": "Anterior",
       "legendNext": "Siguiente"
     },
@@ -461,6 +487,20 @@
       "copiedMoveToPos": "Copiado. Mueve el puntero y haz clic para pegar",
       "cutMoveToPos": "Cortado. Mueve el puntero y haz clic para pegar",
       "moveMouseToPaste": "Mueve el puntero a su posición y haz clic para pegar"
+    },
+    "save": "Guardar",
+    "files": {
+      "project": "Proyecto",
+      "projectHint": "archivo .tps",
+      "image": "Imagen",
+      "imageHint": "PNG o JPG, se convierte en píxeles",
+      "sheet": "Hoja de sprites",
+      "sheetImportHint": "una hoja se convierte en fotogramas",
+      "sheetExportHint": "todos los fotogramas en una hoja",
+      "png": "PNG",
+      "pngHint": "el fotograma actual",
+      "gif": "GIF",
+      "gifHint": "toda la animación"
     }
   },
   "auth": {

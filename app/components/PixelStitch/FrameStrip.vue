@@ -6,7 +6,7 @@ import { usePixelStitchContext } from '~/composables/usePixelStitchContext'
 const editor = usePixelStitchContext()
 const { t } = useI18n()
 
-const PREVIEW_SIZE = 64
+const PREVIEW_SIZE = 88
 
 const previewRefs = ref<HTMLCanvasElement[]>([])
 
@@ -41,92 +41,87 @@ function onDrop(target: number) {
   dragIndex.value = null
   if (from !== null) editor.reorderFrames(from, target)
 }
+
+// With onion skin on, the two neighbours of the current frame carry the colour
+// of the ghost they draw on the canvas — a border on the tile, not a band
+// inside it, so the thumbnail itself stays readable.
+function tileBorder(index: number) {
+  if (editor.currentFrameIndex.value === index) return 'border-primary bg-slate-100'
+  if (editor.onionSkin.value) {
+    if (index === editor.currentFrameIndex.value - 1) return 'border-cornflower-500'
+    if (index === editor.currentFrameIndex.value + 1) return 'border-teal-500'
+  }
+  return 'border-default'
+}
 </script>
 
 
 <template>
-  <UPageCard variant="outline" :ui="{ root: 'rounded-2xl', container: 'p-4 sm:p-4 gap-3' }">
-    <div class="flex items-center justify-between">
-      <h3 class="font-heading font-bold text-sm text-highlighted">{{ t('pixelStitch.frames.title') }}</h3>
-      <div class="flex gap-1.5">
-        <UTooltip :text="editor.isPlaying.value ? t('pixelStitch.frames.pause') : t('pixelStitch.frames.play')">
-          <UButton
-            :icon="editor.isPlaying.value ? 'lucide:pause' : 'lucide:play'"
-            size="xs"
-            color="neutral"
-            variant="outline"
-            :aria-label="editor.isPlaying.value ? t('pixelStitch.frames.pause') : t('pixelStitch.frames.play')"
-            @click="editor.isPlaying.value = !editor.isPlaying.value"
-          />
-        </UTooltip>
-        <UTooltip :text="t('pixelStitch.frames.addTooltip')">
-          <UButton
-            :label="t('pixelStitch.frames.add')"
-            icon="lucide:plus"
-            size="xs"
-            color="neutral"
-            variant="outline"
-            @click="editor.addFrame()"
-          />
-        </UTooltip>
+  <!-- 10px between tiles. `items-stretch` so every tile, and the dashed one
+       that adds a frame, is exactly as tall as the row. -->
+  <section class="flex h-full items-stretch gap-2.5 overflow-x-auto">
+    <div
+      v-for="(frame, index) in editor.frames.value"
+      :key="frame.id"
+      class="flex w-[104px] shrink-0 cursor-grab flex-col gap-1 rounded-[10px] border p-1.5 transition-opacity active:cursor-grabbing"
+      :class="[tileBorder(index), dragIndex === index ? 'opacity-50' : '']"
+      draggable="true"
+      @click="editor.selectFrame(index)"
+      @dragstart="dragIndex = index"
+      @dragend="dragIndex = null"
+      @dragover.prevent
+      @drop.prevent="onDrop(index)"
+    >
+      <div class="grid h-[76px] shrink-0 place-items-center rounded-md ring-1 ring-default">
+        <canvas
+          :ref="element => { if (element) previewRefs[index] = element as HTMLCanvasElement }"
+          :width="PREVIEW_SIZE"
+          :height="PREVIEW_SIZE"
+          class="aspect-square max-h-full rounded"
+          :style="{ imageRendering: 'pixelated' }"
+        />
       </div>
-    </div>
-
-    <!-- Preview and timeline in one panel: the preview plays the strip next to
-         it, and the FPS slider it carries is what drives that playback. -->
-    <div class="flex gap-3">
-      <PixelStitchAnimationPreview />
-
-      <div class="flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1">
-        <div
-          v-for="(frame, index) in editor.frames.value"
-          :key="frame.id"
-          class="shrink-0 rounded-xl p-2 bg-elevated ring-1 transition-opacity cursor-grab active:cursor-grabbing"
-          :class="[
-            editor.currentFrameIndex.value === index ? 'ring-2 ring-primary' : 'ring-default',
-            dragIndex === index ? 'opacity-50' : ''
-          ]"
-          draggable="true"
-          @click="editor.selectFrame(index)"
-          @dragstart="dragIndex = index"
-          @dragend="dragIndex = null"
-          @dragover.prevent
-          @drop.prevent="onDrop(index)"
+      <div class="flex h-6 shrink-0 items-center gap-0.5">
+        <!-- The counter left the panel header for this: the number is on the
+             tile, which is where you are looking. -->
+        <span
+          class="grow text-xs tabular-nums"
+          :class="editor.currentFrameIndex.value === index ? 'font-semibold text-highlighted' : 'text-dimmed'"
         >
-          <canvas
-            :ref="element => { if (element) previewRefs[index] = element as HTMLCanvasElement }"
-            :width="PREVIEW_SIZE"
-            :height="PREVIEW_SIZE"
-            class="rounded-md"
-            :style="{ imageRendering: 'pixelated' }"
+          {{ index + 1 }}
+        </span>
+        <UTooltip :text="t('pixelStitch.frames.duplicate')">
+          <UButton
+            icon="lucide:copy"
+            color="neutral"
+            variant="ghost"
+            :aria-label="t('pixelStitch.frames.duplicate')"
+            class="size-6 shrink-0 justify-center rounded-[5px]"
+            @click.stop="editor.duplicateFrame(index)"
           />
-          <div class="mt-1.5 flex items-center justify-between gap-1">
-            <span class="text-xs text-dimmed tabular-nums">{{ t('pixelStitch.frames.frame') }} {{ index + 1 }}</span>
-            <div class="flex">
-              <UTooltip :text="t('pixelStitch.frames.duplicate')">
-                <UButton
-                  icon="lucide:copy"
-                  size="xs"
-                  color="neutral"
-                  variant="ghost"
-                  :aria-label="t('pixelStitch.frames.duplicate')"
-                  @click.stop="editor.duplicateFrame(index)"
-                />
-              </UTooltip>
-              <UTooltip :text="t('pixelStitch.frames.delete')">
-                <UButton
-                  icon="lucide:trash-2"
-                  size="xs"
-                  color="neutral"
-                  variant="ghost"
-                  :aria-label="t('pixelStitch.frames.delete')"
-                  @click.stop="editor.deleteFrame(index)"
-                />
-              </UTooltip>
-            </div>
-          </div>
-        </div>
+        </UTooltip>
+        <UTooltip :text="t('pixelStitch.frames.delete')">
+          <HoldToConfirm
+            :label="t('pixelStitch.frames.delete')"
+            :disabled="editor.frames.value.length === 1"
+            size="sm"
+            @confirm="editor.deleteFrame(index)"
+          />
+        </UTooltip>
       </div>
     </div>
-  </UPageCard>
+
+    <!-- The Add button left the header: a new frame appears at the end of the
+         strip, so the control that makes one belongs there. -->
+    <UTooltip :text="t('pixelStitch.frames.addTooltip')">
+      <button
+        type="button"
+        class="flex w-[104px] shrink-0 cursor-pointer items-center justify-center rounded-[10px] border border-dashed border-default text-dimmed transition-colors hover:border-primary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        :aria-label="t('pixelStitch.frames.addTooltip')"
+        @click="editor.addFrame()"
+      >
+        <Icon name="lucide:plus" class="size-5" />
+      </button>
+    </UTooltip>
+  </section>
 </template>

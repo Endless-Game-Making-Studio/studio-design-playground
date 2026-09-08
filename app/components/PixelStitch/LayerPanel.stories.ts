@@ -33,14 +33,27 @@ export const Stack: Story = {
   decorators: [withEditor({ width: INSPECTOR_WIDTH, seed: buildStack })]
 }
 
+// Hidden is zero, so both rows below carry a number; a layer left whole
+// carries none.
 export const HiddenAndFaded: Story = {
   decorators: [withEditor({
     width: INSPECTOR_WIDTH,
     seed: (editor) => {
       buildStack(editor)
-      editor.toggleLayerVisibility(1)
+      editor.toggleLayerHidden(1)
       editor.setLayerOpacity(2, 0.4)
       editor.currentLayerIndex.value = 0
     }
   })]
+}
+
+// Mid-drag: the held row is left as an empty dashed slot, the lifted chip
+// follows the pointer and a mark shows where it will land.
+export const MidDrag: Story = {
+  decorators: [withEditor({ width: INSPECTOR_WIDTH, seed: buildStack })],
+  play: async ({ canvasElement }) => {
+    const grip = canvasElement.querySelectorAll('button[aria-label^="Reorder"]')[2] as HTMLElement
+    grip.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 40, clientY: 200 }))
+    grip.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: 40, clientY: 60 }))
+  }
 }

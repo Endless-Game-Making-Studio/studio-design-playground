@@ -1,6 +1,6 @@
 import type {
   Frame,
-  OnionSkinSettings,
+  Layer,
   PixelGrid,
   PixelTool,
   Point,
@@ -8,7 +8,7 @@ import type {
   Selection,
   SelectionMode
 } from '~/composables/pixelStitch/types'
-import { MAX_HISTORY_STEPS } from '~/composables/pixelStitch/types'
+import { MAX_HISTORY_STEPS, MAX_ZOOM, MIN_ZOOM } from '~/composables/pixelStitch/types'
 import {
   DEFAULT_PALETTE,
   cloneGrid,
@@ -49,11 +49,41 @@ export interface PixelStitchOptions {
 export function usePixelStitch(options: PixelStitchOptions = {}) {
   const { persist = true } = options
   const { t } = useI18n()
-  const toast = useToast()
+
+  // ─── Notices ──────────────────────────────────────────────────────────────
+
+  /**
+   * The editor's own notice line, shown along the foot of the canvas area
+   * rather than as a toast. A toast for every layer added and colour saved is
+   * a lot of stacked cards over the drawing for events the artist just caused;
+   * one discreet line that replaces itself says the same thing without taking
+   * the screen.
+   */
+  const notice = ref<{ id: number, text: string, color: 'success' | 'error' | 'info' } | null>(null)
+  let noticeTimer: ReturnType<typeof setTimeout> | null = null
+  let noticeSerial = 0
+
+  // Long enough to read, short enough that the line is usually empty. Errors
+  // stay longer: they are the ones worth catching up on.
+  const NOTICE_MS = 2600
+  const NOTICE_ERROR_MS = 5000
+
+  function showNotice(text: string, color: 'success' | 'error' | 'info' = 'success') {
+    if (noticeTimer) clearTimeout(noticeTimer)
+    notice.value = { id: ++noticeSerial, text, color }
+    noticeTimer = setTimeout(() => {
+      notice.value = null
+      noticeTimer = null
+    }, color === 'error' ? NOTICE_ERROR_MS : NOTICE_MS)
+  }
 
   function notify(key: string, color: 'success' | 'error' | 'info' = 'success') {
-    toast.add({ title: t(`pixelStitch.toast.${key}`), color })
+    showNotice(t(`pixelStitch.toast.${key}`), color)
   }
+
+  onBeforeUnmount(() => {
+    if (noticeTimer) clearTimeout(noticeTimer)
+  })
 
   // ─── Document state ───────────────────────────────────────────────────────
 
@@ -69,21 +99,59 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
   // ─── Tool state ───────────────────────────────────────────────────────────
 
   const currentColor = ref('#FF00FF')
-  const brushOpacity = ref(1)
   const currentTool = ref<PixelTool>('pencil')
   const brushSize = ref(1)
   const eraserSize = ref(1)
   const gridVisible = ref(true)
   const zoom = ref(1)
-  const palette = ref<string[]>([...DEFAULT_PALETTE])
+
+  // Measured by the canvas, which is the only part that knows how big its
+  // scroll area is; the zoom control in the top bar reads it for its
+  // fit-to-window preset.
+  const fitZoom = ref(1)
+
+  function setZoom(value: number) {
+    zoom.value = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value))
+  }
+  const palette = ref<string[][]>(DEFAULT_PALETTE.map(row => [...row]))
 
   const isPlaying = ref(false)
-  const onionSkin = ref<OnionSkinSettings>({
-    enabled: false,
-    previousFrames: 1,
-    nextFrames: 1,
-    opacity: 0.3
-  })
+
+  // Whether the animation panel along the bottom is open. It lives here rather
+  // than in the panel because the page's own bottom padding has to clear it.
+  const animationPanelOpen = ref(false)
+
+  // Playback lives with the state rather than inside the preview component:
+  // play stays available while the panel is closed and the preview is not
+  // mounted. It advances the shared frame cursor, so the canvas and the strip
+  // follow along — nothing here is a separate player.
+  let playbackTimer: ReturnType<typeof setInterval> | null = null
+
+  function stopPlayback() {
+    if (playbackTimer) clearInterval(playbackTimer)
+    playbackTimer = null
+  }
+
+  watch(
+    [isPlaying, fps, () => frames.value.length],
+    ([playing, rate, frameCount]) => {
+      stopPlayback()
+      if (!playing || frameCount < 2) return
+      // Re-created whenever fps changes, which is what lets the drag retime a
+      // running animation instead of waiting for the next play.
+      playbackTimer = setInterval(() => {
+        currentFrameIndex.value = (currentFrameIndex.value + 1) % frames.value.length
+      }, 1000 / rate)
+    },
+    { immediate: true }
+  )
+
+  onBeforeUnmount(stopPlayback)
+
+  // On or off, nothing else. Two ghost colours carry one neighbour each way;
+  // reaching further needs either fading the more distant ghosts in the same
+  // colour or more tones on the strip, which is a separate decision.
+  const onionSkin = ref(false)
 
   const selection = ref<Selection | null>(null)
   const clipboard = ref<PixelGrid | null>(null)
@@ -157,7 +225,17 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
   function addLayer() {
     const frame = currentFrame.value
     if (!frame) return
-    frame.layers.push(createLayer(canvasSize.value, Date.now()))
+
+    // Names count up from the highest "Layer N" already in the stack, so
+    // deleting the middle of a list does not hand the next layer a number that
+    // is already taken. The id is separate and only has to be unique.
+    const highestNumber = frame.layers.reduce((highest, layer) => {
+      const match = /^Layer (\d+)$/.exec(layer.name)
+      return match ? Math.max(highest, Number(match[1])) : highest
+    }, frame.layers.length)
+    const nextId = frame.layers.reduce((highest, layer) => Math.max(highest, layer.id), 0) + 1
+
+    frame.layers.push(createLayer(canvasSize.value, nextId, `Layer ${highestNumber + 1}`))
     currentLayerIndex.value = frame.layers.length - 1
     notify('layerAdded')
   }
@@ -174,9 +252,20 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
     notify('layerDeleted')
   }
 
-  function toggleLayerVisibility(index: number) {
+  // What a layer was at before it was hidden. Deliberately not part of the
+  // project: 45% coming back as 45% is a convenience within a session, not a
+  // second piece of state a saved file has to agree about.
+  const opacityBeforeHiding = new Map<number, number>()
+
+  function toggleLayerHidden(index: number) {
     const layer = currentFrame.value?.layers[index]
-    if (layer) layer.visible = !layer.visible
+    if (!layer) return
+    if (layer.opacity > 0) {
+      opacityBeforeHiding.set(layer.id, layer.opacity)
+      layer.opacity = 0
+      return
+    }
+    layer.opacity = opacityBeforeHiding.get(layer.id) ?? 1
   }
 
   function setLayerOpacity(index: number, opacity: number) {
@@ -189,15 +278,36 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
     if (layer) layer.name = name
   }
 
-  // "Up" is toward the top of the stack, which is the end of the array, since
-  // later layers composite over earlier ones.
-  function moveLayer(index: number, direction: 1 | -1) {
+  // Absolute rather than a one-step nudge: the arrow keys on the grip know the
+  // position they want to land on.
+  function reorderLayer(from: number, to: number) {
     const layers = currentFrame.value?.layers
-    const target = index + direction
-    if (!layers || target < 0 || target >= layers.length) return
-    const [moved] = layers.splice(index, 1)
-    layers.splice(target, 0, moved!)
-    currentLayerIndex.value = target
+    if (!layers || from === to || to < 0 || to >= layers.length) return
+    const [moved] = layers.splice(from, 1)
+    layers.splice(to, 0, moved!)
+    currentLayerIndex.value = to
+  }
+
+  // The drag reports the order it arrived at rather than a pair of indices, and
+  // it reports it continuously while the pointer moves. Selection follows the
+  // layer itself, not its old position, so the row someone is holding stays the
+  // selected one as it travels.
+  function setLayerOrder(next: Layer[]) {
+    const frame = currentFrame.value
+    if (!frame) return
+
+    // A reorder is a permutation and nothing else. The drag reports the order
+    // its own layout measurements know about, and a row added moments earlier
+    // may not have been measured yet — taking that array at face value dropped
+    // the unmeasured layer from the project.
+    const ids = new Set(frame.layers.map(layer => layer.id))
+    const isPermutation = next.length === ids.size && next.every(layer => ids.has(layer.id))
+    if (!isPermutation) return
+
+    const selected = frame.layers[currentLayerIndex.value]
+    frame.layers = next
+    const found = selected ? next.findIndex(layer => layer.id === selected.id) : -1
+    if (found !== -1) currentLayerIndex.value = found
   }
 
   function clearLayer() {
@@ -335,6 +445,12 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
 
   // Resizing starts over: pixel art can't be rescaled between grids without
   // either resampling or cropping, and the original chose a clean slate.
+  // Every frame, not just the one on screen — which is the whole point of
+  // asking before a resize.
+  const hasArtwork = computed(() =>
+    frames.value.some(frame => frame.layers.some(layer => layer.data.some(row => row.some(pixel => pixel !== ''))))
+  )
+
   function setCanvasSize(size: number) {
     if (size === canvasSize.value) return
     canvasSize.value = size
@@ -342,12 +458,25 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
       for (const layer of frame.layers) layer.data = emptyGrid(size)
     }
     resetHistory(currentLayer.value?.data ?? emptyGrid(size))
+    showNotice(t('pixelStitch.toast.canvasSizeChanged', { size: `${size}×${size}` }))
   }
 
   // ─── Palette ──────────────────────────────────────────────────────────────
 
-  function setPaletteColor(index: number, color: string) {
-    palette.value[index] = color
+  function setPaletteColor(rowIndex: number, slotIndex: number, color: string) {
+    const row = palette.value[rowIndex]
+    if (!row) return
+    row[slotIndex] = color
+    notify('colorAddedToPalette')
+  }
+
+  // The trailing slot on every row is empty, so a colour can be put somewhere
+  // rather than only over something. Appending refills it, which is what keeps
+  // an empty slot at the end however long the row gets.
+  function addPaletteColor(rowIndex: number, color: string) {
+    const row = palette.value[rowIndex]
+    if (!row) return
+    row.push(color)
     notify('colorAddedToPalette')
   }
 
@@ -440,6 +569,16 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
   }
 
   function applyProjectData(data: ProjectData) {
+    // Files written before hiding became zero carry a `visible` flag; a layer
+    // saved as hidden has to stay hidden rather than reappear at full strength.
+    for (const frame of data.frames) {
+      for (const layer of frame.layers) {
+        const legacy = layer as typeof layer & { visible?: boolean }
+        if (legacy.visible === false) layer.opacity = 0
+        delete legacy.visible
+      }
+    }
+
     frames.value = data.frames
     canvasSize.value = data.canvasSize
     fps.value = data.fps
@@ -472,7 +611,7 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
   }, { deep: true })
 
   watch(palette, (value) => {
-    if (persist) savePalette([...value])
+    if (persist) savePalette(value.map(row => [...row]))
   }, { deep: true })
 
   onBeforeUnmount(() => {
@@ -480,6 +619,10 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
   })
 
   return {
+    // notices
+    notice,
+    notify,
+    showNotice,
     // document
     canvasSize,
     frames,
@@ -490,14 +633,16 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
     fps,
     // tools
     currentColor,
-    brushOpacity,
     currentTool,
     brushSize,
     eraserSize,
     gridVisible,
     zoom,
+    fitZoom,
+    setZoom,
     palette,
     isPlaying,
+    animationPanelOpen,
     onionSkin,
     selection,
     clipboard,
@@ -514,10 +659,11 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
     // layers
     addLayer,
     deleteLayer,
-    toggleLayerVisibility,
+    toggleLayerHidden,
     setLayerOpacity,
     renameLayer,
-    moveLayer,
+    reorderLayer,
+    setLayerOrder,
     clearLayer,
     clearAllLayers,
     // frames
@@ -530,8 +676,10 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
     flipHorizontal,
     flipVertical,
     removeBackground,
+    hasArtwork,
     setCanvasSize,
     setPaletteColor,
+    addPaletteColor,
     // selection
     cancelSelection,
     copySelection,

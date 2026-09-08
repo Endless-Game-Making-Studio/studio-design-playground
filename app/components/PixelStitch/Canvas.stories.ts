@@ -35,15 +35,15 @@ export const LargeCanvas: Story = {
   })]
 }
 
-// Neighbouring frames drawn as flat brand-coloured ghosts: primary behind,
-// secondary ahead.
+// One neighbour each way, drawn as a flat coloured ghost: cornflower behind,
+// teal ahead — the same two colours that border those tiles on the strip.
 export const OnionSkinning: Story = {
   decorators: [withEditor({
     seed: (editor) => {
       paintSample(editor)
       addFrames(editor, 2)
       editor.currentFrameIndex.value = 1
-      editor.onionSkin.value = { enabled: true, previousFrames: 1, nextFrames: 1, opacity: 0.5 }
+      editor.onionSkin.value = true
     }
   })]
 }

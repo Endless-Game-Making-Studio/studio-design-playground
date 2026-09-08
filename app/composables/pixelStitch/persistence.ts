@@ -1,5 +1,6 @@
 import type { ProjectData } from './types'
 import { downloadBlob, pickFile } from './files'
+import { PALETTE_ROW_LENGTH } from './project'
 
 const PROJECT_KEY = 'pixel-stitch-project'
 const PALETTE_KEY = 'pixel-stitch-palette'
@@ -53,7 +54,7 @@ export function loadPalette(): string[] | null {
   }
 }
 
-export function savePalette(palette: string[]) {
+export function savePalette(palette: string[][]) {
   if (!import.meta.client) return
   try {
     localStorage.setItem(PALETTE_KEY, JSON.stringify(palette))

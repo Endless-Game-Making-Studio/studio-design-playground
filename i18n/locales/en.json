@@ -325,7 +325,17 @@
     "exportingGif": "Exporting GIF…",
     "canvasSize": {
       "label": "Canvas",
-      "tooltip": "Choose the canvas size — this clears every frame"
+      "tooltip": "Set the canvas to {size} pixels",
+      "confirmTitle": "Change the canvas to {size}?",
+      "confirmBody": "Everything drawn on the frame will be cleared. | Everything drawn on all {count} frames will be cleared.",
+      "confirmKeep": "Keep {size}",
+      "confirmClear": "Clear and resize",
+      "confirmReason": "A drawing made for a {size} grid cannot be carried over to another one without redrawing it."
+    },
+    "holdToConfirm": {
+      "instruction": "Hold for one second to {action}.",
+      "holding": "Holding",
+      "completed": "Confirmed"
     },
     "tools": {
       "pencil": "Pencil",
@@ -342,6 +352,7 @@
       "selectTooltip": "Select an area to copy (Ctrl+C) or cut (Ctrl+X), then paste (Ctrl+V)"
     },
     "toolbar": {
+      "import": "Import",
       "removeBackground": "Remove the background from the current layer",
       "flipHorizontal": "Flip horizontally",
       "flipVertical": "Flip vertically",
@@ -356,9 +367,14 @@
       "clearCurrentLayer": "Clear current layer",
       "clearAllLayers": "Clear all layers",
       "exportSpriteSheet": "Export every frame as a sprite sheet",
-      "importSpriteSheet": "Import a sprite sheet as frames"
+      "importSpriteSheet": "Import a sprite sheet as frames",
+      "submit": "Save & submit",
+      "submitTooltip": "Download the current frame as a PNG",
+      "actualSize": "Preview at actual size"
     },
     "canvas": {
+      "zoomFit": "Fit to window",
+      "zoomPresets": "Zoom presets",
       "zoomIn": "Zoom in",
       "zoomOut": "Zoom out",
       "zoomReset": "Reset the zoom to 100%",
@@ -368,18 +384,25 @@
       "hintPasting": "Move the pointer to position it, click to paste, or press Esc to cancel."
     },
     "color": {
-      "currentTooltip": "Click to pick a colour, or drag it onto a palette slot",
+      "title": "Colour",
+      "dragToSave": "Drag onto a palette slot to save this colour",
       "hexTooltip": "Enter a hex colour code",
-      "brushOpacity": "Brush opacity",
-      "dragToCustomize": "Drag colours onto slots to customise the palette.",
-      "rowLabel": "Palette row",
       "swatchTooltip": "{color} — click to select, drop a colour to replace",
       "row": {
         "base": "Colour",
         "shade1": "Shade 1",
         "shade2": "Shade 2",
         "highlight": "Highlight"
-      }
+      },
+      "hueTooltip": "Hue",
+      "formatTooltip": "Colour format",
+      "channel": {
+        "red": "Red",
+        "green": "Green",
+        "blue": "Blue"
+      },
+      "pickerTooltip": "Pick a colour",
+      "addSwatch": "Add this colour to the palette"
     },
     "layers": {
       "title": "Layers",
@@ -388,33 +411,36 @@
       "hide": "Hide this layer",
       "show": "Show this layer",
       "rename": "Rename this layer",
-      "moveUp": "Move this layer up",
-      "moveDown": "Move this layer down",
+      "reorder": "Drag to reorder, or use the arrow keys",
+      "reorderLabel": "Reorder {name}",
       "delete": "Delete this layer",
-      "opacity": "Opacity"
+      "opacity": "Opacity",
+      "opacityLabel": "Opacity of {name}",
+      "renameHint": "Double-click to rename",
+      "renameLabel": "Rename {name}"
     },
     "frames": {
-      "title": "Animation frames",
+      "count": "{count} frame | {count} frames",
+      "collapse": "Close the animation panel",
+      "title": "Animation",
       "frame": "Frame",
       "add": "Add",
       "addTooltip": "Create a new animation frame",
       "play": "Play the animation",
       "pause": "Pause the animation",
       "duplicate": "Duplicate this frame",
-      "delete": "Delete this frame"
+      "delete": "Delete this frame",
+      "openHint": "Click to open the timeline",
+      "closeHint": "Click to fold it away"
     },
     "preview": {
-      "title": "Animation preview",
-      "label": "Preview",
+      "title": "Preview",
       "fps": "FPS",
       "fpsTooltip": "Adjust the playback speed in frames per second"
     },
     "onion": {
       "title": "Onion skinning",
       "tooltip": "Show ghosts of the neighbouring frames while you draw",
-      "previousFrames": "Previous frames",
-      "nextFrames": "Next frames",
-      "opacity": "Ghost opacity",
       "legendPrevious": "Previous",
       "legendNext": "Next"
     },
@@ -461,6 +487,20 @@
       "copiedMoveToPos": "Copied. Move the pointer and click to paste",
       "cutMoveToPos": "Cut. Move the pointer and click to paste",
       "moveMouseToPaste": "Move the pointer into position and click to paste"
+    },
+    "save": "Save",
+    "files": {
+      "project": "Project",
+      "projectHint": ".tps file",
+      "image": "Image",
+      "imageHint": "PNG or JPG, becomes pixels",
+      "sheet": "Sprite sheet",
+      "sheetImportHint": "a sheet becomes frames",
+      "sheetExportHint": "every frame on one sheet",
+      "png": "PNG",
+      "pngHint": "the current frame",
+      "gif": "GIF",
+      "gifHint": "the whole animation"
     }
   },
   "auth": {

@@ -1,116 +1,89 @@
 <script setup lang="ts">
+import { AnimatePresence, ReorderGroup } from 'motion-v'
+import type { Layer } from '~/composables/pixelStitch/types'
 import { usePixelStitchContext } from '~/composables/usePixelStitchContext'
 
 const editor = usePixelStitchContext()
 const { t } = useI18n()
 
 const layers = computed(() => editor.currentFrame.value?.layers ?? [])
+
+// ─── Drag to reorder ────────────────────────────────────────────────────────
+
+// `ReorderGroup` from motion-v, which Nuxt UI already runs on. It reports the
+// order it has arrived at, continuously, while the pointer moves: the row being
+// held stays under the cursor and its neighbours spring out of the way, so the
+// list itself is the preview. That leaves nothing for a placeholder slot or a
+// landing mark to say — the hand-rolled version needed both, and the two of
+// them plus the row read as three stacked cards.
+const order = computed({
+  get: () => layers.value,
+  set: (next: Layer[]) => editor.setLayerOrder(next)
+})
+
+// Focus has to survive an arrow-key move, or a run of presses would strand the
+// layer after the first one.
+const rowRefs = ref<{ focusGrip: () => void }[]>([])
+
+watch(() => layers.value.length, count => (rowRefs.value.length = count))
+
+async function onKeyboardReorder(from: number, to: number) {
+  editor.reorderLayer(from, to)
+  await nextTick()
+  rowRefs.value[to]?.focusGrip()
+}
 </script>
 
 <template>
-  <UPageCard variant="outline" :ui="{ root: 'rounded-2xl', container: 'p-4 sm:p-4 gap-3' }">
-    <div class="flex items-center justify-between">
-      <h3 class="font-heading font-bold text-sm text-highlighted">{{ t('pixelStitch.layers.title') }}</h3>
+  <!-- A column that fills what the colour panel leaves: the header stays put
+       and the list takes the rest, so a long stack scrolls on its own instead
+       of pushing the panel past the window. -->
+  <section class="flex min-h-0 flex-1 flex-col gap-2 p-3.5">
+    <div class="flex shrink-0 items-center">
+      <p class="grow text-[11px] font-semibold uppercase tracking-[0.06em] text-dimmed">
+        {{ t('pixelStitch.layers.title') }}
+      </p>
       <UTooltip :text="t('pixelStitch.layers.addTooltip')">
         <UButton
           :label="t('pixelStitch.layers.add')"
           icon="lucide:plus"
-          size="xs"
           color="neutral"
           variant="outline"
+          class="h-[30px] gap-1.5 rounded-md px-2.5 text-[13px]"
           @click="editor.addLayer()"
         />
       </UTooltip>
     </div>
 
     <!-- Listed bottom-up, matching the compositing order: the first entry is
-         the layer everything else paints over. -->
-    <div class="flex max-h-96 flex-col gap-2 overflow-y-auto">
-      <UCard
-        v-for="(layer, index) in layers"
-        :key="layer.id"
-        variant="subtle"
-        :ui="{
-          root: editor.currentLayerIndex.value === index ? 'rounded-xl ring-2 ring-primary' : 'rounded-xl',
-          body: 'p-2.5 sm:p-2.5 flex flex-col gap-2'
-        }"
-        class="cursor-pointer"
-        @click="editor.currentLayerIndex.value = index"
-      >
-        <div class="flex items-center gap-1">
-          <UTooltip :text="layer.visible ? t('pixelStitch.layers.hide') : t('pixelStitch.layers.show')">
-            <UButton
-              :icon="layer.visible ? 'lucide:eye' : 'lucide:eye-off'"
-              size="xs"
-              color="neutral"
-              variant="ghost"
-              :aria-label="layer.visible ? t('pixelStitch.layers.hide') : t('pixelStitch.layers.show')"
-              @click.stop="editor.toggleLayerVisibility(index)"
-            />
-          </UTooltip>
+         the layer everything else paints over.
 
-          <UTooltip :text="t('pixelStitch.layers.rename')" class="flex-1 min-w-0">
-            <UInput
-              :model-value="layer.name"
-              size="xs"
-              :aria-label="t('pixelStitch.layers.rename')"
-              class="w-full"
-              @click.stop
-              @update:model-value="value => editor.renameLayer(index, String(value))"
-            />
-          </UTooltip>
-
-          <UTooltip :text="t('pixelStitch.layers.moveUp')">
-            <UButton
-              icon="lucide:chevron-up"
-              size="xs"
-              color="neutral"
-              variant="ghost"
-              :disabled="index === layers.length - 1"
-              :aria-label="t('pixelStitch.layers.moveUp')"
-              @click.stop="editor.moveLayer(index, 1)"
-            />
-          </UTooltip>
-          <UTooltip :text="t('pixelStitch.layers.moveDown')">
-            <UButton
-              icon="lucide:chevron-down"
-              size="xs"
-              color="neutral"
-              variant="ghost"
-              :disabled="index === 0"
-              :aria-label="t('pixelStitch.layers.moveDown')"
-              @click.stop="editor.moveLayer(index, -1)"
-            />
-          </UTooltip>
-          <UTooltip :text="t('pixelStitch.layers.delete')">
-            <UButton
-              icon="lucide:trash-2"
-              size="xs"
-              color="neutral"
-              variant="ghost"
-              :disabled="layers.length === 1"
-              :aria-label="t('pixelStitch.layers.delete')"
-              @click.stop="editor.deleteLayer(index)"
-            />
-          </UTooltip>
-        </div>
-
-        <div class="flex flex-col gap-1">
-          <div class="flex items-center justify-between text-xs text-dimmed">
-            <span>{{ t('pixelStitch.layers.opacity') }}</span>
-            <span class="tabular-nums">{{ Math.round(layer.opacity * 100) }}%</span>
-          </div>
-          <USlider
-            :model-value="layer.opacity"
-            :min="0"
-            :max="1"
-            :step="0.1"
-            size="xs"
-            @click.stop
-            @update:model-value="value => editor.setLayerOpacity(index, Number(value))"
-          />
-        </div>
-      </UCard>
-    </div>
-  </UPageCard>
+         The scroller is the list itself rather than a wrapper around it, so
+         motion's auto-scroll finds it when a row is dragged to the edge. It
+         doubles as the clip: `ReorderItem` sets its own `dragSnapToOrigin`,
+         which overrides any `dragConstraints` box passed in, so a hard pull
+         upward would otherwise carry the row clear of the panel and leave it
+         floating over the colour picker. The opacity track is unaffected,
+         being teleported out of this subtree. -->
+    <ReorderGroup
+      v-model:values="order"
+      as="ul"
+      axis="y"
+      class="-mx-1 flex min-h-0 flex-1 list-none flex-col gap-2 overflow-y-auto px-1 py-0.5"
+    >
+      <!-- A deleted row collapses out rather than popping: without this the
+           hold finishes and the row is simply gone the same frame. -->
+      <AnimatePresence>
+        <PixelStitchLayerRow
+          v-for="(layer, index) in order"
+          :ref="element => { if (element) rowRefs[index] = element as unknown as { focusGrip: () => void } }"
+          :key="layer.id"
+          :layer="layer"
+          :index="index"
+          :count="order.length"
+          @reorder="onKeyboardReorder"
+        />
+      </AnimatePresence>
+    </ReorderGroup>
+  </section>
 </template>

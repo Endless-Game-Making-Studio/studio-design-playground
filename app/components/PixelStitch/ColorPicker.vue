@@ -1,25 +1,60 @@
 <script setup lang="ts">
-import { hexToRgb, hexToRgba, isHexColor } from '~/composables/pixelStitch/project'
+import type { DropdownMenuItem } from '@nuxt/ui'
+import { hexToRgb, isHexColor, PALETTE_ROW_LENGTH } from '~/composables/pixelStitch/project'
+import { rgbToHex, type Rgb } from '~/composables/pixelStitch/color'
 import { usePixelStitchContext } from '~/composables/usePixelStitchContext'
 
 const editor = usePixelStitchContext()
 const { t } = useI18n()
 
-// The picker reads and writes whole percents; the editor stores 0-1 because
-// that's what canvas globalAlpha takes.
-const opacityPercent = computed({
-  get: () => Math.round(editor.brushOpacity.value * 100),
-  set: percent => (editor.brushOpacity.value = (Array.isArray(percent) ? percent[0]! : percent) / 100)
-})
+// ─── Readout ────────────────────────────────────────────────────────────────
 
-const rgb = computed(() => hexToRgb(editor.currentColor.value) ?? [0, 0, 0])
+// No alpha in either format: a pixel here is painted or empty, and a
+// half-opaque value survives on the canvas but not through an export.
+const FORMATS = ['rgb', 'hex'] as const
+type Format = typeof FORMATS[number]
+const format = ref<Format>('rgb')
 
-// The swatch preview shows the brush as it will actually paint, opacity
-// included — the palette itself always stores opaque hex.
-const previewColor = computed(() =>
-  editor.brushOpacity.value < 1 && isHexColor(editor.currentColor.value)
-    ? hexToRgba(editor.currentColor.value, editor.brushOpacity.value)
-    : editor.currentColor.value
+const formatItems = computed<DropdownMenuItem[]>(() =>
+  FORMATS.map(id => ({
+    label: id.toUpperCase(),
+    type: 'checkbox' as const,
+    checked: format.value === id,
+    onSelect: () => (format.value = id)
+  }))
+)
+
+const channels = computed<Rgb>(() => (hexToRgb(editor.currentColor.value) as Rgb) ?? [0, 0, 0])
+
+function setChannel(index: 0 | 1 | 2, value: string | number) {
+  const next = [...channels.value] as Rgb
+  next[index] = Math.min(255, Math.max(0, Number(value) || 0))
+  editor.currentColor.value = rgbToHex(next)
+}
+
+// ─── Palette ────────────────────────────────────────────────────────────────
+
+// Four rows: the base hue ramp, two darker shades, and a pastel highlight row.
+// One row is on screen and the dropdown above it chooses which — forty swatches
+// at once was most of the panel for something an artist scans rather than
+// reads. Rows grow, so a row is however long the artist has made it.
+const ROWS = ['base', 'shade1', 'shade2', 'highlight'] as const
+const activeRow = ref<typeof ROWS[number]>('base')
+const rowIndex = computed(() => ROWS.indexOf(activeRow.value))
+const swatches = computed(() => editor.palette.value[rowIndex.value] ?? [])
+
+// Each option carries its own row of colours: the four names alone
+// ("Colour", "Shade 1"…) leave the artist guessing what is actually in each
+// one, and the swatches are the thing being chosen.
+const rowItems = computed<DropdownMenuItem[]>(() =>
+  ROWS.map((row, index) => ({
+    label: t(`pixelStitch.color.row.${row}`),
+    type: 'checkbox' as const,
+    checked: activeRow.value === row,
+    slot: 'row' as const,
+    colours: (editor.palette.value[index] ?? []).slice(0, PALETTE_ROW_LENGTH),
+    onSelect: () => (activeRow.value = row)
+  }))
 )
 
 const draggedColor = ref<string | null>(null)
@@ -29,133 +64,169 @@ function onDragStart(event: DragEvent, color: string) {
   if (event.dataTransfer) event.dataTransfer.effectAllowed = 'copy'
 }
 
-function onDrop(index: number) {
+// Dropping on a swatch replaces it; dropping on the empty slot at the end adds
+// one. Both gestures are the same reach, so both have to land somewhere.
+function onDropOnSwatch(slot: number) {
   const color = draggedColor.value
   draggedColor.value = null
-  if (color && isHexColor(color)) editor.setPaletteColor(index, color)
+  if (color && isHexColor(color)) editor.setPaletteColor(rowIndex.value, slot, color)
 }
 
-// Four rows of ten: the base hue ramp, two darker shades, and a pastel
-// highlight row. Only the selected row is on screen — a dropdown of rows keeps
-// the panel short, and unlike a popover of swatches it leaves every row a
-// visible drop target for dragging the current colour onto.
-const ROWS = ['base', 'shade1', 'shade2', 'highlight'] as const
-const ROW_LENGTH = 10
+function onDropOnEmpty() {
+  const color = draggedColor.value
+  draggedColor.value = null
+  if (color && isHexColor(color)) editor.addPaletteColor(rowIndex.value, color)
+}
 
-const rowItems = computed(() =>
-  ROWS.map((row, index) => ({ label: t(`pixelStitch.color.row.${row}`), value: index }))
-)
-const activeRow = ref(0)
+// Clicking the empty slot saves what is in hand, which is the shorter way to
+// the same result as dragging the swatch onto it.
+function addCurrentColor() {
+  if (isHexColor(editor.currentColor.value)) editor.addPaletteColor(rowIndex.value, editor.currentColor.value)
+}
 
-const activeSwatches = computed(() =>
-  Array.from({ length: ROW_LENGTH }, (_, slot) => {
-    const index = activeRow.value * ROW_LENGTH + slot
-    return { index, color: editor.palette.value[index] ?? '#000000' }
-  })
-)
+// ─── Eyedropper ─────────────────────────────────────────────────────────────
+
+const eyedropperActive = computed(() => editor.currentTool.value === 'eyedropper')
+
+// Toggling back rather than leaving the tool stuck: the eyedropper is a
+// one-shot borrow from whatever was in hand, so a second click gives the pencil
+// back instead of stranding someone on a tool that only samples.
+function toggleEyedropper() {
+  editor.currentTool.value = eyedropperActive.value ? 'pencil' : 'eyedropper'
+}
+
+const FIELD = 'h-8 rounded-md'
 </script>
 
 <template>
-  <UPageCard variant="outline" :ui="{ root: 'rounded-2xl', container: 'p-4 sm:p-4 gap-4' }">
-    <div class="flex items-center gap-3">
-      <UPopover>
-        <UTooltip :text="t('pixelStitch.color.currentTooltip')">
-          <!-- The swatch is the picker's trigger, and still draggable so a mixed
-               colour can be dropped into a palette slot. The checker sits behind
-               it so a translucent brush reads as translucent rather than as a
-               lighter solid. -->
-          <button
-            type="button"
-            class="size-14 shrink-0 rounded-xl ring-1 ring-default active:cursor-grabbing pixel-checker"
-            draggable="true"
-            :aria-label="t('pixelStitch.color.currentTooltip')"
-            @dragstart="onDragStart($event, editor.currentColor.value)"
-            @dragend="draggedColor = null"
-          >
-            <span class="block size-full rounded-xl" :style="{ backgroundColor: previewColor }" />
-          </button>
+  <section class="flex flex-col gap-2.5 p-3.5">
+    <p class="text-[11px] font-semibold uppercase tracking-[0.06em] text-dimmed">
+      {{ t('pixelStitch.color.title') }}
+    </p>
+
+    <PixelStitchColorField v-model="editor.currentColor.value">
+      <template #leading>
+        <UTooltip :text="t('pixelStitch.tools.eyedropperTooltip')">
+          <UButton
+            icon="lucide:pipette"
+            :color="eyedropperActive ? 'primary' : 'neutral'"
+            :variant="eyedropperActive ? 'solid' : 'outline'"
+            :aria-label="t('pixelStitch.tools.eyedropper')"
+            :aria-pressed="eyedropperActive"
+            class="size-8 shrink-0 justify-center rounded-md"
+            @click="toggleEyedropper"
+          />
         </UTooltip>
+      </template>
+    </PixelStitchColorField>
 
-        <template #content>
-          <div class="flex flex-col gap-2 p-2">
-            <div class="flex gap-3">
-              <UColorPicker v-model="editor.currentColor.value" />
+    <div class="flex items-center gap-1.5">
+      <UDropdownMenu :items="formatItems" :ui="{ content: 'w-32' }">
+        <UButton
+          color="neutral"
+          variant="outline"
+          trailing-icon="lucide:chevron-down"
+          :class="[FIELD, 'gap-1.5 px-2.5 text-[13px]']"
+          :aria-label="t('pixelStitch.color.formatTooltip')"
+        >
+          {{ format.toUpperCase() }}
+        </UButton>
+      </UDropdownMenu>
 
-              <!-- Opacity as a third track beside hue: same 8px width and
-                   white-ringed thumb as UColorPicker's own tracks, over the
-                   checker so the gradient reads as transparency rather than as
-                   a fade to white. -->
-              <div class="pixel-checker w-2 shrink-0 rounded-md">
-                <div
-                  class="size-full rounded-md"
-                  :style="{ backgroundImage: `linear-gradient(to top, transparent, ${editor.currentColor.value})` }"
-                >
-                  <!-- `neutral` for a white thumb with a dark ring: the track
-                       runs from the picked colour to bare checker, so neither a
-                       white nor a coloured ring stays visible along all of it. -->
-                  <USlider
-                    v-model="opacityPercent"
-                    orientation="vertical"
-                    color="neutral"
-                    :ui="{ track: 'bg-transparent', range: 'bg-transparent' }"
-                    :aria-label="t('pixelStitch.color.brushOpacity')"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <!-- Under the square rather than over it, as in the reference: white
-                 readout text on the swatch itself stops being legible as soon as
-                 the picked colour is pale. -->
-            <div class="text-center">
-              <p class="font-mono text-sm font-semibold text-highlighted">{{ editor.currentColor.value.toUpperCase() }}</p>
-              <p class="font-mono text-xs tabular-nums text-dimmed">
-                R{{ rgb[0] }} G{{ rgb[1] }} B{{ rgb[2] }} A{{ opacityPercent }}%
-              </p>
-            </div>
-          </div>
-        </template>
-      </UPopover>
-
-      <UTooltip :text="t('pixelStitch.color.hexTooltip')" class="flex-1 min-w-0">
+      <template v-if="format === 'rgb'">
         <UInput
-          v-model="editor.currentColor.value"
-          placeholder="#000000"
-          size="sm"
-          class="w-full"
-          :ui="{ base: 'font-mono' }"
-          :aria-label="t('pixelStitch.color.hexTooltip')"
+          v-for="(channel, index) in channels"
+          :key="index"
+          :model-value="channel"
+          type="number"
+          :min="0"
+          :max="255"
+          :aria-label="t(`pixelStitch.color.channel.${index === 0 ? 'red' : index === 1 ? 'green' : 'blue'}`)"
+          class="min-w-0 grow"
+          :ui="{ base: `${FIELD} text-center tabular-nums px-1.5` }"
+          @update:model-value="value => setChannel(index as 0 | 1 | 2, value)"
+        />
+      </template>
+      <UInput
+        v-else
+        v-model="editor.currentColor.value"
+        placeholder="#000000"
+        :aria-label="t('pixelStitch.color.hexTooltip')"
+        class="min-w-0 grow"
+        :ui="{ base: `${FIELD} font-mono px-2` }"
+      />
+
+      <!-- Draggable so a mixed colour can be dropped into a palette slot. -->
+      <UTooltip :text="t('pixelStitch.color.dragToSave')">
+        <div
+          class="size-8 shrink-0 cursor-grab rounded-md ring-1 ring-default active:cursor-grabbing"
+          :style="{ backgroundColor: editor.currentColor.value }"
+          draggable="true"
+          :aria-label="editor.currentColor.value"
+          @dragstart="onDragStart($event, editor.currentColor.value)"
+          @dragend="draggedColor = null"
         />
       </UTooltip>
     </div>
 
-    <div class="flex flex-col gap-2">
-      <USelect
-        v-model="activeRow"
-        :items="rowItems"
-        size="xs"
-        class="w-full"
-        :aria-label="t('pixelStitch.color.rowLabel')"
-      />
-      <div class="grid grid-cols-10 gap-1.5">
-        <UTooltip
-          v-for="swatch in activeSwatches"
-          :key="swatch.index"
-          :text="t('pixelStitch.color.swatchTooltip', { color: swatch.color })"
+    <UDropdownMenu :items="rowItems" :ui="{ content: 'w-[264px]' }">
+      <UButton
+        color="neutral"
+        variant="outline"
+        trailing-icon="lucide:chevron-down"
+        block
+        :class="[FIELD, 'justify-between px-3 text-[13px]']"
+      >
+        {{ t(`pixelStitch.color.row.${activeRow}`) }}
+      </UButton>
+      <template #row="{ item }">
+        <span class="flex min-w-0 flex-1 flex-col gap-1.5 py-0.5">
+          <span class="text-[13px]">{{ item.label }}</span>
+          <span class="flex gap-1">
+            <span
+              v-for="(colour, slot) in (item as { colours: string[] }).colours"
+              :key="slot"
+              class="size-3 shrink-0 rounded-[3px] ring-1 ring-default"
+              :style="{ backgroundColor: colour }"
+            />
+          </span>
+        </span>
+      </template>
+    </UDropdownMenu>
+
+    <!-- `grid-cols-10` with one slot more than there are colours: on a full row
+         the empty one wraps onto a new line, which is where the next colour
+         lands. -->
+    <div class="grid grid-cols-10 gap-1.5">
+      <UTooltip
+        v-for="(color, slot) in swatches"
+        :key="`${activeRow}-${slot}`"
+        :text="t('pixelStitch.color.swatchTooltip', { color })"
+      >
+        <button
+          type="button"
+          class="aspect-square w-full rounded-md ring-1 ring-default transition-transform duration-150 hover:scale-110"
+          :class="editor.currentColor.value === color ? 'ring-2 ring-primary' : ''"
+          :style="{ backgroundColor: color }"
+          :aria-label="color"
+          @click="editor.currentColor.value = color"
+          @dragover.prevent
+          @drop.prevent="onDropOnSwatch(slot)"
+        />
+      </UTooltip>
+
+      <UTooltip :text="t('pixelStitch.color.addSwatch')">
+        <button
+          type="button"
+          class="grid aspect-square w-full cursor-pointer place-items-center rounded-md border border-dashed border-default text-dimmed transition-colors hover:border-primary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          :aria-label="t('pixelStitch.color.addSwatch')"
+          @click="addCurrentColor"
+          @dragover.prevent
+          @drop.prevent="onDropOnEmpty"
         >
-          <button
-            type="button"
-            class="aspect-square w-full rounded-md ring-1 ring-default transition-transform duration-150 hover:scale-110"
-            :class="editor.currentColor.value === swatch.color ? 'ring-2 ring-primary' : ''"
-            :style="{ backgroundColor: swatch.color }"
-            :aria-label="swatch.color"
-            @click="editor.currentColor.value = swatch.color"
-            @dragover.prevent
-            @drop.prevent="onDrop(swatch.index)"
-          />
-        </UTooltip>
-      </div>
-      <p class="text-xs text-dimmed">{{ t('pixelStitch.color.dragToCustomize') }}</p>
+          <Icon name="lucide:plus" class="size-3.5" />
+        </button>
+      </UTooltip>
     </div>
-  </UPageCard>
+  </section>
 </template>

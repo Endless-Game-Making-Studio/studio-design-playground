@@ -8,8 +8,10 @@ export function cloneGrid(grid: PixelGrid): PixelGrid {
   return grid.map(row => [...row])
 }
 
-export function createLayer(size: number, id: number, name = `Layer ${id}`): Layer {
-  return { id, name, data: emptyGrid(size), visible: true, opacity: 1 }
+// The name is the caller's business: it used to default to the id, and since
+// ids are timestamps every new layer arrived called "Layer 1788879817697".
+export function createLayer(size: number, id: number, name: string): Layer {
+  return { id, name, data: emptyGrid(size), opacity: 1 }
 }
 
 export function createFrame(size: number, id: number): Frame {
@@ -19,12 +21,17 @@ export function createFrame(size: number, id: number): Frame {
 // The artist's starting palette: four rows of ten — a hue ramp, two darker
 // shades of it, and a pastel highlight row. Ported verbatim from the original,
 // because it's the tool's content rather than platform chrome.
-export const DEFAULT_PALETTE = [
-  '#FFFFFF', '#73ff00', '#fff700', '#ffa200', '#ff0000', '#ff00a2', '#8c00ff', '#1e00ff', '#00fffb', '#000000',
-  '#878787', '#008509', '#828500', '#856100', '#850000', '#850068', '#5b0085', '#0f0085', '#006f85', '#000000',
-  '#656565', '#006307', '#616300', '#634900', '#630000', '#63004e', '#440063', '#0b0063', '#005363', '#000000',
-  '#FFFFFF', '#c9ff99', '#fffb99', '#ffd899', '#ff9999', '#ff99d8', '#d199ff', '#a399ff', '#99fffd', '#999999'
+//
+// Rows rather than one flat run of forty: a row can be added to, so its length
+// is not a constant the rest of the code can divide by.
+export const DEFAULT_PALETTE: string[][] = [
+  ['#FFFFFF', '#73ff00', '#fff700', '#ffa200', '#ff0000', '#ff00a2', '#8c00ff', '#1e00ff', '#00fffb', '#000000'],
+  ['#878787', '#008509', '#828500', '#856100', '#850000', '#850068', '#5b0085', '#0f0085', '#006f85', '#000000'],
+  ['#656565', '#006307', '#616300', '#634900', '#630000', '#63004e', '#440063', '#0b0063', '#005363', '#000000'],
+  ['#FFFFFF', '#c9ff99', '#fffb99', '#ffd899', '#ff9999', '#ff99d8', '#d199ff', '#a399ff', '#99fffd', '#999999']
 ]
+
+export const PALETTE_ROW_LENGTH = 10
 
 export function hexToRgb(hex: string): [number, number, number] | null {
   const value = hex.replace('#', '').trim()
