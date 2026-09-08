@@ -633,7 +633,9 @@
       "volume": "Volume",
       "reverb": "Reverb",
       "deleteMode": "Delete mode",
-      "clear": "Clear the grid"
+      "clear": "Clear the grid",
+      "exportWav": "Export WAV",
+      "exportWavHint": "Save the whole sequence as a WAV file, reverb tail and all"
     },
     "presets": {
       "label": "Preset",

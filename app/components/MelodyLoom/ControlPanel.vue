@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { useMelodyLoomContext } from '~/composables/useMelodyLoomContext'
+import { renderSequenceToBuffer } from '~/composables/melodyLoom/offlineRender'
+import { encodeWav } from '~/composables/melodyLoom/wavEncoder'
+import { downloadBlob } from '~/composables/files'
 
 const editor = useMelodyLoomContext()
 const { t } = useI18n()
@@ -7,6 +10,29 @@ const { t } = useI18n()
 function togglePlayback() {
   if (editor.isPlaying.value) editor.pause()
   else editor.play()
+}
+
+const isExporting = ref(false)
+
+// The render takes the tempo, volume and reverb as they stand when it starts,
+// so the button stays busy until it finishes — a second click mid-render would
+// otherwise hand back a second file recorded at different settings.
+async function exportWav() {
+  if (!editor.hasNotes.value || isExporting.value) return
+  isExporting.value = true
+  try {
+    const buffer = await renderSequenceToBuffer({
+      grid: editor.grid.value,
+      noteDurations: editor.noteDurations,
+      rowInstruments: editor.rowInstruments.value,
+      bpm: editor.bpm.value,
+      volume: editor.volume.value,
+      reverbAmount: editor.reverbAmount.value
+    })
+    downloadBlob(encodeWav(buffer), 'melody-loom-sequence.wav')
+  } finally {
+    isExporting.value = false
+  }
 }
 
 const volumePercent = computed({
@@ -111,5 +137,19 @@ const reverbPercent = computed({
     <div class="grow" />
 
     <MelodyLoomPresetSelector />
+
+    <USeparator orientation="vertical" class="h-8" />
+
+    <UTooltip :text="t('melodyLoom.controls.exportWavHint')">
+      <UButton
+        :label="t('melodyLoom.controls.exportWav')"
+        icon="lucide:file-audio"
+        color="primary"
+        :loading="isExporting"
+        :disabled="!editor.hasNotes.value"
+        class="h-9 shrink-0 gap-1.5 rounded-md px-3"
+        @click="exportWav"
+      />
+    </UTooltip>
   </div>
 </template>

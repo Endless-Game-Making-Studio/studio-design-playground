@@ -86,6 +86,11 @@ export function useMelodyLoom() {
     noteDurations.clear()
   }
 
+  // `grid` is the authority on what's placed — `noteDurations` only mirrors it
+  // — so anything acting on the whole grid asks here rather than counting
+  // cells its own way.
+  const hasNotes = computed(() => grid.value.some(row => row.some(Boolean)))
+
   function toggleDeleteMode() {
     isDeleteMode.value = !isDeleteMode.value
   }
@@ -179,6 +184,7 @@ export function useMelodyLoom() {
   return {
     grid,
     noteDurations,
+    hasNotes,
     rowInstruments,
     currentPreset,
     isPlaying,

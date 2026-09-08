@@ -633,7 +633,9 @@
       "volume": "Volumen",
       "reverb": "Reverberación",
       "deleteMode": "Modo borrar",
-      "clear": "Vaciar la cuadrícula"
+      "clear": "Vaciar la cuadrícula",
+      "exportWav": "Exportar WAV",
+      "exportWavHint": "Guarda la secuencia entera como archivo WAV, con la cola de reverberación incluida"
     },
     "presets": {
       "label": "Preajuste",
