@@ -56,6 +56,8 @@ function tileBorder(index: number) {
 </script>
 
 <template>
+  <!-- 10px between tiles. `items-stretch` so every tile, and the dashed one
+       that adds a frame, is exactly as tall as the row. -->
   <section class="flex h-full items-stretch gap-2.5 overflow-x-auto">
     <div
       v-for="(frame, index) in editor.frames.value"
@@ -69,14 +71,16 @@ function tileBorder(index: number) {
       @dragover.prevent
       @drop.prevent="onDrop(index)"
     >
-      <canvas
-        :ref="element => { if (element) previewRefs[index] = element as HTMLCanvasElement }"
-        :width="PREVIEW_SIZE"
-        :height="PREVIEW_SIZE"
-        class="h-[76px] w-full rounded-md ring-1 ring-default"
-        :style="{ imageRendering: 'pixelated' }"
-      />
-      <div class="flex items-center gap-0.5">
+      <div class="grid h-[76px] shrink-0 place-items-center rounded-md ring-1 ring-default">
+        <canvas
+          :ref="element => { if (element) previewRefs[index] = element as HTMLCanvasElement }"
+          :width="PREVIEW_SIZE"
+          :height="PREVIEW_SIZE"
+          class="aspect-square max-h-full rounded"
+          :style="{ imageRendering: 'pixelated' }"
+        />
+      </div>
+      <div class="flex h-6 shrink-0 items-center gap-0.5">
         <!-- The counter left the panel header for this: the number is on the
              tile, which is where you are looking. -->
         <span
