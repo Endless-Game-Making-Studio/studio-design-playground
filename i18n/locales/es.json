@@ -588,10 +588,39 @@
   "patchworkshop": {
     "title": "Threadbare PatchWorkShop",
     "library": {
+      "title": "Recursos",
       "searchPlaceholder": "Buscar recursos…",
       "allAssets": "Todos los recursos",
       "noResults": "Ningún recurso coincide con tu búsqueda.",
       "addAriaLabel": "Añadir {name} al lienzo"
+    },
+    "canvas": {
+      "label": "Lienzo de composición de PatchWorkShop"
+    },
+    "toolbar": {
+      "undo": "Deshacer",
+      "redo": "Rehacer",
+      "zoomOut": "Alejar",
+      "zoomIn": "Acercar",
+      "pan": "Desplazar lienzo",
+      "upscale": "Factor de ampliación de exportación",
+      "exportPng": "Exportar PNG"
+    },
+    "layers": {
+      "title": "Capas",
+      "empty": "Aún no hay capas — añade un recurso para empezar.",
+      "clearAll": "Borrar todo",
+      "reorder": "Arrastra para reordenar, o usa las flechas del teclado",
+      "reorderLabel": "Reordenar {name}",
+      "lock": "Bloquear capa",
+      "unlock": "Desbloquear capa",
+      "lockLabel": "Bloquear {name}",
+      "unlockLabel": "Desbloquear {name}",
+      "opacity": "Opacidad",
+      "opacityLabel": "Opacidad de {name}",
+      "hide": "Ocultar capa",
+      "show": "Mostrar capa",
+      "delete": "Eliminar capa"
     }
   },
   "melodyLoom": {

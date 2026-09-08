@@ -1,7 +1,6 @@
-// Browser file in/out for Pixel Stitch. The original shipped as a Tauri desktop
-// app and branched between native dialogs and these DOM fallbacks; running
-// inside the platform there is no native side, so only the browser paths
-// survive.
+// Browser file in/out shared by every Studio tool that reads or writes local
+// files (Pixel Stitch, PatchWorkShop, ...). Originally lived under
+// `pixelStitch/`; promoted here once a second tool needed the same downloads.
 
 export function downloadBlob(blob: Blob, fileName: string) {
   const url = URL.createObjectURL(blob)

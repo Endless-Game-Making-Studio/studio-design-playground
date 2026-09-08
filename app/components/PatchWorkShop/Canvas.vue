@@ -1,30 +1,16 @@
 <script setup lang="ts">
 import type { LibraryAsset } from '~/composables/patchWorkShop/types'
+import { CANVAS_SIZE, MAX_ZOOM, MIN_ZOOM } from '~/composables/patchWorkShop/types'
+import { alphaAt, getCachedImage } from '~/composables/patchWorkShop/imageCache'
+import { layerOrigin } from '~/composables/patchWorkShop/geometry'
 import { usePatchWorkShopContext } from '~/composables/usePatchWorkShopContext'
 
 const editor = usePatchWorkShopContext()
+const { t } = useI18n()
 
-// The source app's `Canvas` component defaults its `size` prop to 512, but the
-// PatchWorkShop page itself renders it at 256 — that's the logical resolution
-// every position and drop coordinate here has to agree with.
-const CANVAS_SIZE = 256
-
+const containerRef = ref<HTMLElement | null>(null)
+const boardRef = ref<HTMLElement | null>(null)
 const canvasEl = ref<HTMLCanvasElement | null>(null)
-
-// One `HTMLImageElement` per unique `imageUrl`, shared across layers that
-// repeat an asset. Draws before an image finishes loading skip it; the image's
-// own `onload` schedules the redraw that picks it up.
-const imageCache = new Map<string, HTMLImageElement>()
-
-function getImage(url: string): HTMLImageElement {
-  const cached = imageCache.get(url)
-  if (cached) return cached
-  const image = new Image()
-  image.src = url
-  image.onload = () => redraw()
-  imageCache.set(url, image)
-  return image
-}
 
 function redraw() {
   const canvas = canvasEl.value
@@ -36,21 +22,154 @@ function redraw() {
 
   for (const layer of editor.layers.value) {
     if (!layer.visible) continue
-    const image = getImage(layer.imageUrl)
+    const image = getCachedImage(layer.imageUrl, redraw)
     if (!image.complete || image.naturalWidth === 0) continue
 
+    const origin = layerOrigin(layer, image)
     ctx.globalAlpha = layer.opacity
-    ctx.drawImage(
-      image,
-      CANVAS_SIZE / 2 - image.width / 2 + layer.position.x,
-      CANVAS_SIZE / 2 - image.height / 2 + layer.position.y
-    )
+    ctx.drawImage(image, origin.x, origin.y)
   }
   ctx.globalAlpha = 1
+
+  const selected = editor.selectedLayer.value
+  if (selected) {
+    const image = getCachedImage(selected.imageUrl)
+    if (image.complete && image.naturalWidth > 0) {
+      const { x, y } = layerOrigin(selected, image)
+      ctx.strokeStyle = '#3b5bdb'
+      ctx.lineWidth = 2
+      ctx.setLineDash([6, 4])
+      ctx.strokeRect(x - 1, y - 1, image.width + 2, image.height + 2)
+      ctx.setLineDash([])
+    }
+  }
 }
 
 watch(editor.layers, redraw, { deep: true })
+watch(() => editor.selectedLayerId.value, redraw)
 onMounted(redraw)
+
+// ─── Zoom and panning ───────────────────────────────────────────────────────
+
+const scaledSize = computed(() => CANVAS_SIZE * editor.zoom.value)
+
+// Anchored to the pointer: zooming to the centre of the area makes people
+// chase the part they were looking at.
+async function onWheel(event: WheelEvent) {
+  const container = containerRef.value
+  const board = boardRef.value
+  if (!container || !board) return
+  event.preventDefault()
+
+  const before = board.getBoundingClientRect()
+  const u = (event.clientX - before.left) / before.width
+  const v = (event.clientY - before.top) / before.height
+
+  const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, editor.zoom.value * Math.exp(-event.deltaY * 0.0015)))
+  if (next === editor.zoom.value) return
+  editor.setZoom(next)
+
+  await nextTick()
+  const after = board.getBoundingClientRect()
+  container.scrollLeft += after.left + u * after.width - event.clientX
+  container.scrollTop += after.top + v * after.height - event.clientY
+}
+
+const panning = ref(false)
+let panOrigin = { x: 0, y: 0, scrollLeft: 0, scrollTop: 0 }
+
+function onPanStart(event: PointerEvent) {
+  const container = containerRef.value
+  if (!container) return
+  panning.value = true
+  container.setPointerCapture(event.pointerId)
+  panOrigin = { x: event.clientX, y: event.clientY, scrollLeft: container.scrollLeft, scrollTop: container.scrollTop }
+}
+
+function onPanMove(event: PointerEvent) {
+  const container = containerRef.value
+  if (!panning.value || !container) return
+  container.scrollLeft = panOrigin.scrollLeft - (event.clientX - panOrigin.x)
+  container.scrollTop = panOrigin.scrollTop - (event.clientY - panOrigin.y)
+}
+
+function onPanEnd() {
+  panning.value = false
+}
+
+// ─── Pixel-perfect hit-testing ──────────────────────────────────────────────
+
+// Client coordinates -> canvas logical pixels, undoing both the CSS zoom
+// transform and any difference between the canvas's backing resolution and
+// its rendered size.
+function toCanvasPoint(clientX: number, clientY: number): { x: number, y: number } | null {
+  const canvas = canvasEl.value
+  if (!canvas) return null
+  const rect = canvas.getBoundingClientRect()
+  return {
+    x: ((clientX - rect.left) * (canvas.width / rect.width)),
+    y: ((clientY - rect.top) * (canvas.height / rect.height))
+  }
+}
+
+// Topmost layer first; a transparent pixel passes the hit through to
+// whatever's underneath instead of claiming the click for its bounding box.
+function hitTestLayer(point: { x: number, y: number }): string | null {
+  const layers = editor.layers.value
+  for (let i = layers.length - 1; i >= 0; i--) {
+    const layer = layers[i]!
+    if (!layer.visible) continue
+    const image = getCachedImage(layer.imageUrl)
+    if (!image.complete || image.naturalWidth === 0) continue
+
+    const origin = layerOrigin(layer, image)
+    const localX = point.x - origin.x
+    const localY = point.y - origin.y
+    if (localX < 0 || localY < 0 || localX >= image.width || localY >= image.height) continue
+    if (alphaAt(layer.imageUrl, localX, localY) > 0) return layer.id
+  }
+  return null
+}
+
+// ─── Drag to move ───────────────────────────────────────────────────────────
+
+const dragging = ref(false)
+let dragStart = { pointerX: 0, pointerY: 0, layerX: 0, layerY: 0 }
+
+function onCanvasPointerDown(event: PointerEvent) {
+  if (editor.panMode.value) return onPanStart(event)
+
+  const point = toCanvasPoint(event.clientX, event.clientY)
+  const hitId = point ? hitTestLayer(point) : null
+  editor.selectLayer(hitId)
+  if (!hitId) return
+
+  const layer = editor.layers.value.find(l => l.id === hitId)
+  if (!layer || layer.locked) return
+
+  canvasEl.value?.setPointerCapture(event.pointerId)
+  dragging.value = true
+  dragStart = { pointerX: event.clientX, pointerY: event.clientY, layerX: layer.position.x, layerY: layer.position.y }
+}
+
+function onCanvasPointerMove(event: PointerEvent) {
+  if (editor.panMode.value) return onPanMove(event)
+  if (!dragging.value || !editor.selectedLayerId.value) return
+
+  const scale = editor.zoom.value
+  const dx = (event.clientX - dragStart.pointerX) / scale
+  const dy = (event.clientY - dragStart.pointerY) / scale
+  editor.moveLayerLive(editor.selectedLayerId.value, {
+    x: Math.round(dragStart.layerX + dx),
+    y: Math.round(dragStart.layerY + dy)
+  })
+}
+
+function onCanvasPointerUp(event: PointerEvent) {
+  if (editor.panMode.value) return onPanEnd()
+  if (dragging.value) editor.endLayerMove()
+  dragging.value = false
+}
 
 // ─── Drop to place ──────────────────────────────────────────────────────────
 
@@ -65,9 +184,9 @@ function onDragOver(event: DragEvent) {
 // from canvas-center.
 function onDrop(event: DragEvent) {
   event.preventDefault()
-  const canvas = canvasEl.value
   const raw = event.dataTransfer?.getData('application/json')
-  if (!canvas || !raw) return
+  const point = toCanvasPoint(event.clientX, event.clientY)
+  if (!point || !raw) return
 
   let asset: LibraryAsset
   try {
@@ -76,31 +195,42 @@ function onDrop(event: DragEvent) {
     return
   }
 
-  const rect = canvas.getBoundingClientRect()
-  const scaleX = CANVAS_SIZE / rect.width
-  const scaleY = CANVAS_SIZE / rect.height
-  const canvasX = (event.clientX - rect.left) * scaleX
-  const canvasY = (event.clientY - rect.top) * scaleY
-
   editor.addLayer(asset, {
-    x: Math.round(canvasX - CANVAS_SIZE / 2),
-    y: Math.round(canvasY - CANVAS_SIZE / 2)
+    x: Math.round(point.x - CANVAS_SIZE / 2),
+    y: Math.round(point.y - CANVAS_SIZE / 2)
   })
 }
 </script>
 
 <template>
   <div
-    class="flex h-full w-full flex-1 items-center justify-center bg-slate-50 p-7"
+    ref="containerRef"
+    class="relative flex h-full w-full flex-1 items-center justify-center overflow-auto bg-slate-50 p-7"
+    :class="editor.panMode.value ? (panning ? 'cursor-grabbing' : 'cursor-grab') : ''"
+    @wheel="onWheel"
     @dragover="onDragOver"
     @drop="onDrop"
   >
-    <canvas
-      ref="canvasEl"
-      :width="CANVAS_SIZE"
-      :height="CANVAS_SIZE"
-      class="rounded ring-1 ring-default shadow-xs"
-      style="image-rendering: pixelated"
-    />
+    <div :style="{ width: `${scaledSize}px`, height: `${scaledSize}px` }">
+      <div
+        ref="boardRef"
+        class="relative"
+        :style="{ width: `${CANVAS_SIZE}px`, height: `${CANVAS_SIZE}px`, transform: `scale(${editor.zoom.value})`, transformOrigin: 'top left' }"
+      >
+        <canvas
+          ref="canvasEl"
+          :width="CANVAS_SIZE"
+          :height="CANVAS_SIZE"
+          class="block touch-none rounded ring-1 ring-default shadow-xs"
+          :class="editor.panMode.value ? '' : 'cursor-default'"
+          :style="{ imageRendering: 'pixelated' }"
+          :aria-label="t('patchworkshop.canvas.label')"
+          @pointerdown="onCanvasPointerDown"
+          @pointermove="onCanvasPointerMove"
+          @pointerup="onCanvasPointerUp"
+          @pointercancel="onCanvasPointerUp"
+        />
+      </div>
+    </div>
   </div>
 </template>

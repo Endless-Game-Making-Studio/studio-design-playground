@@ -588,10 +588,39 @@
   "patchworkshop": {
     "title": "Threadbare PatchWorkShop",
     "library": {
+      "title": "Assets",
       "searchPlaceholder": "Search assets…",
       "allAssets": "All assets",
       "noResults": "No assets match your search.",
       "addAriaLabel": "Add {name} to canvas"
+    },
+    "canvas": {
+      "label": "PatchWorkShop composition canvas"
+    },
+    "toolbar": {
+      "undo": "Undo",
+      "redo": "Redo",
+      "zoomOut": "Zoom out",
+      "zoomIn": "Zoom in",
+      "pan": "Pan canvas",
+      "upscale": "Export upscale factor",
+      "exportPng": "Export PNG"
+    },
+    "layers": {
+      "title": "Layers",
+      "empty": "No layers yet — add an asset to get started.",
+      "clearAll": "Clear all",
+      "reorder": "Drag to reorder, or focus and use the arrow keys",
+      "reorderLabel": "Reorder {name}",
+      "lock": "Lock layer",
+      "unlock": "Unlock layer",
+      "lockLabel": "Lock {name}",
+      "unlockLabel": "Unlock {name}",
+      "opacity": "Opacity",
+      "opacityLabel": "Opacity for {name}",
+      "hide": "Hide layer",
+      "show": "Show layer",
+      "delete": "Delete layer"
     }
   },
   "melodyLoom": {

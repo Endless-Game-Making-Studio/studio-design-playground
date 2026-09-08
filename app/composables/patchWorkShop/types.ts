@@ -31,3 +31,9 @@ export interface CategoryGroup {
   name: string
   subcategories: (string | SubcategoryItem)[]
 }
+
+export const CANVAS_SIZE = 256
+export const MIN_ZOOM = 0.5
+export const MAX_ZOOM = 4
+export const ZOOM_PRESETS = [0.5, 1, 1.5, 2, 3, 4]
+export const MAX_HISTORY_STEPS = 50

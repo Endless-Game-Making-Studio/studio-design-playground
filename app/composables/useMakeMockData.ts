@@ -83,8 +83,9 @@ export const tailorApps: ToolCardData[] = [
     blurb: 'Assemble pre-designed art assets, published as individual components, into unique game-ready structures and scenes.',
     badge: 'Live',
     image: '/images/tools/patchworkshop.jpeg',
-    url: 'https://threadbare-patchworkshop.lovable.app/',
-    embedUrl: 'https://threadbare-patchworkshop.lovable.app/'
+    // Rebuilt natively on this stack, so it opens as a page rather than as a
+    // frame of the original Lovable-hosted build.
+    route: '/make/patchworkshop'
   },
   {
     id: 'whispering-well',
