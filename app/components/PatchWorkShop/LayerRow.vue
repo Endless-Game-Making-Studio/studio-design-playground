@@ -99,9 +99,11 @@ function onNameKeyDown(event: KeyboardEvent) {
         @keydown="onNameKeyDown"
       >{{ layer.name }}</span>
 
+      <!-- Bordered as well as filled: the row itself goes bg-elevated on
+           hover, and a same-color pill would disappear into it otherwise. -->
       <span
         v-if="layer.opacity < 1"
-        class="min-w-[34px] shrink-0 rounded-[5px] bg-elevated px-1.5 py-0.5 text-center text-xs font-semibold tabular-nums text-muted"
+        class="min-w-[34px] shrink-0 rounded-[5px] border border-default bg-elevated px-1.5 py-0.5 text-center text-xs font-semibold tabular-nums text-muted"
       >
         {{ Math.round(layer.opacity * 100) }}%
       </span>
