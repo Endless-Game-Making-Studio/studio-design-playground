@@ -602,7 +602,6 @@
       "redo": "Rehacer",
       "zoomOut": "Alejar",
       "zoomIn": "Acercar",
-      "pan": "Desplazar lienzo",
       "upscale": "Factor de ampliación de exportación",
       "exportPng": "Exportar PNG"
     },

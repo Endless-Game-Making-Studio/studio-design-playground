@@ -166,40 +166,34 @@ const mobileTabItems = computed<TabsItem[]>(() => [
         </UTooltip>
       </div>
 
-      <UTooltip :text="t('patchworkshop.toolbar.pan')">
-        <UButton
-          icon="lucide:hand"
-          color="neutral"
-          :variant="editor.panMode.value ? 'soft' : 'outline'"
-          :aria-pressed="editor.panMode.value"
-          :aria-label="t('patchworkshop.toolbar.pan')"
-          class="h-[34px] w-[34px] shrink-0 justify-center rounded-md"
-          @click="editor.panMode.value = !editor.panMode.value"
-        />
-      </UTooltip>
-
       <div class="grow" />
 
-      <UDropdownMenu :items="upscaleItems" :ui="{ content: 'w-32' }">
+      <!-- One split button, not two unrelated controls: the scale picker is
+           an attached segment of Export PNG, not a standalone "1×" that
+           happens to sit next to it. -->
+      <UFieldGroup>
         <UButton
-          color="neutral"
-          variant="outline"
-          trailing-icon="lucide:chevron-down"
-          class="h-[34px] gap-1.5 rounded-md px-2.5 text-sm tabular-nums"
-          :aria-label="t('patchworkshop.toolbar.upscale')"
-        >
-          {{ upscale }}×
-        </UButton>
-      </UDropdownMenu>
-      <UButton
-        :label="t('patchworkshop.toolbar.exportPng')"
-        icon="lucide:image-down"
-        color="primary"
-        :loading="exporting"
-        :disabled="editor.layers.value.length === 0"
-        class="h-[34px] shrink-0 gap-1.5 rounded-md px-2.5 text-sm"
-        @click="exportPng"
-      />
+          :label="t('patchworkshop.toolbar.exportPng')"
+          icon="lucide:image-down"
+          color="primary"
+          :loading="exporting"
+          :disabled="editor.layers.value.length === 0"
+          class="h-[34px] shrink-0 gap-1.5 px-2.5 text-sm"
+          @click="exportPng"
+        />
+        <UDropdownMenu :items="upscaleItems" :ui="{ content: 'w-32' }">
+          <UTooltip :text="t('patchworkshop.toolbar.upscale')">
+            <UButton
+              color="primary"
+              trailing-icon="lucide:chevron-down"
+              class="h-[34px] gap-1 px-2 text-sm tabular-nums"
+              :aria-label="t('patchworkshop.toolbar.upscale')"
+            >
+              {{ upscale }}×
+            </UButton>
+          </UTooltip>
+        </UDropdownMenu>
+      </UFieldGroup>
     </div>
 
     <div class="flex min-h-0 grow">

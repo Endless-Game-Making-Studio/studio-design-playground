@@ -80,31 +80,6 @@ async function onWheel(event: WheelEvent) {
   container.scrollTop += after.top + v * after.height - event.clientY
 }
 
-const panning = ref(false)
-let panOrigin = { x: 0, y: 0, scrollLeft: 0, scrollTop: 0 }
-
-function onPanStart(event: PointerEvent) {
-  const container = containerRef.value
-  if (!container) return
-  panning.value = true
-  // Captured on the container: its own pointerdown/move/up are what call
-  // into this (see onContainerPointer* below), and capturing anywhere else
-  // would retarget every later event away from the element listening for it.
-  container.setPointerCapture(event.pointerId)
-  panOrigin = { x: event.clientX, y: event.clientY, scrollLeft: container.scrollLeft, scrollTop: container.scrollTop }
-}
-
-function onPanMove(event: PointerEvent) {
-  const container = containerRef.value
-  if (!panning.value || !container) return
-  container.scrollLeft = panOrigin.scrollLeft - (event.clientX - panOrigin.x)
-  container.scrollTop = panOrigin.scrollTop - (event.clientY - panOrigin.y)
-}
-
-function onPanEnd() {
-  panning.value = false
-}
-
 // ─── Pixel-perfect hit-testing ──────────────────────────────────────────────
 
 // Client coordinates -> canvas logical pixels, undoing both the CSS zoom
@@ -145,10 +120,6 @@ const dragging = ref(false)
 let dragStart = { pointerX: 0, pointerY: 0, layerX: 0, layerY: 0 }
 
 function onCanvasPointerDown(event: PointerEvent) {
-  // Pan mode is handled by the container (onContainerPointerDown below) so
-  // dragging works from the padded backdrop too, not just the canvas itself.
-  if (editor.panMode.value) return
-
   const point = toCanvasPoint(event.clientX, event.clientY)
   const hitId = point ? hitTestLayer(point) : null
   editor.selectLayer(hitId)
@@ -163,7 +134,6 @@ function onCanvasPointerDown(event: PointerEvent) {
 }
 
 function onCanvasPointerMove(event: PointerEvent) {
-  if (editor.panMode.value) return
   if (!dragging.value || !editor.selectedLayerId.value) return
 
   const scale = editor.zoom.value
@@ -175,27 +145,9 @@ function onCanvasPointerMove(event: PointerEvent) {
   })
 }
 
-function onCanvasPointerUp(event: PointerEvent) {
-  if (editor.panMode.value) return
+function onCanvasPointerUp() {
   if (dragging.value) editor.endLayerMove()
   dragging.value = false
-}
-
-// ─── Pan from the backdrop ──────────────────────────────────────────────────
-
-// Bound on the container rather than the canvas: the grab cursor covers the
-// whole padded scroll area, so a drag started on that padding — not just on
-// the artwork — has to pan too.
-function onContainerPointerDown(event: PointerEvent) {
-  if (editor.panMode.value) onPanStart(event)
-}
-
-function onContainerPointerMove(event: PointerEvent) {
-  if (editor.panMode.value) onPanMove(event)
-}
-
-function onContainerPointerUp() {
-  if (editor.panMode.value) onPanEnd()
 }
 
 // ─── Drop to place ──────────────────────────────────────────────────────────
@@ -233,14 +185,9 @@ function onDrop(event: DragEvent) {
   <div
     ref="containerRef"
     class="relative flex h-full w-full flex-1 items-center justify-center overflow-auto bg-muted p-7"
-    :class="editor.panMode.value ? (panning ? 'cursor-grabbing' : 'cursor-grab') : ''"
     @wheel="onWheel"
     @dragover="onDragOver"
     @drop="onDrop"
-    @pointerdown="onContainerPointerDown"
-    @pointermove="onContainerPointerMove"
-    @pointerup="onContainerPointerUp"
-    @pointercancel="onContainerPointerUp"
   >
     <div :style="{ width: `${scaledSize}px`, height: `${scaledSize}px` }">
       <div
@@ -252,8 +199,7 @@ function onDrop(event: DragEvent) {
           ref="canvasEl"
           :width="CANVAS_SIZE"
           :height="CANVAS_SIZE"
-          class="block touch-none rounded ring-1 ring-default shadow-xs"
-          :class="editor.panMode.value ? '' : 'cursor-default'"
+          class="block cursor-pointer touch-none rounded ring-1 ring-default shadow-xs"
           :style="{ imageRendering: 'pixelated' }"
           :aria-label="t('patchworkshop.canvas.label')"
           @pointerdown="onCanvasPointerDown"

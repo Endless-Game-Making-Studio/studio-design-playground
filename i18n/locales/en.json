@@ -602,7 +602,6 @@
       "redo": "Redo",
       "zoomOut": "Zoom out",
       "zoomIn": "Zoom in",
-      "pan": "Pan canvas",
       "upscale": "Export upscale factor",
       "exportPng": "Export PNG"
     },

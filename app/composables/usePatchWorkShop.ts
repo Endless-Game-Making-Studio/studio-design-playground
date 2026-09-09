@@ -27,7 +27,6 @@ export function usePatchWorkShop() {
   const selectedLayer = computed(() => findLayer(selectedLayerId.value))
 
   const zoom = ref(1)
-  const panMode = ref(false)
 
   function setZoom(next: number) {
     zoom.value = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, next))
@@ -225,7 +224,6 @@ export function usePatchWorkShop() {
 
     zoom,
     setZoom,
-    panMode,
 
     addLayer,
     deleteLayer,
