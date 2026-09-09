@@ -32,14 +32,14 @@ async function onKeyboardReorder(from: number, to: number) {
       <p class="grow text-xs font-semibold uppercase tracking-[0.06em] text-dimmed">
         {{ t('patchworkshop.layers.title') }}
       </p>
-      <UTooltip :text="t('patchworkshop.layers.clearAll')">
-        <HoldToConfirm
-          :label="t('patchworkshop.layers.clearAll')"
-          size="sm"
-          :disabled="editor.layers.value.length === 0"
-          @confirm="editor.clearAll()"
-        />
-      </UTooltip>
+      <!-- No tooltip here — unlike the icon-only bins elsewhere, this one
+           already carries its own label. -->
+      <HoldToConfirm
+        :label="t('patchworkshop.layers.clearAll')"
+        show-label
+        :disabled="editor.layers.value.length === 0"
+        @confirm="editor.clearAll()"
+      />
     </div>
 
     <p v-if="topFirst.length === 0" class="px-1 text-sm text-muted">
