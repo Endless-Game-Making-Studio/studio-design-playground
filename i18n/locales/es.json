@@ -702,6 +702,20 @@
         "decodeFailed": "No se pudo leer ese audio. Prueba con otro archivo.",
         "renderFailed": "No se pudo renderizar el secuenciador. Vuelve a intentarlo."
       }
+    },
+    "ambience": {
+      "title": "Biblioteca de ambientes",
+      "category": "Categoría",
+      "sound": "Sonido",
+      "soundPlaceholder": "Elige un sonido",
+      "duration": "{seconds}s",
+      "volume": "Volumen",
+      "preview": "Escuchar",
+      "add": "Añadir a la forma de onda",
+      "hint": "Las escuchas suenan al volumen que fijes aquí, y ese es el volumen con el que el clip entra en la forma de onda, en la posición del cursor.",
+      "errors": {
+        "playbackFailed": "No se pudo cargar ese sonido. Vuelve a intentarlo."
+      }
     }
   },
   "onboarding": {
