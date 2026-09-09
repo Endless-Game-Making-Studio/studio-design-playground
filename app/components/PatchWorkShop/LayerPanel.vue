@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { AnimatePresence, ReorderGroup } from 'motion-v'
 import type { Layer } from '~/composables/patchWorkShop/types'
+import { moveInArray } from '~/composables/reorder'
 import { usePatchWorkShopContext } from '~/composables/usePatchWorkShopContext'
 
 const editor = usePatchWorkShopContext()
@@ -17,10 +18,8 @@ const rowRefs = ref<{ focusGrip: () => void }[]>([])
 watch(() => topFirst.value.length, count => (rowRefs.value.length = count))
 
 async function onKeyboardReorder(from: number, to: number) {
-  if (to < 0 || to >= topFirst.value.length) return
-  const next = [...topFirst.value]
-  const [moved] = next.splice(from, 1)
-  next.splice(to, 0, moved!)
+  const next = moveInArray(topFirst.value, from, to)
+  if (!next) return
   editor.setLayerOrderTopFirst(next)
   await nextTick()
   rowRefs.value[to]?.focusGrip()

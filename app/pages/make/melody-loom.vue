@@ -2,6 +2,7 @@
 import { ReorderGroup } from 'motion-v'
 import { installAudioUnlock, getSharedAudioContext } from '~/composables/melodyLoom/audioContext'
 import { useMelodyLoom } from '~/composables/useMelodyLoom'
+import { moveInArray } from '~/composables/reorder'
 import { provideMelodyLoom } from '~/composables/useMelodyLoomContext'
 import { useWaveformEditor } from '~/composables/useWaveformEditor'
 import { provideWaveformEditor } from '~/composables/useWaveformEditorContext'
@@ -52,10 +53,8 @@ const blockRefs = ref<{ focusGrip: () => void }[]>([])
 // Keyboard reordering moves focus with the block, so a run of arrow presses
 // keeps landing on the same grip rather than on whatever slid into its place.
 async function onKeyboardReorder(from: number, to: number) {
-  if (to < 0 || to >= blockOrder.value.length) return
-  const next = [...blockOrder.value]
-  const [moved] = next.splice(from, 1)
-  next.splice(to, 0, moved!)
+  const next = moveInArray(blockOrder.value, from, to)
+  if (!next) return
   blockOrder.value = next
   await nextTick()
   blockRefs.value[to]?.focusGrip()

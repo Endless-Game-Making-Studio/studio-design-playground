@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ReorderItem, useDragControls } from 'motion-v'
 
-const props = defineProps<{
+defineProps<{
   /** Identity the reorder group tracks this block by. */
   value: string
   label: string
@@ -25,15 +25,10 @@ const DURATION_FAST = 0.15
 const EASE_OUT_QUART = [0.25, 1, 0.5, 1] as const
 const SHADOW_MENU = '0 4px 16px rgba(15, 23, 43, 0.12)'
 
-function onGripKeyDown(event: KeyboardEvent) {
-  const direction = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0
-  if (direction === 0) return
-  event.preventDefault()
-  emit('reorder', props.index, props.index + direction)
-}
-
-const gripRef = ref<HTMLElement | null>(null)
-defineExpose({ focusGrip: () => gripRef.value?.focus() })
+// `defineExpose` doesn't chain, so the grip's own `focusGrip` is re-exposed
+// here for the page to call after a keyboard move.
+const gripRef = ref<{ focusGrip: () => void } | null>(null)
+defineExpose({ focusGrip: () => gripRef.value?.focusGrip() })
 </script>
 
 <template>
@@ -50,18 +45,16 @@ defineExpose({ focusGrip: () => gripRef.value?.focus() })
     <!-- The grip overlays the header's left padding instead of sitting inside
          it: the collapse trigger is itself a button, and a button can't nest
          another one. -->
-    <UTooltip :text="t('melodyLoom.blocks.reorder')">
-      <button
-        ref="gripRef"
-        type="button"
-        class="absolute left-1.5 top-1.5 z-10 flex h-9 w-7 cursor-grab touch-none items-center justify-center rounded-md text-dimmed transition-colors hover:text-default focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:cursor-grabbing"
-        :aria-label="t('melodyLoom.blocks.reorderLabel', { name: label, position: index + 1, count })"
-        @keydown="onGripKeyDown"
-        @pointerdown="controls.start($event)"
-      >
-        <Icon name="lucide:grip-vertical" class="size-4" />
-      </button>
-    </UTooltip>
+    <ReorderGrip
+      ref="gripRef"
+      :tooltip="t('melodyLoom.blocks.reorder')"
+      :aria-label="t('melodyLoom.blocks.reorderLabel', { name: label, position: index + 1, count })"
+      :index="index"
+      :count="count"
+      class="absolute left-1.5 top-1.5 z-10 h-9 w-7"
+      @reorder="(from, to) => emit('reorder', from, to)"
+      @pointerdown="controls.start($event)"
+    />
 
     <UCollapsible v-model:open="open">
       <!-- Raw button, not UButton: UCollapsible clones its aria-expanded/

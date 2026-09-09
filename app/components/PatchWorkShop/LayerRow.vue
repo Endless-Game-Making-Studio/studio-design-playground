@@ -27,15 +27,10 @@ const SHADOW_MENU = '0 4px 16px rgba(15, 23, 43, 0.12)'
 const selected = computed(() => editor.selectedLayerId.value === props.layer.id)
 const opacityOpen = ref(false)
 
-function onGripKeyDown(event: KeyboardEvent) {
-  const direction = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0
-  if (direction === 0) return
-  event.preventDefault()
-  emit('reorder', props.index, props.index + direction)
-}
-
-const gripRef = ref<HTMLElement | null>(null)
-defineExpose({ focusGrip: () => gripRef.value?.focus() })
+// `defineExpose` doesn't chain, so the grip's own `focusGrip` is re-exposed
+// here for LayerPanel to call after a keyboard move.
+const gripRef = ref<{ focusGrip: () => void } | null>(null)
+defineExpose({ focusGrip: () => gripRef.value?.focusGrip() })
 
 // The row itself has no tabindex — with the grip, lock, eye and delete
 // buttons all inside it, a focusable div around them isn't a legal nesting.
@@ -68,19 +63,17 @@ function onNameKeyDown(event: KeyboardEvent) {
       ]"
       @click="editor.selectLayer(layer.id)"
     >
-      <UTooltip :text="t('patchworkshop.layers.reorder')">
-        <button
-          ref="gripRef"
-          type="button"
-          class="flex h-8 w-[22px] shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-dimmed transition-colors hover:text-default focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:cursor-grabbing"
-          :aria-label="t('patchworkshop.layers.reorderLabel', { name: layer.name })"
-          @click.stop
-          @keydown="onGripKeyDown"
-          @pointerdown="controls.start($event)"
-        >
-          <Icon name="lucide:grip-vertical" class="size-4" />
-        </button>
-      </UTooltip>
+      <ReorderGrip
+        ref="gripRef"
+        :tooltip="t('patchworkshop.layers.reorder')"
+        :aria-label="t('patchworkshop.layers.reorderLabel', { name: layer.name })"
+        :index="index"
+        :count="count"
+        class="h-8 w-[22px]"
+        @reorder="(from, to) => emit('reorder', from, to)"
+        @click.stop
+        @pointerdown="controls.start($event)"
+      />
 
       <img
         :src="layer.imageUrl"
