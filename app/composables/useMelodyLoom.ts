@@ -3,7 +3,7 @@ import { NOTE_FREQUENCIES, NOTES, STEPS, TOTAL_ROWS } from '~/composables/melody
 import { INSTRUMENTS, PRESETS, playMelodicNote, playSoundEffect } from '~/composables/melodyLoom/instruments'
 import { createReverbBus, type ReverbBus } from '~/composables/melodyLoom/reverb'
 import { getSharedAudioContext } from '~/composables/melodyLoom/audioContext'
-import { cellKey, isNoteStart, nextDuration, nextStep } from '~/composables/melodyLoom/sequencer'
+import { cellKey, isNoteStart, nextDuration, nextStep, stepSeconds } from '~/composables/melodyLoom/sequencer'
 
 function emptyGrid(): boolean[][] {
   return Array.from({ length: TOTAL_ROWS }, () => Array<boolean>(STEPS).fill(false))
@@ -16,9 +16,7 @@ function rowsForPreset(preset: Exclude<PresetPack, 'custom'>): RowInstrument[] {
 
 const DEFAULT_PRESET: Exclude<PresetPack, 'custom'> = '8bit'
 
-// 4 steps per beat (a 16th-note grid) at the given BPM — don't "simplify" this
-// constant, the 250 and the 4-steps-per-beat reading of it are the same fact.
-const MS_PER_BEAT_STEP = 250
+const MS_PER_SECOND = 1000
 
 /**
  * Melody Loom's sequencer core: the grid, the transport, and the Web Audio
@@ -109,12 +107,12 @@ export function useMelodyLoom() {
   // ─── Transport ────────────────────────────────────────────────────────────
 
   function stepIntervalMs() {
-    return (60 / bpm.value) * MS_PER_BEAT_STEP
+    return stepSeconds(bpm.value) * MS_PER_SECOND
   }
 
   function playRowsAtStep(step: number) {
     const { ctx, bus } = ensureAudioGraph()
-    const stepSeconds = stepIntervalMs() / 1000
+    const seconds = stepSeconds(bpm.value)
     const startTime = ctx.currentTime
 
     for (let row = 0; row < TOTAL_ROWS; row++) {
@@ -128,7 +126,7 @@ export function useMelodyLoom() {
           INSTRUMENTS[instrument as MelodicInstrument],
           NOTE_FREQUENCIES[row]!,
           startTime,
-          durationSteps * stepSeconds,
+          durationSteps * seconds,
           volume.value,
           bus.dryGain,
           bus.wetGain

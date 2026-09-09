@@ -4,6 +4,15 @@ export function cellKey(row: number, col: number): string {
   return `${row}-${col}`
 }
 
+// The grid is a 16th-note one, so a column lasts a quarter of a beat.
+const STEPS_PER_BEAT = 4
+const SECONDS_PER_MINUTE = 60
+
+/** How long one grid column lasts. Live playback and the offline render both ask, so they can't drift apart. */
+export function stepSeconds(bpm: number): number {
+  return SECONDS_PER_MINUTE / (bpm * STEPS_PER_BEAT)
+}
+
 /**
  * There's no separate "note" object — whether `col` starts a new note or is
  * silently part of an earlier tied note is decided by walking backward

@@ -2,7 +2,7 @@ import type { MelodicInstrument, RowInstrument, SoundEffectId } from '~/composab
 import { NOTE_FREQUENCIES, NOTES, STEPS, TOTAL_ROWS } from '~/composables/melodyLoom/types'
 import { INSTRUMENTS, playMelodicNote, playSoundEffect } from '~/composables/melodyLoom/instruments'
 import { createReverbBus } from '~/composables/melodyLoom/reverb'
-import { cellKey, isNoteStart } from '~/composables/melodyLoom/sequencer'
+import { cellKey, isNoteStart, stepSeconds } from '~/composables/melodyLoom/sequencer'
 
 // 2 extra seconds so a reverb tail from the last step isn't cut off mid-decay
 // (matches the source app's recordSequenceToBuffer).
@@ -27,8 +27,8 @@ export interface SequenceRenderInput {
  * here, not per caller.
  */
 export async function renderSequenceToBuffer(input: SequenceRenderInput): Promise<AudioBuffer> {
-  const stepSeconds = (60 / input.bpm) * 0.25
-  const totalSeconds = STEPS * stepSeconds + REVERB_TAIL_SECONDS
+  const seconds = stepSeconds(input.bpm)
+  const totalSeconds = STEPS * seconds + REVERB_TAIL_SECONDS
   // 44.1kHz stereo regardless of the live context's rate — a fixed, portable
   // export format that doesn't depend on the device that rendered it.
   const sampleRate = 44100
@@ -38,7 +38,7 @@ export async function renderSequenceToBuffer(input: SequenceRenderInput): Promis
   bus.setAmount(input.reverbAmount)
 
   for (let step = 0; step < STEPS; step++) {
-    const startTime = step * stepSeconds
+    const startTime = step * seconds
 
     for (let row = 0; row < TOTAL_ROWS; row++) {
       if (!isNoteStart(input.grid, input.noteDurations, row, step)) continue
@@ -51,7 +51,7 @@ export async function renderSequenceToBuffer(input: SequenceRenderInput): Promis
           INSTRUMENTS[instrument as MelodicInstrument],
           NOTE_FREQUENCIES[row]!,
           startTime,
-          durationSteps * stepSeconds,
+          durationSteps * seconds,
           input.volume,
           bus.dryGain,
           bus.wetGain
