@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import type { SelectItem } from '@nuxt/ui'
 import type { PresetPack } from '~/composables/melodyLoom/types'
+import { PRESET_PACKS } from '~/composables/melodyLoom/types'
 import { useMelodyLoomContext } from '~/composables/useMelodyLoomContext'
 
 const editor = useMelodyLoomContext()
 const { t } = useI18n()
 
 const items = computed<SelectItem[]>(() => [
-  { label: t('melodyLoom.presets.8bit'), value: '8bit' },
-  { label: t('melodyLoom.presets.arcade'), value: 'arcade' },
-  { label: t('melodyLoom.presets.chiptune'), value: 'chiptune' },
-  { label: t('melodyLoom.presets.retro'), value: 'retro' },
+  ...PRESET_PACKS.map(pack => ({ label: t(`melodyLoom.presets.${pack}`), value: pack })),
+  // 'custom' is listed separately because it isn't a pack: it's the label the
+  // editor falls back to once the rows stop matching one.
   { label: t('melodyLoom.presets.custom'), value: 'custom' }
 ])
 </script>
