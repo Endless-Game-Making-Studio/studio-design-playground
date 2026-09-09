@@ -302,39 +302,27 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
       </div>
 
       <div class="flex flex-wrap items-end gap-4">
-        <div class="flex w-40 flex-col gap-1">
-          <div class="flex items-center justify-between text-xs text-muted">
-            <span>{{ t('melodyLoom.waveform.pitch') }}</span>
-            <span class="font-semibold tabular-nums text-highlighted">
-              {{ t('melodyLoom.waveform.semitones', { semitones: pitch > 0 ? `+${pitch}` : pitch }) }}
-            </span>
-          </div>
-          <USlider
-            v-model="pitch"
-            :min="-12"
-            :max="12"
-            :step="1"
-            size="sm"
-            :disabled="!editor.buffer.value"
-            :aria-label="t('melodyLoom.waveform.pitch')"
-          />
-        </div>
+        <LabeledSlider
+          v-model="pitch"
+          :label="t('melodyLoom.waveform.pitch')"
+          :readout="t('melodyLoom.waveform.semitones', { semitones: pitch > 0 ? `+${pitch}` : pitch })"
+          :min="-12"
+          :max="12"
+          :step="1"
+          :disabled="!editor.buffer.value"
+          class="w-40"
+        />
 
-        <div class="flex w-40 flex-col gap-1">
-          <div class="flex items-center justify-between text-xs text-muted">
-            <span>{{ t('melodyLoom.waveform.volume') }}</span>
-            <span class="font-semibold tabular-nums text-highlighted">{{ volume }}%</span>
-          </div>
-          <USlider
-            v-model="volume"
-            :min="0"
-            :max="200"
-            :step="5"
-            size="sm"
-            :disabled="!editor.buffer.value"
-            :aria-label="t('melodyLoom.waveform.volume')"
-          />
-        </div>
+        <LabeledSlider
+          v-model="volume"
+          :label="t('melodyLoom.waveform.volume')"
+          :readout="`${volume}%`"
+          :min="0"
+          :max="200"
+          :step="5"
+          :disabled="!editor.buffer.value"
+          class="w-40"
+        />
 
         <UTooltip :text="t('melodyLoom.waveform.applyHint')">
           <UButton

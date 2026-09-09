@@ -71,50 +71,35 @@ const reverbPercent = computed({
 
     <USeparator orientation="vertical" class="h-8 max-sm:hidden" />
 
-    <div class="flex w-40 flex-col gap-1">
-      <div class="flex items-center justify-between text-xs text-muted">
-        <span>{{ t('melodyLoom.controls.bpm') }}</span>
-        <span class="font-semibold tabular-nums text-highlighted">{{ editor.bpm.value }}</span>
-      </div>
-      <USlider
-        v-model="editor.bpm.value"
-        :min="60"
-        :max="200"
-        :step="1"
-        size="sm"
-        :aria-label="t('melodyLoom.controls.bpm')"
-      />
-    </div>
+    <LabeledSlider
+      v-model="editor.bpm.value"
+      :label="t('melodyLoom.controls.bpm')"
+      :readout="String(editor.bpm.value)"
+      :min="60"
+      :max="200"
+      :step="1"
+      class="w-40"
+    />
 
-    <div class="flex w-32 flex-col gap-1">
-      <div class="flex items-center justify-between text-xs text-muted">
-        <span>{{ t('melodyLoom.controls.volume') }}</span>
-        <span class="font-semibold tabular-nums text-highlighted">{{ volumePercent }}%</span>
-      </div>
-      <USlider
-        v-model="volumePercent"
-        :min="0"
-        :max="100"
-        :step="5"
-        size="sm"
-        :aria-label="t('melodyLoom.controls.volume')"
-      />
-    </div>
+    <LabeledSlider
+      v-model="volumePercent"
+      :label="t('melodyLoom.controls.volume')"
+      :readout="`${volumePercent}%`"
+      :min="0"
+      :max="100"
+      :step="5"
+      class="w-32"
+    />
 
-    <div class="flex w-32 flex-col gap-1">
-      <div class="flex items-center justify-between text-xs text-muted">
-        <span>{{ t('melodyLoom.controls.reverb') }}</span>
-        <span class="font-semibold tabular-nums text-highlighted">{{ reverbPercent }}%</span>
-      </div>
-      <USlider
-        v-model="reverbPercent"
-        :min="0"
-        :max="100"
-        :step="5"
-        size="sm"
-        :aria-label="t('melodyLoom.controls.reverb')"
-      />
-    </div>
+    <LabeledSlider
+      v-model="reverbPercent"
+      :label="t('melodyLoom.controls.reverb')"
+      :readout="`${reverbPercent}%`"
+      :min="0"
+      :max="100"
+      :step="5"
+      class="w-32"
+    />
 
     <USeparator orientation="vertical" class="h-8 max-sm:hidden" />
 
