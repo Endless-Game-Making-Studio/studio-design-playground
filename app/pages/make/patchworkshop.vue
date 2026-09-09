@@ -57,6 +57,11 @@ async function exportPng() {
 function onKeyDown(event: KeyboardEvent) {
   const target = event.target as HTMLElement | null
   if (target?.closest('input, textarea, [contenteditable]')) return
+  // A control that already owns arrow keys for itself — the opacity slider,
+  // the reorder grip — calls preventDefault() when it handles one. Once it
+  // has, this page-wide layer defers instead of also nudging the layer on
+  // top of whatever the focused control just did.
+  if (event.defaultPrevented) return
 
   const meta = event.ctrlKey || event.metaKey
   const selectedId = editor.selectedLayerId.value

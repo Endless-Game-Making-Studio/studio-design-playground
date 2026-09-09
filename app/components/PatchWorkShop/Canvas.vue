@@ -82,10 +82,10 @@ function onPanStart(event: PointerEvent) {
   const container = containerRef.value
   if (!container) return
   panning.value = true
-  // Captured on the canvas, not the container: pointerdown/move/up all listen
-  // on the canvas, and capturing on a different element retargets every
-  // subsequent event to it — the move/up handlers would simply stop firing.
-  canvasEl.value?.setPointerCapture(event.pointerId)
+  // Captured on the container: its own pointerdown/move/up are what call
+  // into this (see onContainerPointer* below), and capturing anywhere else
+  // would retarget every later event away from the element listening for it.
+  container.setPointerCapture(event.pointerId)
   panOrigin = { x: event.clientX, y: event.clientY, scrollLeft: container.scrollLeft, scrollTop: container.scrollTop }
 }
 
@@ -140,7 +140,9 @@ const dragging = ref(false)
 let dragStart = { pointerX: 0, pointerY: 0, layerX: 0, layerY: 0 }
 
 function onCanvasPointerDown(event: PointerEvent) {
-  if (editor.panMode.value) return onPanStart(event)
+  // Pan mode is handled by the container (onContainerPointerDown below) so
+  // dragging works from the padded backdrop too, not just the canvas itself.
+  if (editor.panMode.value) return
 
   const point = toCanvasPoint(event.clientX, event.clientY)
   const hitId = point ? hitTestLayer(point) : null
@@ -156,7 +158,7 @@ function onCanvasPointerDown(event: PointerEvent) {
 }
 
 function onCanvasPointerMove(event: PointerEvent) {
-  if (editor.panMode.value) return onPanMove(event)
+  if (editor.panMode.value) return
   if (!dragging.value || !editor.selectedLayerId.value) return
 
   const scale = editor.zoom.value
@@ -169,9 +171,26 @@ function onCanvasPointerMove(event: PointerEvent) {
 }
 
 function onCanvasPointerUp(event: PointerEvent) {
-  if (editor.panMode.value) return onPanEnd()
+  if (editor.panMode.value) return
   if (dragging.value) editor.endLayerMove()
   dragging.value = false
+}
+
+// ─── Pan from the backdrop ──────────────────────────────────────────────────
+
+// Bound on the container rather than the canvas: the grab cursor covers the
+// whole padded scroll area, so a drag started on that padding — not just on
+// the artwork — has to pan too.
+function onContainerPointerDown(event: PointerEvent) {
+  if (editor.panMode.value) onPanStart(event)
+}
+
+function onContainerPointerMove(event: PointerEvent) {
+  if (editor.panMode.value) onPanMove(event)
+}
+
+function onContainerPointerUp() {
+  if (editor.panMode.value) onPanEnd()
 }
 
 // ─── Drop to place ──────────────────────────────────────────────────────────
@@ -213,6 +232,10 @@ function onDrop(event: DragEvent) {
     @wheel="onWheel"
     @dragover="onDragOver"
     @drop="onDrop"
+    @pointerdown="onContainerPointerDown"
+    @pointermove="onContainerPointerMove"
+    @pointerup="onContainerPointerUp"
+    @pointercancel="onContainerPointerUp"
   >
     <div :style="{ width: `${scaledSize}px`, height: `${scaledSize}px` }">
       <div

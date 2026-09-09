@@ -124,6 +124,9 @@ function onDragStart(event: DragEvent, asset: LibraryAsset) {
         {{ t('patchworkshop.library.noResults') }}
       </p>
       <div v-else class="grid grid-cols-3 gap-2">
+        <!-- Raw button, not UButton: native `draggable`/`dragstart` need a
+             plain element carrying them directly, not a component's own
+             wrapper markup sitting between this and the drag image. -->
         <button
           v-for="asset in filteredAssets"
           :key="asset.id"

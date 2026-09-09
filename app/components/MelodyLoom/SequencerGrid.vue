@@ -131,6 +131,9 @@ function onCellKeyDown(event: KeyboardEvent, cell: Cell) {
         class="grid gap-0.5"
         :style="{ gridTemplateColumns }"
       >
+        <!-- Raw buttons, not UButton: up to 1024 of these, each needing a
+             roving tabindex this component controls directly rather than
+             going through a wrapped component's own focus handling. -->
         <button
           v-for="cell in noteCells"
           :key="`${cell.row}-${cell.col}`"

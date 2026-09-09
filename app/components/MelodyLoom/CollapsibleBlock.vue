@@ -56,6 +56,10 @@ defineExpose({ focusGrip: () => gripRef.value?.focus() })
     </UTooltip>
 
     <UCollapsible v-model:open="open">
+      <!-- Raw button, not UButton: UCollapsible clones its aria-expanded/
+           aria-controls straight onto whatever this slot renders, and a
+           UButton's own root wrapper doesn't line up with the full-width,
+           icon-plus-label row this header needs. -->
       <button
         type="button"
         class="flex w-full cursor-pointer items-center gap-2 px-3 py-2.5 pl-10 text-left transition-colors hover:bg-elevated focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
@@ -74,7 +78,8 @@ defineExpose({ focusGrip: () => gripRef.value?.focus() })
              painting — which leaves a collapsed block's controls sitting in
              the tab order at zero height. Gating the slot on `open` makes
              collapsed mean gone either way. -->
-        <div v-if="open" class="border-t border-default">
+        <div v-if="open">
+          <USeparator />
           <slot />
         </div>
       </template>
