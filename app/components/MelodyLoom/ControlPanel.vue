@@ -69,7 +69,7 @@ const reverbPercent = computed({
       </UTooltip>
     </div>
 
-    <USeparator orientation="vertical" class="h-8" />
+    <USeparator orientation="vertical" class="h-8 max-sm:hidden" />
 
     <div class="flex w-40 flex-col gap-1">
       <div class="flex items-center justify-between text-xs text-muted">
@@ -116,14 +116,18 @@ const reverbPercent = computed({
       />
     </div>
 
-    <USeparator orientation="vertical" class="h-8" />
+    <USeparator orientation="vertical" class="h-8 max-sm:hidden" />
 
     <UTooltip :text="t('melodyLoom.controls.deleteMode')">
+      <!-- The active state grows a word rather than only changing fill, so it
+           doesn't read as "on" by colour alone. -->
       <UButton
         icon="lucide:eraser"
+        :label="editor.isDeleteMode.value ? t('melodyLoom.controls.deleteModeActive') : undefined"
         color="neutral"
         :variant="editor.isDeleteMode.value ? 'subtle' : 'outline'"
-        class="h-9 w-9 justify-center rounded-md"
+        class="h-9 justify-center rounded-md"
+        :class="editor.isDeleteMode.value ? 'px-2.5' : 'w-9'"
         :aria-label="t('melodyLoom.controls.deleteMode')"
         :aria-pressed="editor.isDeleteMode.value"
         @click="editor.toggleDeleteMode()"
@@ -134,11 +138,11 @@ const reverbPercent = computed({
       <HoldToConfirm :label="t('melodyLoom.controls.clear')" @confirm="editor.clearGrid()" />
     </UTooltip>
 
-    <div class="grow" />
+    <div class="hidden grow xl:block" />
 
     <MelodyLoomPresetSelector />
 
-    <USeparator orientation="vertical" class="h-8" />
+    <USeparator orientation="vertical" class="h-8 max-sm:hidden" />
 
     <UTooltip :text="t('melodyLoom.controls.exportWavHint')">
       <UButton

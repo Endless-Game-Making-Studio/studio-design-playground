@@ -106,10 +106,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
 
 <template>
   <section class="flex flex-col gap-2 p-4">
-    <p class="px-1 text-xs font-semibold uppercase tracking-wide text-dimmed">
-      {{ t('melodyLoom.waveform.title') }}
-    </p>
-
     <div class="flex flex-wrap items-center gap-2">
       <UTooltip :text="playLabel">
         <UButton
@@ -122,7 +118,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
         />
       </UTooltip>
 
-      <USeparator orientation="vertical" class="h-8" />
+      <USeparator orientation="vertical" class="h-8 max-sm:hidden" />
 
       <UButton
         :label="t('melodyLoom.waveform.import')"
@@ -144,7 +140,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
         @click="renderFromSequencer"
       />
 
-      <USeparator orientation="vertical" class="h-8" />
+      <USeparator orientation="vertical" class="h-8 max-sm:hidden" />
 
       <template v-if="editor.isRecording.value">
         <UButton
@@ -178,7 +174,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
         @click="editor.startRecording()"
       />
 
-      <div class="grow" />
+      <div class="hidden grow xl:block" />
 
       <span v-if="editor.isZoomed.value" class="text-xs tabular-nums text-dimmed">
         {{ t('melodyLoom.waveform.zoomLevel', { zoom: Math.round(editor.zoom.value) }) }}
@@ -221,7 +217,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
           />
         </UTooltip>
 
-        <USeparator orientation="vertical" class="h-8" />
+        <USeparator orientation="vertical" class="h-8 max-sm:hidden" />
 
         <UTooltip :text="t('melodyLoom.waveform.cut')">
           <UButton
@@ -268,7 +264,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
           />
         </UTooltip>
 
-        <USeparator orientation="vertical" class="h-8" />
+        <USeparator orientation="vertical" class="h-8 max-sm:hidden" />
 
         <UDropdownMenu :items="effectItems" :ui="{ content: 'w-48' }">
           <UButton
@@ -288,7 +284,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
             : t('melodyLoom.waveform.appliesToTake') }}
         </span>
 
-        <div class="grow" />
+        <div class="hidden grow xl:block" />
 
         <UTooltip :text="t('melodyLoom.waveform.exportWavHint')">
           <UButton

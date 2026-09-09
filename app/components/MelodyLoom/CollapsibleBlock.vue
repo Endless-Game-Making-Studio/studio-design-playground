@@ -1,0 +1,83 @@
+<script setup lang="ts">
+import { ReorderItem, useDragControls } from 'motion-v'
+
+const props = defineProps<{
+  /** Identity the reorder group tracks this block by. */
+  value: string
+  label: string
+  index: number
+  count: number
+}>()
+
+const emit = defineEmits<{ reorder: [from: number, to: number] }>()
+
+const open = defineModel<boolean>('open', { required: true })
+
+const { t } = useI18n()
+
+const controls = useDragControls()
+
+function onGripKeyDown(event: KeyboardEvent) {
+  const direction = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0
+  if (direction === 0) return
+  event.preventDefault()
+  emit('reorder', props.index, props.index + direction)
+}
+
+const gripRef = ref<HTMLElement | null>(null)
+defineExpose({ focusGrip: () => gripRef.value?.focus() })
+</script>
+
+<template>
+  <ReorderItem
+    :value="value"
+    :drag-listener="false"
+    :drag-controls="controls"
+    :drag-elastic="0.06"
+    :drag-momentum="false"
+    :while-drag="{ scale: 1.005, zIndex: 30, boxShadow: '0 12px 24px rgba(2, 6, 24, 0.18)' }"
+    :transition="{ type: 'spring', stiffness: 520, damping: 34 }"
+    class="relative list-none rounded-lg border border-default bg-default"
+  >
+    <!-- The grip overlays the header's left padding instead of sitting inside
+         it: the collapse trigger is itself a button, and a button can't nest
+         another one. -->
+    <UTooltip :text="t('melodyLoom.blocks.reorder')">
+      <button
+        ref="gripRef"
+        type="button"
+        class="absolute left-1.5 top-1.5 z-10 flex h-9 w-7 cursor-grab touch-none items-center justify-center rounded-md text-dimmed transition-colors hover:text-default focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:cursor-grabbing"
+        :aria-label="t('melodyLoom.blocks.reorderLabel', { name: label, position: index + 1, count })"
+        @keydown="onGripKeyDown"
+        @pointerdown="controls.start($event)"
+      >
+        <Icon name="lucide:grip-vertical" class="size-4" />
+      </button>
+    </UTooltip>
+
+    <UCollapsible v-model:open="open">
+      <button
+        type="button"
+        class="flex w-full cursor-pointer items-center gap-2 px-3 py-2.5 pl-10 text-left transition-colors hover:bg-elevated focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
+        :class="open ? 'rounded-t-lg' : 'rounded-lg'"
+      >
+        <Icon
+          :name="open ? 'lucide:chevron-down' : 'lucide:chevron-right'"
+          class="size-4 shrink-0 text-dimmed"
+        />
+        <span class="min-w-0 grow truncate text-sm font-semibold text-highlighted">{{ label }}</span>
+      </button>
+
+      <template #content>
+        <!-- Reka only unmounts the panel once the closing animation reports
+             back, and that never arrives in a window the browser isn't
+             painting — which leaves a collapsed block's controls sitting in
+             the tab order at zero height. Gating the slot on `open` makes
+             collapsed mean gone either way. -->
+        <div v-if="open" class="border-t border-default">
+          <slot />
+        </div>
+      </template>
+    </UCollapsible>
+  </ReorderItem>
+</template>

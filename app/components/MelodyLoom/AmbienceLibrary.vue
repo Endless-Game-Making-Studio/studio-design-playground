@@ -73,12 +73,8 @@ onBeforeUnmount(stopAmbiencePreview)
 
 <template>
   <section class="flex flex-col gap-3 p-4">
-    <p class="px-1 text-xs font-semibold uppercase tracking-wide text-dimmed">
-      {{ t('melodyLoom.ambience.title') }}
-    </p>
-
     <div class="flex flex-wrap items-end gap-3">
-      <UFormField :label="t('melodyLoom.ambience.category')" class="w-44">
+      <UFormField :label="t('melodyLoom.ambience.category')" class="w-full sm:w-44">
         <USelect
           :model-value="categoryId"
           :items="categoryItems"
@@ -88,7 +84,7 @@ onBeforeUnmount(stopAmbiencePreview)
         />
       </UFormField>
 
-      <UFormField :label="t('melodyLoom.ambience.sound')" class="w-56">
+      <UFormField :label="t('melodyLoom.ambience.sound')" class="w-full sm:w-56">
         <USelect
           v-model="soundId"
           :items="soundItems"
@@ -100,7 +96,7 @@ onBeforeUnmount(stopAmbiencePreview)
       <UFormField
         :label="t('melodyLoom.ambience.volume')"
         :hint="`${volumePercent}%`"
-        class="w-40"
+        class="w-full sm:w-40"
       >
         <div class="flex h-8 items-center">
           <USlider v-model="volumePercent" :min="0" :max="100" :step="5" size="sm" />
@@ -141,7 +137,7 @@ onBeforeUnmount(stopAmbiencePreview)
       <UButton
         v-for="sound in category?.sounds ?? []"
         :key="sound.id"
-        icon="lucide:play"
+        :icon="soundId === sound.id ? 'lucide:check' : 'lucide:play'"
         size="sm"
         :color="soundId === sound.id ? 'primary' : 'neutral'"
         :variant="soundId === sound.id ? 'subtle' : 'outline'"

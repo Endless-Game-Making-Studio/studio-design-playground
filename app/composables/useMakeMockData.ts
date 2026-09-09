@@ -105,8 +105,9 @@ export const tailorApps: ToolCardData[] = [
     badge: 'Live',
     icon: 'lucide:music',
     logoBg: '#eab308',
-    url: 'https://threadbare-melodyloom.lovable.app',
-    embedUrl: 'https://threadbare-melodyloom.lovable.app'
+    // Rebuilt natively on this stack, so it opens as a page rather than as a
+    // frame of the original Lovable-hosted build.
+    route: '/make/melody-loom'
   },
   {
     id: 'patches',

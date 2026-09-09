@@ -256,6 +256,80 @@ function onWheel(event: WheelEvent) {
   editor.zoomAt(timeAt(event), Math.exp(-event.deltaY * ZOOM_WHEEL_FACTOR))
 }
 
+// ─── Keyboard interaction ───────────────────────────────────────────────────
+
+// The pointer gestures above have no keyboard equivalent of their own, so the
+// canvas takes focus and maps the same moves onto keys.
+// A fraction of the visible span, not a fixed number of seconds: one press
+// should feel like the same nudge whether the whole take is on screen or a
+// tenth of a second of it is.
+const NUDGE_FRACTION = 0.02
+const KEY_ZOOM_FACTOR = 1.3
+
+// Shift + arrow grows one range instead of restarting it on every press, so
+// the edge being moved is tracked separately from the end it grew out of.
+let selectionAnchor: number | null = null
+let selectionHead = 0
+
+function onKeyDown(event: KeyboardEvent) {
+  if (!editor.buffer.value) return
+
+  const total = editor.duration.value
+  const clampTime = (value: number) => Math.max(0, Math.min(total, value))
+  const span = editor.view.value.end - editor.view.value.start
+
+  const direction = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : 0
+
+  if (direction !== 0) {
+    event.preventDefault()
+    const step = direction * span * NUDGE_FRACTION
+
+    if (event.shiftKey) {
+      if (selectionAnchor === null || !editor.selection.value) {
+        selectionAnchor = editor.cursor.value
+        selectionHead = editor.cursor.value
+      }
+      selectionHead = clampTime(selectionHead + step)
+      editor.setSelection({ start: selectionAnchor, end: selectionHead })
+      return
+    }
+
+    selectionAnchor = null
+    editor.clearSelection()
+    editor.setCursor(clampTime(editor.cursor.value + step))
+    return
+  }
+
+  switch (event.key) {
+    case 'Home':
+    case 'End':
+      event.preventDefault()
+      selectionAnchor = null
+      editor.clearSelection()
+      editor.setCursor(event.key === 'Home' ? 0 : total)
+      break
+    case '+':
+    case '=':
+      event.preventDefault()
+      editor.zoomAt(editor.cursor.value, KEY_ZOOM_FACTOR)
+      break
+    case '-':
+      event.preventDefault()
+      editor.zoomAt(editor.cursor.value, 1 / KEY_ZOOM_FACTOR)
+      break
+    case '0':
+      event.preventDefault()
+      editor.resetView()
+      break
+    case 'Escape':
+      if (!editor.selection.value) return
+      event.preventDefault()
+      selectionAnchor = null
+      editor.clearSelection()
+      break
+  }
+}
+
 // ─── Scrollbar ──────────────────────────────────────────────────────────────
 
 // A real overflow strip rather than a drawn or slider-shaped stand-in: the
@@ -307,6 +381,15 @@ const selectionSummary = computed(() => {
     length: seconds(selection.end - selection.start)
   })
 })
+
+// One label carrying both readouts: a keyboard user moving the selection can't
+// see the two badges drawn over the canvas they are focused on.
+const canvasLabel = computed(() => {
+  if (!bufferSummary.value) return t('melodyLoom.waveform.emptyTitle')
+  return selectionSummary.value
+    ? `${bufferSummary.value} — ${selectionSummary.value}`
+    : bufferSummary.value
+})
 </script>
 
 <template>
@@ -314,9 +397,10 @@ const selectionSummary = computed(() => {
     <div ref="wrapperEl" class="relative overflow-hidden rounded-md border border-default bg-elevated">
       <canvas
         ref="canvasEl"
-        role="img"
-        :aria-label="bufferSummary ?? t('melodyLoom.waveform.emptyTitle')"
-        class="block w-full touch-none"
+        :role="editor.buffer.value ? 'application' : 'img'"
+        :tabindex="editor.buffer.value ? 0 : -1"
+        :aria-label="canvasLabel"
+        class="block w-full touch-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
         :class="editor.buffer.value ? 'cursor-crosshair' : 'cursor-default'"
         :style="{ height: `${CANVAS_HEIGHT}px` }"
         @pointerdown="onPointerDown"
@@ -324,6 +408,7 @@ const selectionSummary = computed(() => {
         @pointerup="onPointerUp"
         @pointercancel="onPointerUp"
         @wheel="onWheel"
+        @keydown="onKeyDown"
       />
 
       <div
@@ -342,6 +427,7 @@ const selectionSummary = computed(() => {
       </p>
       <p
         v-if="selectionSummary"
+        aria-live="polite"
         class="pointer-events-none absolute right-2 top-2 rounded bg-default/80 px-1.5 py-0.5 text-[11px] tabular-nums text-dimmed"
       >
         {{ selectionSummary }}

@@ -625,6 +625,13 @@
   },
   "melodyLoom": {
     "title": "Threadbare Melody Loom",
+    "blocks": {
+      "sequencer": "Sequencer grid",
+      "waveform": "Waveform editor",
+      "ambience": "Sound effects & ambience",
+      "reorder": "Drag to reorder, or focus and use the arrow keys",
+      "reorderLabel": "Reorder {name}, block {position} of {count}"
+    },
     "controls": {
       "play": "Play",
       "pause": "Pause",
@@ -633,6 +640,7 @@
       "volume": "Volume",
       "reverb": "Reverb",
       "deleteMode": "Delete mode",
+      "deleteModeActive": "Erasing",
       "clear": "Clear the grid",
       "exportWav": "Export WAV",
       "exportWavHint": "Save the whole sequence as a WAV file, reverb tail and all"
@@ -648,13 +656,13 @@
     "grid": {
       "notesLabel": "Melody",
       "effectsLabel": "Sound effects",
-      "cellLabel": "Note row {row}, step {step}"
+      "cellLabel": "Note row {row}, step {step}",
+      "hint": "Click a cell to place a note. From the keyboard, the arrow keys move around the grid and space toggles the cell you're on."
     },
     "waveform": {
-      "title": "Waveform",
       "emptyTitle": "No audio yet",
       "emptyHint": "Import a file, render the sequencer, or record from your microphone.",
-      "hint": "Click to place the cursor, drag to select a range. Scroll to zoom, shift + scroll to pan.",
+      "hint": "Click to place the cursor, drag to select a range. Scroll to zoom, shift + scroll to pan. From the keyboard: arrows move the cursor, shift + arrows select, + and − zoom, 0 fits the take, escape drops the selection.",
       "bufferSummary": "{duration}s · {sampleRate} Hz · {channels} ch",
       "selectionSummary": "{start}s – {end}s ({length}s)",
       "scroll": "Scroll the waveform",
@@ -704,7 +712,6 @@
       }
     },
     "ambience": {
-      "title": "Ambience library",
       "category": "Category",
       "sound": "Sound",
       "soundPlaceholder": "Pick a sound",
