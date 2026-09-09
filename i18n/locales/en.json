@@ -612,6 +612,7 @@
       "clearAll": "Clear all",
       "reorder": "Drag to reorder, or focus and use the arrow keys",
       "reorderLabel": "Reorder {name}",
+      "selectLabel": "Select {name}",
       "lock": "Lock layer",
       "unlock": "Unlock layer",
       "lockLabel": "Lock {name}",

@@ -28,6 +28,16 @@ function onGripKeyDown(event: KeyboardEvent) {
 
 const gripRef = ref<HTMLElement | null>(null)
 defineExpose({ focusGrip: () => gripRef.value?.focus() })
+
+// The row itself has no tabindex — with the grip, lock, eye and delete
+// buttons all inside it, a focusable div around them isn't a legal nesting.
+// The name is what a keyboard user tabs to instead, same as Pixel Stitch's
+// row does for its own name field.
+function onNameKeyDown(event: KeyboardEvent) {
+  if (event.key !== 'Enter' && event.key !== ' ') return
+  event.preventDefault()
+  editor.selectLayer(props.layer.id)
+}
 </script>
 
 <template>
@@ -72,7 +82,14 @@ defineExpose({ focusGrip: () => gripRef.value?.focus() })
         style="image-rendering: pixelated"
       >
 
-      <span class="min-w-0 grow truncate text-sm text-highlighted">{{ layer.name }}</span>
+      <span
+        role="button"
+        tabindex="0"
+        class="min-w-0 grow truncate rounded-md text-sm text-highlighted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        :aria-label="t('patchworkshop.layers.selectLabel', { name: layer.name })"
+        :aria-pressed="selected"
+        @keydown="onNameKeyDown"
+      >{{ layer.name }}</span>
 
       <span
         v-if="layer.opacity < 1"

@@ -75,20 +75,23 @@ function onKeyDown(event: KeyboardEvent) {
   if (target?.closest('input, textarea, [contenteditable]')) return
 
   const meta = event.ctrlKey || event.metaKey
+  // Shift held turns `key` into 'Z', not 'z' — compare lowercased so
+  // Ctrl/Cmd+Shift+Z actually matches the redo branch below.
+  const key = event.key.toLowerCase()
 
-  if (meta && event.key === 'z' && !event.shiftKey) {
+  if (meta && key === 'z' && !event.shiftKey) {
     event.preventDefault()
     editor.undo()
-  } else if (meta && (event.key === 'y' || (event.key === 'z' && event.shiftKey))) {
+  } else if (meta && (key === 'y' || (key === 'z' && event.shiftKey))) {
     event.preventDefault()
     editor.redo()
-  } else if (meta && event.key === 'x') {
+  } else if (meta && key === 'x') {
     event.preventDefault()
     editor.cutSelection()
-  } else if (meta && event.key === 'c') {
+  } else if (meta && key === 'c') {
     event.preventDefault()
     editor.copySelection()
-  } else if (meta && event.key === 'v') {
+  } else if (meta && key === 'v') {
     event.preventDefault()
     editor.pasteClipboard()
   } else if (!meta && (event.key === 'Delete' || event.key === 'Backspace')) {

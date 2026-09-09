@@ -60,17 +60,20 @@ function onKeyDown(event: KeyboardEvent) {
 
   const meta = event.ctrlKey || event.metaKey
   const selectedId = editor.selectedLayerId.value
+  // Shift held turns `key` into 'Z', not 'z' — compare lowercased so
+  // Ctrl/Cmd+Shift+Z actually matches the redo branch below.
+  const key = event.key.toLowerCase()
 
-  if (meta && event.key === 'z' && !event.shiftKey) {
+  if (meta && key === 'z' && !event.shiftKey) {
     event.preventDefault()
     editor.undo()
-  } else if (meta && (event.key === 'y' || (event.key === 'z' && event.shiftKey))) {
+  } else if (meta && (key === 'y' || (key === 'z' && event.shiftKey))) {
     event.preventDefault()
     editor.redo()
-  } else if (meta && event.key === 'c') {
+  } else if (meta && key === 'c') {
     event.preventDefault()
     editor.copySelected()
-  } else if (meta && event.key === 'v') {
+  } else if (meta && key === 'v') {
     event.preventDefault()
     editor.paste()
   } else if (selectedId && event.key.startsWith('Arrow')) {

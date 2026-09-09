@@ -82,7 +82,10 @@ function onPanStart(event: PointerEvent) {
   const container = containerRef.value
   if (!container) return
   panning.value = true
-  container.setPointerCapture(event.pointerId)
+  // Captured on the canvas, not the container: pointerdown/move/up all listen
+  // on the canvas, and capturing on a different element retargets every
+  // subsequent event to it — the move/up handlers would simply stop firing.
+  canvasEl.value?.setPointerCapture(event.pointerId)
   panOrigin = { x: event.clientX, y: event.clientY, scrollLeft: container.scrollLeft, scrollTop: container.scrollTop }
 }
 
