@@ -1,5 +1,5 @@
 import type { ProjectData } from './types'
-import { downloadBlob, pickFile } from './files'
+import { downloadBlob, pickFile } from '~/composables/files'
 import { PALETTE_ROW_LENGTH } from './project'
 
 const PROJECT_KEY = 'pixel-stitch-project'

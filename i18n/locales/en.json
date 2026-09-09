@@ -585,6 +585,146 @@
       "tryAgain": "Try another email"
     }
   },
+  "patchworkshop": {
+    "title": "Threadbare PatchWorkShop",
+    "library": {
+      "title": "Assets",
+      "searchPlaceholder": "Search assets…",
+      "allAssets": "All assets",
+      "noResults": "No assets match your search.",
+      "addAriaLabel": "Add {name} to canvas"
+    },
+    "canvas": {
+      "label": "PatchWorkShop composition canvas"
+    },
+    "toolbar": {
+      "undo": "Undo",
+      "redo": "Redo",
+      "zoomOut": "Zoom out",
+      "zoomIn": "Zoom in",
+      "upscale": "Export upscale factor",
+      "exportPng": "Export PNG"
+    },
+    "layers": {
+      "title": "Layers",
+      "empty": "No layers yet — add an asset to get started.",
+      "clearAll": "Clear all",
+      "reorder": "Drag to reorder, or focus and use the arrow keys",
+      "reorderLabel": "Reorder {name}",
+      "selectLabel": "Select {name}",
+      "lock": "Lock layer",
+      "unlock": "Unlock layer",
+      "lockLabel": "Lock {name}",
+      "unlockLabel": "Unlock {name}",
+      "opacity": "Opacity",
+      "opacityLabel": "Opacity for {name}",
+      "hide": "Hide layer",
+      "show": "Show layer",
+      "delete": "Delete layer"
+    }
+  },
+  "melodyLoom": {
+    "title": "Threadbare Melody Loom",
+    "blocks": {
+      "sequencer": "Sequencer grid",
+      "waveform": "Waveform editor",
+      "ambience": "Sound effects & ambience",
+      "reorder": "Drag to reorder, or focus and use the arrow keys",
+      "reorderLabel": "Reorder {name}, block {position} of {count}"
+    },
+    "controls": {
+      "play": "Play",
+      "pause": "Pause",
+      "stop": "Stop",
+      "bpm": "BPM",
+      "volume": "Volume",
+      "reverb": "Reverb",
+      "deleteMode": "Delete mode",
+      "deleteModeActive": "Erasing",
+      "clear": "Clear the grid",
+      "exportWav": "Export WAV",
+      "exportWavHint": "Save the whole sequence as a WAV file, reverb tail and all"
+    },
+    "presets": {
+      "label": "Preset",
+      "8bit": "8-Bit",
+      "arcade": "Arcade",
+      "chiptune": "Chiptune",
+      "retro": "Retro",
+      "custom": "Custom"
+    },
+    "grid": {
+      "notesLabel": "Melody",
+      "effectsLabel": "Sound effects",
+      "cellLabel": "Note row {row}, step {step}",
+      "hint": "Click a cell to place a note. From the keyboard, the arrow keys move around the grid and space toggles the cell you're on."
+    },
+    "waveform": {
+      "emptyTitle": "No audio yet",
+      "emptyHint": "Import a file, render the sequencer, or record from your microphone.",
+      "hint": "Click to place the cursor, drag to select a range. Scroll to zoom, shift + scroll to pan. From the keyboard: arrows move the cursor, shift + arrows select, + and − zoom, 0 fits the take, escape drops the selection.",
+      "bufferSummary": "{duration}s · {sampleRate} Hz · {channels} ch",
+      "selectionSummary": "{start}s – {end}s ({length}s)",
+      "scroll": "Scroll the waveform",
+      "import": "Import",
+      "fromSequencer": "From sequencer",
+      "record": "Record",
+      "stopRecording": "Stop",
+      "discardTake": "Discard",
+      "recording": "Recording {seconds}s",
+      "play": "Play",
+      "playSelection": "Play selection",
+      "stop": "Stop",
+      "fit": "Fit the whole take",
+      "zoomLevel": "{zoom}×",
+      "undo": "Undo",
+      "redo": "Redo",
+      "cut": "Cut",
+      "copy": "Copy",
+      "paste": "Paste at the cursor",
+      "delete": "Delete",
+      "effects": "Effects",
+      "appliesToSelection": "Applies to the selection",
+      "appliesToTake": "Applies to the whole take",
+      "effect": {
+        "normalize": "Normalize",
+        "amplify": "Amplify",
+        "reduce": "Reduce",
+        "fadeIn": "Fade in",
+        "fadeOut": "Fade out",
+        "echo": "Echo",
+        "reverb": "Reverb"
+      },
+      "pitch": "Pitch",
+      "semitones": "{semitones} st",
+      "volume": "Volume",
+      "apply": "Apply",
+      "applyHint": "Apply the pitch and volume above",
+      "exportWav": "Export WAV",
+      "exportWavHint": "Save the waveform as it stands, edits and all",
+      "errors": {
+        "micDenied": "Microphone access was denied. Allow it in your browser settings, then try again.",
+        "micNotFound": "No microphone found. Connect one and try again.",
+        "micUnavailable": "This browser can't record audio here. Recording needs a secure (https) page.",
+        "recordFailed": "Recording couldn't start. Try again.",
+        "decodeFailed": "That audio couldn't be read. Try a different file.",
+        "renderFailed": "The sequencer couldn't be rendered. Try again."
+      }
+    },
+    "ambience": {
+      "category": "Category",
+      "sound": "Sound",
+      "soundPlaceholder": "Pick a sound",
+      "duration": "{seconds}s",
+      "volume": "Volume",
+      "preview": "Preview",
+      "add": "Add to waveform",
+      "hint": "Previews play at the volume set here, and that's the volume the clip lands at when you add it to the waveform at the cursor.",
+      "errors": {
+        "playbackFailed": "That sound couldn't be loaded. Try again."
+      }
+    }
+  },
   "onboarding": {
     "checklist": {
       "title": "Getting started",

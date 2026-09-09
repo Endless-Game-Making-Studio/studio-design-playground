@@ -585,6 +585,146 @@
       "tryAgain": "Prueba con otro correo"
     }
   },
+  "patchworkshop": {
+    "title": "Threadbare PatchWorkShop",
+    "library": {
+      "title": "Recursos",
+      "searchPlaceholder": "Buscar recursos…",
+      "allAssets": "Todos los recursos",
+      "noResults": "Ningún recurso coincide con tu búsqueda.",
+      "addAriaLabel": "Añadir {name} al lienzo"
+    },
+    "canvas": {
+      "label": "Lienzo de composición de PatchWorkShop"
+    },
+    "toolbar": {
+      "undo": "Deshacer",
+      "redo": "Rehacer",
+      "zoomOut": "Alejar",
+      "zoomIn": "Acercar",
+      "upscale": "Factor de ampliación de exportación",
+      "exportPng": "Exportar PNG"
+    },
+    "layers": {
+      "title": "Capas",
+      "empty": "Aún no hay capas — añade un recurso para empezar.",
+      "clearAll": "Borrar todo",
+      "reorder": "Arrastra para reordenar, o usa las flechas del teclado",
+      "reorderLabel": "Reordenar {name}",
+      "selectLabel": "Seleccionar {name}",
+      "lock": "Bloquear capa",
+      "unlock": "Desbloquear capa",
+      "lockLabel": "Bloquear {name}",
+      "unlockLabel": "Desbloquear {name}",
+      "opacity": "Opacidad",
+      "opacityLabel": "Opacidad de {name}",
+      "hide": "Ocultar capa",
+      "show": "Mostrar capa",
+      "delete": "Eliminar capa"
+    }
+  },
+  "melodyLoom": {
+    "title": "Threadbare Melody Loom",
+    "blocks": {
+      "sequencer": "Cuadrícula del secuenciador",
+      "waveform": "Editor de forma de onda",
+      "ambience": "Efectos de sonido y ambiente",
+      "reorder": "Arrastra para reordenar, o usa las flechas del teclado",
+      "reorderLabel": "Reordenar {name}, bloque {position} de {count}"
+    },
+    "controls": {
+      "play": "Reproducir",
+      "pause": "Pausar",
+      "stop": "Detener",
+      "bpm": "BPM",
+      "volume": "Volumen",
+      "reverb": "Reverberación",
+      "deleteMode": "Modo borrar",
+      "deleteModeActive": "Borrando",
+      "clear": "Vaciar la cuadrícula",
+      "exportWav": "Exportar WAV",
+      "exportWavHint": "Guarda la secuencia entera como archivo WAV, con la cola de reverberación incluida"
+    },
+    "presets": {
+      "label": "Preajuste",
+      "8bit": "8 bits",
+      "arcade": "Arcade",
+      "chiptune": "Chiptune",
+      "retro": "Retro",
+      "custom": "Personalizado"
+    },
+    "grid": {
+      "notesLabel": "Melodía",
+      "effectsLabel": "Efectos de sonido",
+      "cellLabel": "Fila de nota {row}, paso {step}",
+      "hint": "Haz clic en una celda para poner una nota. Desde el teclado, las flechas recorren la cuadrícula y el espacio activa o desactiva la celda en la que estás."
+    },
+    "waveform": {
+      "emptyTitle": "Aún no hay audio",
+      "emptyHint": "Importa un archivo, renderiza el secuenciador o graba con tu micrófono.",
+      "hint": "Haz clic para situar el cursor y arrastra para seleccionar un rango. Desplaza para hacer zoom y mayúsculas + desplazamiento para moverte. Desde el teclado: las flechas mueven el cursor, mayúsculas + flechas seleccionan, + y − hacen zoom, 0 muestra la toma completa y escape quita la selección.",
+      "bufferSummary": "{duration}s · {sampleRate} Hz · {channels} can.",
+      "selectionSummary": "{start}s – {end}s ({length}s)",
+      "scroll": "Desplazar la forma de onda",
+      "import": "Importar",
+      "fromSequencer": "Desde el secuenciador",
+      "record": "Grabar",
+      "stopRecording": "Detener",
+      "discardTake": "Descartar",
+      "recording": "Grabando {seconds}s",
+      "play": "Reproducir",
+      "playSelection": "Reproducir la selección",
+      "stop": "Detener",
+      "fit": "Ver la toma completa",
+      "zoomLevel": "{zoom}×",
+      "undo": "Deshacer",
+      "redo": "Rehacer",
+      "cut": "Cortar",
+      "copy": "Copiar",
+      "paste": "Pegar en el cursor",
+      "delete": "Eliminar",
+      "effects": "Efectos",
+      "appliesToSelection": "Se aplica a la selección",
+      "appliesToTake": "Se aplica a toda la toma",
+      "effect": {
+        "normalize": "Normalizar",
+        "amplify": "Amplificar",
+        "reduce": "Reducir",
+        "fadeIn": "Aparecer",
+        "fadeOut": "Desvanecer",
+        "echo": "Eco",
+        "reverb": "Reverberación"
+      },
+      "pitch": "Tono",
+      "semitones": "{semitones} st",
+      "volume": "Volumen",
+      "apply": "Aplicar",
+      "applyHint": "Aplicar el tono y el volumen de arriba",
+      "exportWav": "Exportar WAV",
+      "exportWavHint": "Guardar la forma de onda tal como está, con las ediciones incluidas",
+      "errors": {
+        "micDenied": "Se denegó el acceso al micrófono. Permítelo en la configuración del navegador y vuelve a intentarlo.",
+        "micNotFound": "No se encontró ningún micrófono. Conecta uno y vuelve a intentarlo.",
+        "micUnavailable": "Este navegador no puede grabar audio aquí. La grabación necesita una página segura (https).",
+        "recordFailed": "No se pudo iniciar la grabación. Vuelve a intentarlo.",
+        "decodeFailed": "No se pudo leer ese audio. Prueba con otro archivo.",
+        "renderFailed": "No se pudo renderizar el secuenciador. Vuelve a intentarlo."
+      }
+    },
+    "ambience": {
+      "category": "Categoría",
+      "sound": "Sonido",
+      "soundPlaceholder": "Elige un sonido",
+      "duration": "{seconds}s",
+      "volume": "Volumen",
+      "preview": "Escuchar",
+      "add": "Añadir a la forma de onda",
+      "hint": "Las escuchas suenan al volumen que fijes aquí, y ese es el volumen con el que el clip entra en la forma de onda, en la posición del cursor.",
+      "errors": {
+        "playbackFailed": "No se pudo cargar ese sonido. Vuelve a intentarlo."
+      }
+    }
+  },
   "onboarding": {
     "checklist": {
       "title": "Primeros pasos",

@@ -30,7 +30,7 @@ export const NativeRoute: Story = {
 // the platform's bar above the frame — so it gets the same tab-arrow icon.
 export const Embeddable: Story = {
   args: {
-    tool: tool('patchworkshop')
+    tool: tool('whispering-well')
   }
 }
 

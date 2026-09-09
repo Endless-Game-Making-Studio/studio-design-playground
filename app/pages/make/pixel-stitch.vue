@@ -3,7 +3,7 @@ import type { DropdownMenuItem } from '@nuxt/ui'
 import { usePixelStitch } from '~/composables/usePixelStitch'
 import { providePixelStitch } from '~/composables/usePixelStitchContext'
 import { emptyGrid } from '~/composables/pixelStitch/project'
-import { downloadBlob, downloadDataUrl, loadImage, pickFile, readFileAsDataUrl } from '~/composables/pixelStitch/files'
+import { downloadBlob, downloadDataUrl, loadImage, pickFile, readFileAsDataUrl } from '~/composables/files'
 import { downloadProjectFile, openProjectFile } from '~/composables/pixelStitch/persistence'
 import { frameToBlob } from '~/composables/pixelStitch/render'
 import { exportAsGif } from '~/composables/pixelStitch/gifExport'
@@ -427,6 +427,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
   <UModal
     v-model:open="isExporting"
     :title="t('pixelStitch.exportingGif')"
+    :close="false"
     :dismissible="false"
   >
     <template #body>

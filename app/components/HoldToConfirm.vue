@@ -6,10 +6,16 @@ const props = withDefaults(defineProps<{
   // The frame tiles are tighter than the layer rows, so the same control comes
   // in the two sizes the design uses rather than being scaled by a wrapper.
   size?: 'sm' | 'md'
+  // Every existing use of this control sits in a tight row where the icon
+  // already reads as "delete" — but a standalone toolbar action (PatchWorkShop's
+  // "Clear All") has nothing else around it to carry that meaning, so it needs
+  // its own visible text instead of relying on the tooltip/aria-label.
+  showLabel?: boolean
 }>(), {
   disabled: false,
   holdDuration: 1000,
-  size: 'md'
+  size: 'md',
+  showLabel: false
 })
 
 const emit = defineEmits<{ confirm: [] }>()
@@ -141,9 +147,12 @@ onBeforeUnmount(() => {
     :disabled="disabled"
     :aria-label="label"
     :aria-describedby="instructionId"
-    class="relative inline-grid shrink-0 place-items-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50"
+    class="relative shrink-0 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50"
     :class="[
-      size === 'sm' ? 'size-6 rounded-[5px]' : 'size-8 rounded-md',
+      showLabel
+        ? 'inline-flex items-center gap-1.5 overflow-hidden rounded-md px-2.5 text-sm font-medium'
+        : ['inline-grid place-items-center', size === 'sm' ? 'size-6 rounded-[5px]' : 'size-8 rounded-md'],
+      showLabel ? 'h-8' : '',
       // The tint only appears once the hold is under way: idle, this is a plain
       // ghost bin like every other row button.
       holding || completed ? 'bg-error/8 text-error' : 'text-muted hover:text-default'
@@ -157,10 +166,10 @@ onBeforeUnmount(() => {
     @keydown="onKeyDown"
     @keyup="onKeyUp"
   >
-    <!-- The progress follows the button's own shape — a rounded square, like
-         every other control in this app, not a ring around one. -->
+    <!-- Icon-only: the progress follows the button's own shape — a rounded
+         square, like every other control in this app, not a ring around one. -->
     <svg
-      v-if="holding || completed"
+      v-if="!showLabel && (holding || completed)"
       class="pointer-events-none absolute inset-0 size-full -rotate-90"
       viewBox="0 0 32 32"
       aria-hidden="true"
@@ -179,7 +188,16 @@ onBeforeUnmount(() => {
         :stroke-dashoffset="progressOffset"
       />
     </svg>
-    <Icon name="lucide:trash-2" :class="size === 'sm' ? 'size-3.5' : 'size-4'" aria-hidden="true" />
+    <!-- Labeled: a square ring reads oddly on a wide pill, so progress fills
+         the button's own background left-to-right instead. -->
+    <span
+      v-if="showLabel && (holding || completed)"
+      class="pointer-events-none absolute inset-y-0 left-0 bg-error/15 transition-[width] duration-75"
+      :style="{ width: `${progress * 100}%` }"
+      aria-hidden="true"
+    />
+    <Icon name="lucide:trash-2" class="relative" :class="size === 'sm' ? 'size-3.5' : 'size-4'" aria-hidden="true" />
+    <span v-if="showLabel" class="relative">{{ label }}</span>
     <span :id="instructionId" class="sr-only">{{ instruction }}</span>
     <span class="sr-only" role="status" aria-live="polite">{{ status }}</span>
   </button>
