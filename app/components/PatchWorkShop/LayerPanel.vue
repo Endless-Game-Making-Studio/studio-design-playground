@@ -30,7 +30,7 @@ async function onKeyboardReorder(from: number, to: number) {
 <template>
   <section class="flex min-h-0 flex-1 flex-col gap-2 p-3.5">
     <div class="flex shrink-0 items-center">
-      <p class="grow text-[11px] font-semibold uppercase tracking-[0.06em] text-dimmed">
+      <p class="grow text-xs font-semibold uppercase tracking-[0.06em] text-dimmed">
         {{ t('patchworkshop.layers.title') }}
       </p>
       <UTooltip :text="t('patchworkshop.layers.clearAll')">

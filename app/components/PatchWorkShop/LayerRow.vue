@@ -16,6 +16,14 @@ const { t } = useI18n()
 
 const controls = useDragControls()
 
+// motion-v takes plain numbers here, not CSS custom properties, so these are
+// the design tokens spelled out: `--duration-fast` (0.15s), the `--ease-out-quart`
+// curve from docs/animation.md, and `--shadow-menu` for the dragged row while it
+// floats above the list. A spring would overshoot, which the motion rules rule out.
+const DURATION_FAST = 0.15
+const EASE_OUT_QUART = [0.25, 1, 0.5, 1] as const
+const SHADOW_MENU = '0 4px 16px rgba(15, 23, 43, 0.12)'
+
 const selected = computed(() => editor.selectedLayerId.value === props.layer.id)
 const opacityOpen = ref(false)
 
@@ -47,9 +55,9 @@ function onNameKeyDown(event: KeyboardEvent) {
     :drag-controls="controls"
     :drag-elastic="0.06"
     :drag-momentum="false"
-    :while-drag="{ scale: 1.02, rotate: -0.6, zIndex: 30, boxShadow: '0 12px 24px rgba(2, 6, 24, 0.18)' }"
-    :transition="{ type: 'spring', stiffness: 520, damping: 34 }"
-    :exit="{ opacity: 0, height: 0, marginTop: 0, transition: { duration: 0.16 } }"
+    :while-drag="{ scale: 1.02, rotate: -0.6, zIndex: 30, boxShadow: SHADOW_MENU }"
+    :transition="{ type: 'tween', ease: EASE_OUT_QUART, duration: DURATION_FAST }"
+    :exit="{ opacity: 0, height: 0, marginTop: 0, transition: { ease: EASE_OUT_QUART, duration: DURATION_FAST } }"
     class="relative list-none"
   >
     <div
@@ -93,7 +101,7 @@ function onNameKeyDown(event: KeyboardEvent) {
 
       <span
         v-if="layer.opacity < 1"
-        class="min-w-[34px] shrink-0 rounded-[5px] bg-slate-200 px-1.5 py-0.5 text-center text-[11px] font-semibold tabular-nums text-muted"
+        class="min-w-[34px] shrink-0 rounded-[5px] bg-elevated px-1.5 py-0.5 text-center text-xs font-semibold tabular-nums text-muted"
       >
         {{ Math.round(layer.opacity * 100) }}%
       </span>

@@ -36,7 +36,12 @@ function redraw() {
     const image = getCachedImage(selected.imageUrl)
     if (image.complete && image.naturalWidth > 0) {
       const { x, y } = layerOrigin(selected, image)
-      ctx.strokeStyle = '#3b5bdb'
+      // Read off the theme's own custom properties, the same way Melody Loom's
+      // waveform does, so the outline follows a light/dark switch instead of
+      // pinning a second palette inside the canvas. `secondary` is the role
+      // Melody Loom already uses for "this range is selected".
+      const styles = getComputedStyle(canvas)
+      ctx.strokeStyle = styles.getPropertyValue('--ui-secondary').trim() || '#6556f0'
       ctx.lineWidth = 2
       ctx.setLineDash([6, 4])
       ctx.strokeRect(x - 1, y - 1, image.width + 2, image.height + 2)
@@ -227,7 +232,7 @@ function onDrop(event: DragEvent) {
 <template>
   <div
     ref="containerRef"
-    class="relative flex h-full w-full flex-1 items-center justify-center overflow-auto bg-slate-50 p-7"
+    class="relative flex h-full w-full flex-1 items-center justify-center overflow-auto bg-muted p-7"
     :class="editor.panMode.value ? (panning ? 'cursor-grabbing' : 'cursor-grab') : ''"
     @wheel="onWheel"
     @dragover="onDragOver"

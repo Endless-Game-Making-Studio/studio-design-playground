@@ -17,6 +17,14 @@ const { t } = useI18n()
 
 const controls = useDragControls()
 
+// motion-v takes plain numbers here, not CSS custom properties, so these are
+// the design tokens spelled out: `--duration-fast` (0.15s), the `--ease-out-quart`
+// curve from docs/animation.md, and `--shadow-menu` for the dragged block while it
+// floats above the stack. A spring would overshoot, which the motion rules rule out.
+const DURATION_FAST = 0.15
+const EASE_OUT_QUART = [0.25, 1, 0.5, 1] as const
+const SHADOW_MENU = '0 4px 16px rgba(15, 23, 43, 0.12)'
+
 function onGripKeyDown(event: KeyboardEvent) {
   const direction = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0
   if (direction === 0) return
@@ -35,8 +43,8 @@ defineExpose({ focusGrip: () => gripRef.value?.focus() })
     :drag-controls="controls"
     :drag-elastic="0.06"
     :drag-momentum="false"
-    :while-drag="{ scale: 1.005, zIndex: 30, boxShadow: '0 12px 24px rgba(2, 6, 24, 0.18)' }"
-    :transition="{ type: 'spring', stiffness: 520, damping: 34 }"
+    :while-drag="{ scale: 1.005, zIndex: 30, boxShadow: SHADOW_MENU }"
+    :transition="{ type: 'tween', ease: EASE_OUT_QUART, duration: DURATION_FAST }"
     class="relative list-none rounded-lg border border-default bg-default"
   >
     <!-- The grip overlays the header's left padding instead of sitting inside

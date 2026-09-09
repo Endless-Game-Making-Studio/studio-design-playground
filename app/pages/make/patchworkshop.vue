@@ -112,7 +112,7 @@ const mobileTabItems = computed<TabsItem[]>(() => [
 
 <template>
   <div class="flex min-h-0 grow flex-col">
-    <div class="flex h-[52px] shrink-0 items-center gap-2.5 overflow-x-auto border-b border-default bg-slate-50 px-4">
+    <div class="flex h-[52px] shrink-0 items-center gap-2.5 overflow-x-auto border-b border-default bg-muted px-4">
       <div class="flex h-[34px] items-center gap-0.5 rounded-md border border-default bg-default px-1">
         <UTooltip :text="t('patchworkshop.toolbar.undo')">
           <UButton
@@ -150,7 +150,7 @@ const mobileTabItems = computed<TabsItem[]>(() => [
             @click="stepZoom(-1)"
           />
         </UTooltip>
-        <span class="min-w-[42px] px-1 text-center text-[13px] tabular-nums text-muted">
+        <span class="min-w-[42px] px-1 text-center text-sm tabular-nums text-muted">
           {{ Math.round(editor.zoom.value * 100) }}%
         </span>
         <UTooltip :text="t('patchworkshop.toolbar.zoomIn')">
@@ -185,7 +185,7 @@ const mobileTabItems = computed<TabsItem[]>(() => [
           color="neutral"
           variant="outline"
           trailing-icon="lucide:chevron-down"
-          class="h-[34px] gap-1.5 rounded-md px-2.5 text-[13px] tabular-nums"
+          class="h-[34px] gap-1.5 rounded-md px-2.5 text-sm tabular-nums"
           :aria-label="t('patchworkshop.toolbar.upscale')"
         >
           {{ upscale }}×
@@ -197,21 +197,21 @@ const mobileTabItems = computed<TabsItem[]>(() => [
         color="primary"
         :loading="exporting"
         :disabled="editor.layers.value.length === 0"
-        class="h-[34px] shrink-0 gap-1.5 rounded-md px-2.5 text-[13px]"
+        class="h-[34px] shrink-0 gap-1.5 rounded-md px-2.5 text-sm"
         @click="exportPng"
       />
     </div>
 
     <div class="flex min-h-0 grow">
-      <aside class="hidden w-[300px] shrink-0 flex-col overflow-hidden border-r border-default bg-slate-50 md:flex">
+      <aside class="hidden w-[300px] shrink-0 flex-col overflow-hidden border-r border-default bg-muted md:flex">
         <PatchWorkShopAssetLibrary />
       </aside>
 
-      <main class="flex min-w-0 grow flex-col bg-slate-50">
+      <main class="flex min-w-0 grow flex-col bg-muted">
         <PatchWorkShopCanvas />
       </main>
 
-      <aside class="hidden w-[300px] shrink-0 flex-col overflow-hidden border-l border-default bg-slate-50 md:flex">
+      <aside class="hidden w-[300px] shrink-0 flex-col overflow-hidden border-l border-default bg-muted md:flex">
         <PatchWorkShopLayerPanel />
       </aside>
     </div>

@@ -421,14 +421,14 @@ const canvasLabel = computed(() => {
 
       <p
         v-if="bufferSummary"
-        class="pointer-events-none absolute left-2 top-2 rounded bg-default/80 px-1.5 py-0.5 text-[11px] tabular-nums text-dimmed"
+        class="pointer-events-none absolute left-2 top-2 rounded bg-default/80 px-1.5 py-0.5 text-xs tabular-nums text-dimmed"
       >
         {{ bufferSummary }}
       </p>
       <p
         v-if="selectionSummary"
         aria-live="polite"
-        class="pointer-events-none absolute right-2 top-2 rounded bg-default/80 px-1.5 py-0.5 text-[11px] tabular-nums text-dimmed"
+        class="pointer-events-none absolute right-2 top-2 rounded bg-default/80 px-1.5 py-0.5 text-xs tabular-nums text-dimmed"
       >
         {{ selectionSummary }}
       </p>
