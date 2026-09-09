@@ -677,6 +677,20 @@
         "decodeFailed": "That audio couldn't be read. Try a different file.",
         "renderFailed": "The sequencer couldn't be rendered. Try again."
       }
+    },
+    "ambience": {
+      "title": "Ambience library",
+      "category": "Category",
+      "sound": "Sound",
+      "soundPlaceholder": "Pick a sound",
+      "duration": "{seconds}s",
+      "volume": "Volume",
+      "preview": "Preview",
+      "add": "Add to waveform",
+      "hint": "Previews play at the volume set here, and that's the volume the clip lands at when you add it to the waveform at the cursor.",
+      "errors": {
+        "playbackFailed": "That sound couldn't be loaded. Try again."
+      }
     }
   },
   "onboarding": {

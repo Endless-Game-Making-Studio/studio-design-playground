@@ -38,6 +38,8 @@ onBeforeUnmount(() => {
       <MelodyLoomSequencerGrid />
       <USeparator />
       <MelodyLoomWaveformEditor />
+      <USeparator />
+      <MelodyLoomAmbienceLibrary />
     </div>
   </div>
 </template>
