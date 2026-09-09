@@ -195,6 +195,12 @@ Key rules from that playbook, worth following now even ahead of the token migrat
 - **GPU-only** — animate `transform` and `opacity`; never animate layout properties (`width`, `height`, `top`, `left`).
 - **`prefers-reduced-motion` is required**, not optional, on any animation added.
 
+## Focus rings
+
+Every hand-rolled focusable element (a Nuxt UI component already themes its own focus state — this is only for the raw HTML CLAUDE.md's mandatory-tool-use rule allows) follows one pattern: `focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-{semantic-color}`, flipping to `-outline-offset-2` where the ring needs to sit flush against a tightly-bounded control (e.g. a canvas). `{semantic-color}` is always one of the same roles used everywhere else (`primary`, `warning`, …) — never a raw palette name.
+
+This pattern genuinely compiles and paints correctly — confirmed with a real Tab-driven `:focus-visible` state, screenshotted at scale. Don't take that on faith from `getComputedStyle(el).outlineColor` in the console, though: Chromium has a long-standing quirk where reading a focused element's computed `outline-color` back out via JS reports `currentColor`'s resolved value regardless of what's actually painted, even for a literal inline `outline-color: red`. Two separate review passes on this codebase were fooled by exactly that into flagging a real-looking but nonexistent bug. To verify a focus ring for real: Tab to the element for real (`.focus()` alone usually isn't enough to earn `:focus-visible` in Chrome) and look at a screenshot — scale the element up with a temporary `transform: scale()` first if it's too small to read at 1x.
+
 ## Components
 
 The component library is **Nuxt UI v4** — per `CLAUDE.md`'s "Building UI — mandatory tool use" rule, check the `nuxt-ui` skill or the `nuxt-ui-remote` MCP server for a component's baseline API before writing raw markup. This section covers only what Studio Home changes or establishes as a pattern on top of that baseline.
