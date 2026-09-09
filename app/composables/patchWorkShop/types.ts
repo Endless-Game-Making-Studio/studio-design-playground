@@ -1,3 +1,11 @@
+// Canvas coordinates in logical pixels. Which origin they count from depends
+// on where they come from — a layer's position is measured from canvas-center,
+// a hit test from the top-left corner — so each field says which it means.
+export interface Point {
+  x: number
+  y: number
+}
+
 export interface Layer {
   id: string
   name: string
@@ -8,7 +16,7 @@ export interface Layer {
   // Offset from canvas-center, not from the top-left corner — every later
   // ticket (rendering, hit-testing, dragging, nudge) reads position against
   // that same origin, so this has to stay the convention everywhere.
-  position: { x: number, y: number }
+  position: Point
 }
 
 export interface LibraryAsset {

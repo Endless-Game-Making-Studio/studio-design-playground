@@ -1,4 +1,4 @@
-import type { Layer, LibraryAsset } from '~/composables/patchWorkShop/types'
+import type { Layer, LibraryAsset, Point } from '~/composables/patchWorkShop/types'
 import { MAX_HISTORY_STEPS, MAX_ZOOM, MIN_ZOOM } from '~/composables/patchWorkShop/types'
 
 function cloneLayers(layers: Layer[]): Layer[] {
@@ -17,7 +17,14 @@ function newLayerId() {
 export function usePatchWorkShop() {
   const layers = ref<Layer[]>([])
   const selectedLayerId = ref<string | null>(null)
-  const selectedLayer = computed(() => layers.value.find(layer => layer.id === selectedLayerId.value) ?? null)
+
+  // Returns the live entry, not a copy — the `*Live` mutators below rely on
+  // writing straight through to the layer the canvas is already watching.
+  function findLayer(id: string | null) {
+    return layers.value.find(layer => layer.id === id) ?? null
+  }
+
+  const selectedLayer = computed(() => findLayer(selectedLayerId.value))
 
   const zoom = ref(1)
   const panMode = ref(false)
@@ -71,7 +78,7 @@ export function usePatchWorkShop() {
 
   // New layers go on top: last in the array is drawn last, so it's the one
   // that ends up visually on top.
-  function addLayer(asset: LibraryAsset, position: { x: number, y: number } = { x: 0, y: 0 }) {
+  function addLayer(asset: LibraryAsset, position: Point = { x: 0, y: 0 }) {
     const layer: Layer = {
       id: newLayerId(),
       name: asset.name,
@@ -135,14 +142,14 @@ export function usePatchWorkShop() {
   }
 
   function toggleLayerVisible(id: string) {
-    const layer = layers.value.find(l => l.id === id)
+    const layer = findLayer(id)
     if (!layer) return
     layer.visible = !layer.visible
     pushHistory()
   }
 
   function toggleLayerLocked(id: string) {
-    const layer = layers.value.find(l => l.id === id)
+    const layer = findLayer(id)
     if (!layer) return
     layer.locked = !layer.locked
     pushHistory()
@@ -153,7 +160,7 @@ export function usePatchWorkShop() {
   // `end*` call folds the whole gesture into one history entry instead of one
   // per intermediate value.
   function setLayerOpacityLive(id: string, opacity: number) {
-    const layer = layers.value.find(l => l.id === id)
+    const layer = findLayer(id)
     if (!layer) return
     layer.opacity = Math.min(1, Math.max(0, opacity))
   }
@@ -162,8 +169,8 @@ export function usePatchWorkShop() {
     pushHistory()
   }
 
-  function moveLayerLive(id: string, position: { x: number, y: number }) {
-    const layer = layers.value.find(l => l.id === id)
+  function moveLayerLive(id: string, position: Point) {
+    const layer = findLayer(id)
     if (!layer || layer.locked) return
     layer.position = position
   }
@@ -175,7 +182,7 @@ export function usePatchWorkShop() {
   // Arrow-key nudges are already discrete (one press, one step), so they push
   // straight away rather than needing a matching `end*` call.
   function nudgeLayer(id: string, dx: number, dy: number) {
-    const layer = layers.value.find(l => l.id === id)
+    const layer = findLayer(id)
     if (!layer || layer.locked) return
     layer.position = { x: layer.position.x + dx, y: layer.position.y + dy }
     pushHistory()
@@ -211,6 +218,7 @@ export function usePatchWorkShop() {
 
   return {
     layers,
+    findLayer,
     selectedLayerId,
     selectedLayer,
     selectLayer,

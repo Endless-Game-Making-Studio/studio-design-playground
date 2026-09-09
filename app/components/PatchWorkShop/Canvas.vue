@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { LibraryAsset } from '~/composables/patchWorkShop/types'
+import type { LibraryAsset, Point } from '~/composables/patchWorkShop/types'
 import { CANVAS_SIZE, MAX_ZOOM, MIN_ZOOM } from '~/composables/patchWorkShop/types'
 import { alphaAt, getCachedImage } from '~/composables/patchWorkShop/imageCache'
 import { layerOrigin } from '~/composables/patchWorkShop/geometry'
@@ -110,7 +110,7 @@ function onPanEnd() {
 // Client coordinates -> canvas logical pixels, undoing both the CSS zoom
 // transform and any difference between the canvas's backing resolution and
 // its rendered size.
-function toCanvasPoint(clientX: number, clientY: number): { x: number, y: number } | null {
+function toCanvasPoint(clientX: number, clientY: number): Point | null {
   const canvas = canvasEl.value
   if (!canvas) return null
   const rect = canvas.getBoundingClientRect()
@@ -122,7 +122,7 @@ function toCanvasPoint(clientX: number, clientY: number): { x: number, y: number
 
 // Topmost layer first; a transparent pixel passes the hit through to
 // whatever's underneath instead of claiming the click for its bounding box.
-function hitTestLayer(point: { x: number, y: number }): string | null {
+function hitTestLayer(point: Point): string | null {
   const layers = editor.layers.value
   for (let i = layers.length - 1; i >= 0; i--) {
     const layer = layers[i]!
@@ -154,7 +154,7 @@ function onCanvasPointerDown(event: PointerEvent) {
   editor.selectLayer(hitId)
   if (!hitId) return
 
-  const layer = editor.layers.value.find(l => l.id === hitId)
+  const layer = editor.findLayer(hitId)
   if (!layer || layer.locked) return
 
   canvasEl.value?.setPointerCapture(event.pointerId)
