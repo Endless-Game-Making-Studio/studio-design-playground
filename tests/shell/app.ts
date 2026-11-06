@@ -114,8 +114,26 @@ export interface RunningApp {
   page: Page
   /** The app's one top-level window, as Windows sees it now. */
   window: () => AppWindow
-  /** Closes the window the way its close button does and waits for the app to exit. */
-  close: () => Promise<void>
+  /**
+   * Closes the window the way its close button does and waits for the app to
+   * exit. `forced` is true when it hadn't exited after 15 seconds and was
+   * killed.
+   */
+  close: () => Promise<{ forced: boolean }>
+  /**
+   * Asks the window to close, as its close button does, and returns at once,
+   * still attached to the page, so the spec can answer what the app asks.
+   */
+  requestClose: () => void
+  /**
+   * Gets a close ready to send, for a test that has to close within a moment
+   * of its last action: starting the helper that posts the close takes longer
+   * than the editor's autosave delay. The returned function closes the window
+   * at once and then behaves like `close`.
+   */
+  armClose: () => Promise<() => Promise<{ forced: boolean }>>
+  /** Resolves with the exit code once the app has exited. */
+  exited: Promise<number | null>
 }
 
 /** Launches the app and attaches to its WebView2. */
@@ -130,6 +148,13 @@ export async function launch(dataDir: string): Promise<RunningApp> {
   const page = browser.contexts()[0]!.pages()[0]!
   await expect.poll(() => ownWindows().length).toBe(1)
 
+  async function waitForExit() {
+    const timedOut = await Promise.race([app.exited.then(() => false), new Promise<boolean>(done => setTimeout(done, 15_000, true))])
+    if (timedOut) app.kill()
+    await app.exited
+    return { forced: timedOut }
+  }
+
   return {
     pid: app.pid,
     page,
@@ -141,10 +166,30 @@ export async function launch(dataDir: string): Promise<RunningApp> {
     close: async () => {
       await browser.close().catch(() => {})
       for (const window of ownWindows()) windowsHelper('close', window.hwnd)
-      const timedOut = await Promise.race([app.exited.then(() => false), new Promise(done => setTimeout(done, 15_000, true))])
-      if (timedOut) app.kill()
-      await app.exited
-    }
+      return waitForExit()
+    },
+    requestClose: () => {
+      for (const window of ownWindows()) windowsHelper('close', window.hwnd)
+    },
+    armClose: async () => {
+      const [window] = ownWindows()
+      if (!window) throw new Error('No Pixel Stitch window to close')
+      const helper = spawn('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', join(here, 'windows.ps1'), 'close-on-signal', window.hwnd], { stdio: ['pipe', 'pipe', 'inherit'] })
+      const helperExited = new Promise(done => helper.on('exit', done))
+      await new Promise<void>((ready, failed) => {
+        helper.stdout.on('data', (chunk: Buffer) => {
+          if (chunk.toString().includes('ready')) ready()
+        })
+        helper.on('exit', () => failed(new Error('windows.ps1 close-on-signal exited early')))
+      })
+      return async () => {
+        helper.stdin.end('\n')
+        await helperExited
+        await browser.close().catch(() => {})
+        return waitForExit()
+      }
+    },
+    exited: app.exited
   }
 }
 

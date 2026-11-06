@@ -48,6 +48,10 @@ export const browserHost: PixelStitchHost = {
 
     onWriteFailed: () => () => {},
 
+    // Writes either land at once or return false, which the caller has
+    // already told the person about. There is nothing to try again.
+    flush: () => Promise.resolve(true),
+
     whenIdle: () => Promise.resolve()
   },
 

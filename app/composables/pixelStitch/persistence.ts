@@ -1,3 +1,4 @@
+import { nextTick } from 'vue'
 import type { ProjectData, ProjectSummary, Workspace } from './types'
 import { usePixelStitchHost } from './host'
 import { PROJECT_FILE } from './fileTypes'
@@ -63,6 +64,29 @@ export function onProjectSaveFailed(id: string, listener: () => void) {
   return usePixelStitchHost().storage.onWriteFailed((failed) => {
     if (failed === key) listener()
   })
+}
+
+// Each open editor's "write what's waiting on autosave now". Every tab stays
+// mounted while open, so this holds one per open tab, front or not.
+const pendingSaves = new Set<() => void>()
+
+/** Registers an editor's flush for `saveEverything`. Returns the unregister. */
+export function onSaveEverything(flush: () => void) {
+  pendingSaves.add(flush)
+  return () => pendingSaves.delete(flush)
+}
+
+/**
+ * Writes every open editor's pending autosave and waits for the host to
+ * finish writing. Resolves to whether everything landed. The desktop shell
+ * awaits it before quitting.
+ */
+export async function saveEverything() {
+  for (const flush of pendingSaves) flush()
+  // A save updates the projects list's date, and its watcher writes the list
+  // on the next tick.
+  await nextTick()
+  return usePixelStitchHost().storage.flush()
 }
 
 /** The `pixelStitch.toast` key for a failed save, worded for where the host keeps projects. */

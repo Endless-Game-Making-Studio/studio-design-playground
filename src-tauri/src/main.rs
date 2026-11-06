@@ -2,6 +2,7 @@
 // Windows.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod close;
 mod storage;
 
 use std::path::PathBuf;
@@ -64,11 +65,16 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             storage::storage_read,
             storage::storage_write,
-            storage::storage_remove
+            storage::storage_remove,
+            close::quit,
+            close::quit_held
         ])
+        // Holds the window open until the page has saved what is waiting.
+        .on_window_event(close::on_window_event)
         .setup(|app| {
             let root = storage::storage_root(data_dir(), app.path().app_data_dir()?);
             app.manage(storage::Storage::new(root));
+            app.manage(close::CloseRequests::default());
             create_main_window(app)?;
             Ok(())
         })
