@@ -27,7 +27,9 @@ test('the first launch opens the start screen in a window of its own', async () 
   expect(app.window().title).toBe('Pixel Stitch')
 
   // Everything comes from the bundle inside the executable, which WebView2
-  // serves from http://tauri.localhost. Loaded again with the spec watching,
+  // serves from http://tauri.localhost, and the calls to the app's own
+  // commands (reading the projects from disk) go to http://ipc.localhost,
+  // which Tauri answers in-process. Loaded again with the spec watching,
   // since the first load was over before it attached.
   const requested: string[] = []
   app.page.on('request', request => requested.push(request.url()))
@@ -35,7 +37,7 @@ test('the first launch opens the start screen in a window of its own', async () 
   await expect(app.page.getByRole('button', { name: 'Create project' })).toBeVisible()
   await app.page.evaluate(() => document.fonts.ready)
   expect(requested.length).toBeGreaterThan(0)
-  expect(requested.filter(url => !/^(http:\/\/tauri\.localhost\/|data:|blob:)/.test(url))).toEqual([])
+  expect(requested.filter(url => !/^(http:\/\/(tauri|ipc)\.localhost\/|data:|blob:)/.test(url))).toEqual([])
 })
 
 test('a second launch focuses the running window instead of opening another', async () => {

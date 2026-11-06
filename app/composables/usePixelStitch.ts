@@ -21,6 +21,7 @@ import {
   loadPalette,
   loadProject,
   onProjectSaveFailed,
+  saveFailedNotice,
   savePalette,
   saveProject
 } from '~/composables/pixelStitch/persistence'
@@ -631,7 +632,7 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
   function saveFailed() {
     if (saveFailing) return
     saveFailing = true
-    notify('storageFull', 'error')
+    notify(saveFailedNotice(), 'error')
   }
 
   // A host that writes in the background (to disk) only learns a save failed

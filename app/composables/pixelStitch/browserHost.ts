@@ -16,6 +16,8 @@ function acceptList(types: FileType[]) {
  */
 export const browserHost: PixelStitchHost = {
   storage: {
+    kind: 'browser',
+
     load: () => Promise.resolve(),
 
     read(key) {
@@ -44,7 +46,9 @@ export const browserHost: PixelStitchHost = {
       if (import.meta.client) localStorage.removeItem(key)
     },
 
-    onWriteFailed: () => () => {}
+    onWriteFailed: () => () => {},
+
+    whenIdle: () => Promise.resolve()
   },
 
   // A download can't be cancelled from the page's side and gives no answer
