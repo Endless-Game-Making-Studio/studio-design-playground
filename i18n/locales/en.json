@@ -448,6 +448,8 @@
       "exportTitle": "Export sprite sheet",
       "importTitle": "Import sprite sheet",
       "imageFile": "Image file",
+      "chooseFile": "Choose image",
+      "noFile": "No file chosen",
       "columns": "Columns",
       "rows": "Rows",
       "summary": "{count} frames will be arranged in a {columns} × {rows} grid.",

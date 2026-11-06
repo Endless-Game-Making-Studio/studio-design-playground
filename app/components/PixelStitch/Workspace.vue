@@ -4,8 +4,10 @@ import { usePixelStitch } from '~/composables/usePixelStitch'
 import { providePixelStitch } from '~/composables/usePixelStitchContext'
 import { usePixelStitchProjectsContext } from '~/composables/usePixelStitchProjects'
 import { emptyGrid } from '~/composables/pixelStitch/project'
-import { downloadBlob, downloadDataUrl, loadImage, pickFile, readFileAsDataUrl } from '~/composables/files'
-import { downloadProjectFile, openProjectFile, projectFileName } from '~/composables/pixelStitch/persistence'
+import { loadImage, readFileAsDataUrl } from '~/composables/files'
+import { openProjectFile, projectFileName, saveProjectFile } from '~/composables/pixelStitch/persistence'
+import { usePixelStitchHost } from '~/composables/pixelStitch/host'
+import { GIF_FILE, IMAGE_FILE, PNG_FILE } from '~/composables/pixelStitch/fileTypes'
 import { frameToBlob } from '~/composables/pixelStitch/render'
 import { exportAsGif } from '~/composables/pixelStitch/gifExport'
 import { exportSpriteSheet, importSpriteSheet } from '~/composables/pixelStitch/spriteSheet'
@@ -24,6 +26,7 @@ const props = defineProps<{
 
 const { t } = useI18n()
 const projects = usePixelStitchProjectsContext()
+const host = usePixelStitchHost()
 const editor = usePixelStitch({
   projectId: props.projectId,
   onSave: data => projects.touch(props.projectId, data)
@@ -75,8 +78,12 @@ async function exportPng() {
   if (!frame) return
   const blob = await frameToBlob(frame, editor.canvasSize.value)
   if (!blob) return
-  downloadBlob(blob, `pixel-art-frame-${editor.currentFrameIndex.value + 1}.png`)
-  editor.notify('frameExported')
+  const saved = await host.saveFile({
+    data: blob,
+    suggestedName: `pixel-art-frame-${editor.currentFrameIndex.value + 1}.png`,
+    types: [PNG_FILE]
+  })
+  if (saved) editor.notify('frameExported')
 }
 
 const isExporting = ref(false)
@@ -96,8 +103,8 @@ async function exportGif() {
       editor.fps.value,
       progress => (exportProgress.value = progress * 100)
     )
-    downloadBlob(blob, 'pixel-art-animation.gif')
-    editor.notify('gifExported')
+    const saved = await host.saveFile({ data: blob, suggestedName: 'pixel-art-animation.gif', types: [GIF_FILE] })
+    if (saved) editor.notify('gifExported')
   } catch {
     editor.notify('failedToExportGif', 'error')
   } finally {
@@ -109,10 +116,10 @@ async function exportGif() {
 // Imports rasterise the picked image down to the current grid with smoothing
 // off, so a photo lands as blocky pixels rather than a blurred average.
 async function importImage() {
-  const file = await pickFile('image/*')
+  const file = await host.openFile({ types: [IMAGE_FILE] })
   if (!file) return
   try {
-    const image = await loadImage(await readFileAsDataUrl(file))
+    const image = await loadImage(await readFileAsDataUrl(file.data))
     const size = editor.canvasSize.value
     const canvas = document.createElement('canvas')
     canvas.width = size
@@ -156,14 +163,15 @@ function openSheetModal(mode: 'export' | 'import') {
 async function onExportSheet(columns: number) {
   try {
     const dataUrl = exportSpriteSheet(editor.frames.value, editor.canvasSize.value, columns)
-    await downloadDataUrl(dataUrl, 'sprite-sheet.png')
-    editor.notify('spriteSheetExported')
+    const blob = await (await fetch(dataUrl)).blob()
+    const saved = await host.saveFile({ data: blob, suggestedName: 'sprite-sheet.png', types: [PNG_FILE] })
+    if (saved) editor.notify('spriteSheetExported')
   } catch {
     editor.notify('failedToExportSpriteSheet', 'error')
   }
 }
 
-async function onImportSheet(file: File, columns: number, rows: number) {
+async function onImportSheet(file: Blob, columns: number, rows: number) {
   try {
     const image = await loadImage(await readFileAsDataUrl(file))
     const canvas = document.createElement('canvas')
@@ -197,9 +205,8 @@ async function onImportSheet(file: File, columns: number, rows: number) {
 
 // ─── Project file ───────────────────────────────────────────────────────────
 
-function saveProjectFile() {
-  downloadProjectFile(editor.toProjectData(), projectName.value)
-  editor.notify('projectSaved')
+async function saveAsProjectFile() {
+  if (await saveProjectFile(editor.toProjectData(), projectName.value)) editor.notify('projectSaved')
 }
 
 // A project file opens as a project of its own, in a new tab: loading it over
@@ -222,7 +229,7 @@ const importItems = computed<FileItem[]>(() => [
 // click Save. PNG, GIF and the sheet follow, because they are the same
 // gesture — writing a file.
 const saveItems = computed<FileItem[]>(() => [
-  { label: t('pixelStitch.files.project'), hint: projectFileName(projectName.value), icon: 'lucide:save', onSelect: saveProjectFile },
+  { label: t('pixelStitch.files.project'), hint: projectFileName(projectName.value), icon: 'lucide:save', onSelect: saveAsProjectFile },
   { label: t('pixelStitch.files.png'), hint: t('pixelStitch.files.pngHint'), icon: 'lucide:image-down', onSelect: exportPng },
   { label: t('pixelStitch.files.gif'), hint: t('pixelStitch.files.gifHint'), icon: 'lucide:file-image', onSelect: exportGif },
   { label: t('pixelStitch.files.sheet'), hint: t('pixelStitch.files.sheetExportHint'), icon: 'lucide:grid-2x2-plus', onSelect: () => openSheetModal('export') }
