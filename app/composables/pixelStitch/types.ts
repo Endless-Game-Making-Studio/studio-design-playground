@@ -41,6 +41,29 @@ export interface ProjectData {
   frames: Frame[]
 }
 
+/**
+ * What the start screen lists about a project without loading its pixels. The
+ * pixels live in their own storage entry, in the same shape as a project file.
+ */
+export interface ProjectSummary {
+  id: string
+  name: string
+  canvasSize: number
+  createdAt: number
+  updatedAt: number
+}
+
+/** Which projects are open as tabs, in order, and which one is in front. */
+export interface Workspace {
+  open: string[]
+  // None means the start screen is showing.
+  active: string | null
+}
+
+export const PROJECT_NAME_MAX = 40
+
+export const DEFAULT_CANVAS_SIZE = 32
+
 export const CANVAS_SIZES = [16, 32, 64, 128] as const
 
 // The artboard has a size of its own rather than shrinking to fit the window,

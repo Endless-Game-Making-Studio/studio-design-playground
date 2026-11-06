@@ -11,7 +11,7 @@ Nuxt 3-style app (Nuxt 4) implementing the Endless Studios "Studio Home" page, b
 - `npm install` — installs dependencies. This repo requires `npm install --legacy-peer-deps` in this environment (a stock `npm install` hits an npm/arborist bug — `Cannot read properties of null (reading 'edgesOut')` — unrelated to this project's dependencies).
 - `npm run dev` — start the dev server (`nuxt dev`, defaults to port 3000; pass `-- --port <n>` to override).
 - `npm run build` — production build.
-- No test suite yet.
+- `npm test` — browser tests (Playwright, `tests/e2e/`). They drive the real app in the installed Chrome (`channel: 'chrome'`, no browser download) and reuse a dev server already on port 3000, or start one.
 
 ## Architecture
 
@@ -22,6 +22,7 @@ Nuxt 3-style app (Nuxt 4) implementing the Endless Studios "Studio Home" page, b
 - `app/components/{ProgramTile,TaskTile,PostCard}.vue` — brand components ported from the design system's React source (`_ds_bundle.js`) into Vue SFCs.
 - `app/components/{AppSidebar,AppTopbar}.vue` — the fixed left nav and top bar.
 - Maker tools open outside the platform's menu structure: `app/layouts/tool.vue` (no sidebar) plus `AppTopbar`'s sibling `ToolTopbar.vue`, whose centre select opens the mega menu built from `useMakeMockData`'s `toolMenuGroups`. Both bars share their right-hand account block through `AppAccountCluster.vue`. A tool rebuilt on this stack gets its own page under `app/pages/make/` with `layout: 'tool'`; one we can only frame gets an `embedUrl` and is served by `app/pages/make/tool/[id].vue`. Either way the card on `/make` opens it in a new tab — `toolEntry()` is what resolves a tool to its destination, so add a tool to those arrays rather than wiring a card by hand.
+- Pixel Stitch holds several projects, each in a tab inside the tool. `usePixelStitchProjects` owns what spans projects (the saved list, open tabs, the active one, the migration from the old single drawing). Each open tab mounts its own `PixelStitchWorkspace` with its own `usePixelStitch` editor, which saves its pixels under its project's id. The page keeps every open tab mounted and only shows the active one.
 - `app/composables/usePreviewState.ts` — the app-wide preview state: `guest`, `new`, `onboarded`. One `useState` shared by every page, persisted to localStorage, plus a `reset()` that wipes the mock session. There's no real auth/backend yet, so this one switch stands in for the session — who is signed in, what they've earned, whether they're enrolled. Any new page that varies by signed-in state reads it from here rather than declaring its own; the `DevPreviewBar.vue` "PREVIEW AS" pill (bottom right, on every page) is how you switch it for manual QA. Kept intentionally, but the original design source marks the equivalent control as preview-only, so revisit whether to keep it once real session state exists.
 - `app/pages/index.vue` — the Studio Home page. Renders one branch per preview state, off mock data in `app/composables/useHomeMockData.ts`, matching the original prototype's `sc-if` branches.
 - `project/` — the original Claude Design handoff (raw `.dc.html` prototype + design system bundle + source images), kept for reference. Not part of the app build.

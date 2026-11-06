@@ -15,9 +15,9 @@ import type { PixelStitchEditor } from '../../composables/usePixelStitchContext'
 export function withEditor(options: { width?: string, seed?: (editor: PixelStitchEditor) => void } = {}) {
   return () => ({
     setup() {
-      // `persist: false` — otherwise a story's seeded artwork would be written
-      // over whatever the developer had drawn in the real editor.
-      const editor = usePixelStitch({ persist: false })
+      // No project id, so nothing is restored or saved — otherwise a story's
+      // seeded artwork would be written over a real project.
+      const editor = usePixelStitch()
       options.seed?.(editor)
       providePixelStitch(editor)
     },

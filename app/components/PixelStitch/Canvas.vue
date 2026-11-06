@@ -594,11 +594,19 @@ const selectionHint = computed(() => {
           @contextmenu.prevent
         />
         <!-- White outside, dark inside: one stroke alone vanishes over the
-             pixel it happens to be covering. -->
+             pixel it happens to be covering. The pencil's square is filled
+             with the colour it will paint, so the artist sees the result
+             before clicking; the eraser's stays hollow, since what it leaves
+             behind is nothing. -->
         <div
           v-if="showsBrushCursor && brushCursorStyle"
           class="pointer-events-none absolute"
-          :style="{ ...brushCursorStyle, boxShadow: '0 0 0 1px #ffffff, inset 0 0 0 1px #18181b' }"
+          data-testid="brush-cursor"
+          :style="{
+            ...brushCursorStyle,
+            backgroundColor: editor.currentTool.value === 'pencil' ? editor.currentColor.value : undefined,
+            boxShadow: '0 0 0 1px #ffffff, inset 0 0 0 1px #18181b'
+          }"
         />
       </div>
     </div>
