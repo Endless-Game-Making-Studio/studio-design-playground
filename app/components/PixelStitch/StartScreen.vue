@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import type { RadioGroupItem } from '@nuxt/ui'
+import type { RadioGroupItem, SelectItem } from '@nuxt/ui'
 import { usePixelStitchProjectsContext } from '~/composables/usePixelStitchProjects'
+import { saveLocale, type PixelStitchLocale } from '~/composables/pixelStitch/locale'
 import { CANVAS_SIZES, DEFAULT_CANVAS_SIZE, PROJECT_NAME_MAX } from '~/composables/pixelStitch/types'
 
 /**
@@ -9,7 +10,7 @@ import { CANVAS_SIZES, DEFAULT_CANVAS_SIZE, PROJECT_NAME_MAX } from '~/composabl
  * click from coming back.
  */
 const projects = usePixelStitchProjectsContext()
-const { t, locale } = useI18n()
+const { t, locale, locales, setLocale } = useI18n()
 
 // Pre-filled so a project can be made without stopping to think of a name, and
 // refreshed each time the screen comes back so the suggestion is never taken.
@@ -52,6 +53,24 @@ function editedAgo(timestamp: number) {
 }
 
 const isOpen = (id: string) => projects.openIds.value.includes(id)
+
+// ─── Desktop only: language and version ─────────────────────────────────────
+
+// The web keeps its language control in the account menu, and its version is
+// the platform's, so neither belongs on its start screen.
+const { isDesktop, appVersion } = useRuntimeConfig().public
+
+const languageItems = computed<SelectItem[]>(() =>
+  locales.value.map(l => ({ label: l.name ?? l.code, value: l.code }))
+)
+
+const language = computed({
+  get: () => locale.value,
+  set: (value: PixelStitchLocale) => {
+    saveLocale(value)
+    setLocale(value)
+  }
+})
 </script>
 
 <template>
@@ -191,6 +210,22 @@ const isOpen = (id: string) => projects.openIds.value.includes(id)
           </template>
         </UPageCard>
       </section>
+
+      <footer v-if="isDesktop" class="flex flex-wrap items-center justify-between gap-4">
+        <UFormField
+          :label="t('pixelStitch.desktop.language')"
+          orientation="horizontal"
+          :ui="{ root: 'items-center gap-3', label: 'font-semibold text-highlighted' }"
+        >
+          <USelect
+            v-model="language"
+            :items="languageItems"
+            icon="lucide:languages"
+            class="w-44"
+          />
+        </UFormField>
+        <p class="text-xs text-dimmed tabular-nums">{{ t('pixelStitch.desktop.version', { version: appVersion }) }}</p>
+      </footer>
     </div>
   </div>
 </template>

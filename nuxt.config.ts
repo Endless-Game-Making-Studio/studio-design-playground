@@ -1,4 +1,7 @@
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+
+const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string }
 
 export default defineNuxtConfig({
   compatibilityDate: '2026-07-21',
@@ -8,7 +11,10 @@ export default defineNuxtConfig({
     public: {
       // True only in the desktop build ($env.desktop below), for the few
       // places the tool must tell the two apart.
-      isDesktop: false
+      isDesktop: false,
+      // The version the desktop start screen shows; empty on the web, which
+      // doesn't show one.
+      appVersion: ''
     }
   },
   ui: {
@@ -61,8 +67,13 @@ export default defineNuxtConfig({
         output: { dir: '.output-desktop' }
       },
       runtimeConfig: {
-        public: { isDesktop: true }
+        public: { isDesktop: true, appVersion: version }
       },
+      // The desktop start screen has its own language control, remembered
+      // through the Pixel Stitch host, and the plugin below picks the language
+      // at startup; i18n's own browser detection and cookie would compete.
+      i18n: { detectBrowserLanguage: false },
+      plugins: [fileURLToPath(new URL('./app/desktop/locale.client.ts', import.meta.url))],
       // No server to ask for icons, so every icon in use ships in the client
       // bundle: whatever the app's code names (the scan) plus Nuxt UI's own,
       // which @nuxt/ui adds to the bundle itself. A miss stays a miss rather

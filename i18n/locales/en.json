@@ -537,6 +537,10 @@
       "delete": "Delete {name}",
       "edited": "Edited {when}",
       "editedJustNow": "Edited just now"
+    },
+    "desktop": {
+      "language": "Language",
+      "version": "Version {version}"
     }
   },
   "auth": {
