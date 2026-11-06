@@ -73,7 +73,12 @@ export default defineNuxtConfig({
       // through the Pixel Stitch host, and the plugin below picks the language
       // at startup; i18n's own browser detection and cookie would compete.
       i18n: { detectBrowserLanguage: false },
-      plugins: [fileURLToPath(new URL('./app/desktop/locale.client.ts', import.meta.url))],
+      // The host first: the language plugin reads the remembered choice
+      // through it (it is `enforce: 'post'` for that reason too).
+      plugins: [
+        fileURLToPath(new URL('./app/desktop/host.client.ts', import.meta.url)),
+        fileURLToPath(new URL('./app/desktop/locale.client.ts', import.meta.url))
+      ],
       // No server to ask for icons, so every icon in use ships in the client
       // bundle: whatever the app's code names (the scan) plus Nuxt UI's own,
       // which @nuxt/ui adds to the bundle itself. A miss stays a miss rather

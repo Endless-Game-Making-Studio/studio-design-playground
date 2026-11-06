@@ -65,6 +65,11 @@ export function onProjectSaveFailed(id: string, listener: () => void) {
   })
 }
 
+/** The `pixelStitch.toast` key for a failed save, worded for where the host keeps projects. */
+export function saveFailedNotice() {
+  return usePixelStitchHost().storage.kind === 'disk' ? 'diskSaveFailed' : 'storageFull'
+}
+
 export function loadProject(id: string): ProjectData | null {
   const parsed = read(projectKey(id))
   return isProjectData(parsed) ? parsed : null

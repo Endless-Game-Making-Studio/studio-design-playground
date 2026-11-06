@@ -2,13 +2,16 @@
 // Windows.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod storage;
+
 use std::path::PathBuf;
 
 use tauri::{App, Manager, WebviewWindow, WebviewWindowBuilder};
 use tauri_plugin_window_state::StateFlags;
 
-/// Points everything the shell writes at another folder: the web engine's
-/// profile and the remembered window state. The shell spec runs every launch
+/// Points everything the app writes at another folder: Pixel Stitch's own
+/// storage (in `storage/`), the web engine's profile and the remembered window
+/// state. The shell spec runs every launch
 /// against a fresh temporary folder through it, and it also makes a portable
 /// copy possible.
 const DATA_DIR_VAR: &str = "PIXEL_STITCH_DATA_DIR";
@@ -58,7 +61,14 @@ fn main() {
             }
         }))
         .plugin(window_state.build())
+        .invoke_handler(tauri::generate_handler![
+            storage::storage_read,
+            storage::storage_write,
+            storage::storage_remove
+        ])
         .setup(|app| {
+            let root = storage::storage_root(data_dir(), app.path().app_data_dir()?);
+            app.manage(storage::Storage::new(root));
             create_main_window(app)?;
             Ok(())
         })

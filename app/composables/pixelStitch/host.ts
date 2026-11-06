@@ -30,6 +30,11 @@ export interface OpenedFile {
  */
 export interface HostStorage {
   /**
+   * Where the values end up, so a failed save can be explained in the
+   * person's terms: a full browser storage, or a disk that refused the file.
+   */
+  kind: 'browser' | 'disk'
+  /**
    * Makes these keys readable synchronously. Callers await it before the first
    * render (the base keys and every open tab's project) and before a closed
    * project's tab mounts. A key with nothing stored is not an error.
@@ -48,6 +53,12 @@ export interface HostStorage {
    * write that finished in the background. Returns the unsubscribe.
    */
   onWriteFailed(listener: (key: string) => void): () => void
+  /**
+   * Resolves once every write and remove made so far has reached the real
+   * storage, failed ones included (those are reported through
+   * `onWriteFailed`). Quitting waits on it, so the last stroke isn't lost.
+   */
+  whenIdle(): Promise<void>
 }
 
 export interface PixelStitchHost {
