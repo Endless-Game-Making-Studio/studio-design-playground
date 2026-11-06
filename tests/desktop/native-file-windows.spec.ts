@@ -170,6 +170,23 @@ test.describe('inside the shell', () => {
     await expect.poll(() => calls(page, 'open_dialog')).toEqual([{ types: [IMAGE_TYPE] }, { types: [IMAGE_TYPE] }])
   })
 
+  test("a sprite sheet that can't be read says so on its field, and a readable one clears it", async ({ page }) => {
+    await openTool(page)
+    await createProject(page, 'Hero walk')
+    await chooseFrom(page, 'Import', /Sprite sheet/)
+    const sheet = page.getByRole('dialog', { name: 'Import sprite sheet' })
+
+    await setShell(page, { open: { name: 'locked.png', bytes: [], unreadable: true } })
+    await sheet.getByRole('button', { name: 'Choose image' }).click()
+    await expect(sheet.getByText("Couldn't open that file")).toBeVisible()
+    await expect(sheet.getByText('No file chosen')).toBeVisible()
+
+    await setShell(page, { open: { name: 'walk.png', bytes: [1, 2, 3] } })
+    await sheet.getByRole('button', { name: 'Choose image' }).click()
+    await expect(sheet.getByText('walk.png')).toBeVisible()
+    await expect(sheet.getByText("Couldn't open that file")).toBeHidden()
+  })
+
   test('an image picked in the Open window becomes pixels', async ({ page }) => {
     await openTool(page)
     await createProject(page, 'Hero walk')

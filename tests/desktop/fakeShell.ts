@@ -15,8 +15,11 @@ export interface FakeShell {
    * place the file then can't be written to.
    */
   save: 'save' | 'cancel' | 'unwritable'
-  /** The file the next Open window picks, or null to cancel it. */
-  open: { name: string, bytes: number[] } | null
+  /**
+   * The file the next Open window picks, or null to cancel it. `unreadable`
+   * picks a file that then can't be read.
+   */
+  open: { name: string, bytes: number[], unreadable?: boolean } | null
 }
 
 declare global {
@@ -28,7 +31,7 @@ declare global {
 export async function withFakeShell(page: Page) {
   await page.addInitScript(() => {
     const storage = new Map<string, string>()
-    let opened: number[] | null = null
+    let opened: { bytes: number[], unreadable?: boolean } | null = null
     const shell: Window['__shell'] = { save: 'save', open: null, calls: [], written: [] }
     window.__shell = shell
 
@@ -55,10 +58,11 @@ export async function withFakeShell(page: Page) {
           shell.written.push(recorded as number[])
           return null
         case 'open_dialog':
-          opened = shell.open?.bytes ?? null
+          opened = shell.open
           return shell.open?.name ?? null
         case 'read_opened_file':
-          return new Uint8Array(opened ?? []).buffer
+          if (opened?.unreadable) throw new Error('could not read: The process cannot access the file. (os error 32)')
+          return new Uint8Array(opened?.bytes ?? []).buffer
         default:
           throw new Error(`unknown command ${command}`)
       }

@@ -20,6 +20,9 @@ const { t } = useI18n()
 const columns = ref(4)
 const rows = ref(1)
 const file = ref<OpenedFile | null>(null)
+// This window has no notice line of its own, so a file that was picked but
+// couldn't be read shows its error on the field instead.
+const openFailed = ref(false)
 
 // Reset per open so a previous run's file doesn't get re-imported by accident,
 // and default the row count to whatever squares off the current frames.
@@ -28,6 +31,7 @@ watch(open, (isOpen) => {
   columns.value = 4
   rows.value = Math.max(1, Math.ceil(props.frameCount / 4))
   file.value = null
+  openFailed.value = false
 })
 
 const exportRows = computed(() => Math.ceil(props.frameCount / Math.max(1, columns.value)))
@@ -36,8 +40,14 @@ const exportRows = computed(() => Math.ceil(props.frameCount / Math.max(1, colum
 // desktop build shows its native dialog here too. Cancelling keeps whatever
 // was picked before.
 async function chooseFile() {
-  const picked = await usePixelStitchHost().openFile({ types: [imageFileType(t)] })
-  if (picked) file.value = picked
+  try {
+    const picked = await usePixelStitchHost().openFile({ types: [imageFileType(t)] })
+    if (picked) file.value = picked
+    openFailed.value = false
+  } catch (error) {
+    console.error(`Pixel Stitch: ${String(error)}`)
+    openFailed.value = true
+  }
 }
 
 function confirm() {
@@ -55,7 +65,11 @@ function confirm() {
   >
     <template #body>
       <div class="flex flex-col gap-4">
-        <UFormField v-if="mode === 'import'" :label="t('pixelStitch.sheet.imageFile')">
+        <UFormField
+          v-if="mode === 'import'"
+          :label="t('pixelStitch.sheet.imageFile')"
+          :error="openFailed ? t('pixelStitch.toast.failedToOpenFile') : false"
+        >
           <div class="flex min-w-0 items-center gap-3">
             <UButton
               :label="t('pixelStitch.sheet.chooseFile')"
