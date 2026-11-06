@@ -68,18 +68,35 @@ The language you pick on the start screen is saved and wins over the system's af
 
 ### Native Save and Open windows
 
-Each of these opens the system's own Save or Open window, not a browser download or file picker. Cancelling the window does nothing and shows no error. Each file opens in another app afterwards (an image viewer, or Pixel Stitch itself for project files).
+Each of these opens the system's own Save or Open window, not a browser download or file picker. The automatic runs only check what the page asks the shell for, so these steps check that the real windows do the right thing. Each saved file opens in another app afterwards (an image viewer, or Pixel Stitch itself for project files).
 
 | Step | Windows | Ubuntu |
 | --- | --- | --- |
-| **Save as .tps file**: saves a project file. | [ ] | [ ] |
-| **Open** a .tps file: it opens in a new tab with the drawing intact. | [ ] | [ ] |
-| **Save as PNG**: saves the current frame. | [ ] | [ ] |
-| **Export the animation as a GIF**: saves a GIF that plays all frames. | [ ] | [ ] |
-| **Export sprite sheet**: saves one image with every frame. | [ ] | [ ] |
-| **Import sprite sheet** → **Choose image**: the frames come in. | [ ] | [ ] |
-| **Import an image onto the canvas**: a PNG and a JPG both become pixels. | [ ] | [ ] |
-| Cancel each window once: nothing happens, no error toast. | [ ] | [ ] |
+| **Save → Project**: the Save window has the project's name filled in (`<name>.tps`), and its file type list offers only "Pixel Stitch project" (`*.tps`, `*.json`). | [ ] | [ ] |
+| Save it in a folder of your choice: the file is there, with that name, and "Project saved" shows. | [ ] | [ ] |
+| Save again, and delete `.tps` from the name before saving: the file still ends in `.tps`. | [ ] | [ ] |
+| **Import → Project**: the Open window offers only project files. The file opens in a new tab named after the file, with its drawing, frames, layers and board size. The tab that was open is still there. | [ ] | [ ] |
+| A project file saved from Pixel Stitch on the platform (Make → Pixel Stitch → Save → Project) imports the same way, with its frames, layers and board size. | [ ] | [ ] |
+| **Save → PNG**: the Save window offers only "PNG image". The file is the current frame. | [ ] | [ ] |
+| **Save → GIF** (with two frames or more): the Save window offers only "GIF animation". The GIF plays all frames. | [ ] | [ ] |
+| **Save → Sprite sheet** → **Export**: the Save window offers only "PNG image". The image holds every frame. | [ ] | [ ] |
+| **Import → Image**: the Open window offers only "Image" (png, jpg, jpeg, gif, webp, bmp). A PNG and a JPG both become pixels. | [ ] | [ ] |
+| **Import → Sprite sheet** → **Choose image**: the Open window offers only images. The chosen file's name shows, and **Import** brings the frames in. | [ ] | [ ] |
+| Cancel each window above once (with Cancel, and with Esc): nothing changes, no tab opens, no message shows. | [ ] | [ ] |
+| Save a PNG over a file another program holds open (Windows: a PNG open in an editor that locks it; Ubuntu: a file in a folder you made read-only with `chmod a-w`), and confirm replacing it: "Couldn't save the file there…" shows, and the app keeps working. (A protected folder such as `C:\Windows` is refused by the Save window itself before Pixel Stitch sees it.) | [ ] | [ ] |
+| With the app in Spanish, the windows name the file types in Spanish: "Proyecto de Pixel Stitch", "Imagen PNG", "Animación GIF", "Imagen". | [ ] | [ ] |
+
+### Browser behaviour is off
+
+On Windows, `npm run test:shell` covers this. On Ubuntu it has to be done by hand. Draw a few pixels first, so a reload would show.
+
+| Step | Windows | Ubuntu |
+| --- | --- | --- |
+| Right-click the board and the panels: no menu appears (no Back, Reload or Inspect Element). | test:shell | [ ] |
+| F5, Ctrl+R and Ctrl+Shift+R don't reload: the drawing and the open tabs stay as they are. | test:shell | [ ] |
+| F12 and Ctrl+Shift+I don't open developer tools or an inspector. | test:shell | [ ] |
+| Ctrl + plus, Ctrl + minus, Ctrl+0 and Ctrl + mouse wheel don't zoom the page. | test:shell | [ ] |
+| Ctrl+Z still undoes, and Ctrl+C / Ctrl+V still copy and paste a selection. | test:shell | [ ] |
 
 ### The window remembers its size, position and maximised state
 

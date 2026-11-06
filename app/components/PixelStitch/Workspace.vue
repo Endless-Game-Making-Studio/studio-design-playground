@@ -7,7 +7,7 @@ import { emptyGrid } from '~/composables/pixelStitch/project'
 import { loadImage, readFileAsDataUrl } from '~/composables/files'
 import { openProjectFile, projectFileName, saveProjectFile } from '~/composables/pixelStitch/persistence'
 import { usePixelStitchHost } from '~/composables/pixelStitch/host'
-import { GIF_FILE, IMAGE_FILE, PNG_FILE } from '~/composables/pixelStitch/fileTypes'
+import { gifFileType, imageFileType, pngFileType } from '~/composables/pixelStitch/fileTypes'
 import { frameToBlob } from '~/composables/pixelStitch/render'
 import { exportAsGif } from '~/composables/pixelStitch/gifExport'
 import { exportSpriteSheet, importSpriteSheet } from '~/composables/pixelStitch/spriteSheet'
@@ -78,12 +78,16 @@ async function exportPng() {
   if (!frame) return
   const blob = await frameToBlob(frame, editor.canvasSize.value)
   if (!blob) return
-  const saved = await host.saveFile({
-    data: blob,
-    suggestedName: `pixel-art-frame-${editor.currentFrameIndex.value + 1}.png`,
-    types: [PNG_FILE]
-  })
-  if (saved) editor.notify('frameExported')
+  try {
+    const saved = await host.saveFile({
+      data: blob,
+      suggestedName: `pixel-art-frame-${editor.currentFrameIndex.value + 1}.png`,
+      types: [pngFileType(t)]
+    })
+    if (saved) editor.notify('frameExported')
+  } catch {
+    editor.notify('failedToSaveFile', 'error')
+  }
 }
 
 const isExporting = ref(false)
@@ -103,7 +107,7 @@ async function exportGif() {
       editor.fps.value,
       progress => (exportProgress.value = progress * 100)
     )
-    const saved = await host.saveFile({ data: blob, suggestedName: 'pixel-art-animation.gif', types: [GIF_FILE] })
+    const saved = await host.saveFile({ data: blob, suggestedName: 'pixel-art-animation.gif', types: [gifFileType(t)] })
     if (saved) editor.notify('gifExported')
   } catch {
     editor.notify('failedToExportGif', 'error')
@@ -116,9 +120,9 @@ async function exportGif() {
 // Imports rasterise the picked image down to the current grid with smoothing
 // off, so a photo lands as blocky pixels rather than a blurred average.
 async function importImage() {
-  const file = await host.openFile({ types: [IMAGE_FILE] })
-  if (!file) return
   try {
+    const file = await host.openFile({ types: [imageFileType(t)] })
+    if (!file) return
     const image = await loadImage(await readFileAsDataUrl(file.data))
     const size = editor.canvasSize.value
     const canvas = document.createElement('canvas')
@@ -164,7 +168,7 @@ async function onExportSheet(columns: number) {
   try {
     const dataUrl = exportSpriteSheet(editor.frames.value, editor.canvasSize.value, columns)
     const blob = await (await fetch(dataUrl)).blob()
-    const saved = await host.saveFile({ data: blob, suggestedName: 'sprite-sheet.png', types: [PNG_FILE] })
+    const saved = await host.saveFile({ data: blob, suggestedName: 'sprite-sheet.png', types: [pngFileType(t)] })
     if (saved) editor.notify('spriteSheetExported')
   } catch {
     editor.notify('failedToExportSpriteSheet', 'error')
@@ -205,14 +209,26 @@ async function onImportSheet(file: Blob, columns: number, rows: number) {
 
 // ─── Project file ───────────────────────────────────────────────────────────
 
+// A desktop host writes the file itself, so a folder that refuses it (no
+// space, no permission) shows up here; the browser's download can't fail.
 async function saveAsProjectFile() {
-  if (await saveProjectFile(editor.toProjectData(), projectName.value)) editor.notify('projectSaved')
+  try {
+    if (await saveProjectFile(editor.toProjectData(), projectName.value, t)) editor.notify('projectSaved')
+  } catch {
+    editor.notify('failedToSaveFile', 'error')
+  }
 }
 
 // A project file opens as a project of its own, in a new tab: loading it over
 // the drawing on screen would throw that drawing away.
 async function importProjectFile() {
-  const file = await openProjectFile()
+  let file
+  try {
+    file = await openProjectFile(t)
+  } catch {
+    editor.notify('failedToOpenFile', 'error')
+    return
+  }
   if (!file) return
   projects.importProject(file.name, file.data)
 }

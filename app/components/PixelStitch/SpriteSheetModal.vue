@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { OpenedFile } from '~/composables/pixelStitch/host'
 import { usePixelStitchHost } from '~/composables/pixelStitch/host'
-import { IMAGE_FILE } from '~/composables/pixelStitch/fileTypes'
+import { imageFileType } from '~/composables/pixelStitch/fileTypes'
 
 const props = defineProps<{
   mode: 'export' | 'import'
@@ -36,7 +36,7 @@ const exportRows = computed(() => Math.ceil(props.frameCount / Math.max(1, colum
 // desktop build shows its native dialog here too. Cancelling keeps whatever
 // was picked before.
 async function chooseFile() {
-  const picked = await usePixelStitchHost().openFile({ types: [IMAGE_FILE] })
+  const picked = await usePixelStitchHost().openFile({ types: [imageFileType(t)] })
   if (picked) file.value = picked
 }
 

@@ -1,8 +1,11 @@
-import type { HostStorage, PixelStitchHost } from './host'
-import { browserHost } from './browserHost'
+import type { FileType, HostStorage, PixelStitchHost } from './host'
 
-/** Calls one of the desktop shell's commands (`src-tauri/src/storage.rs`). */
-export type Invoke = <T>(command: string, args?: Record<string, unknown>) => Promise<T>
+/**
+ * Calls one of the desktop shell's commands (`src-tauri/src/storage.rs`,
+ * `src-tauri/src/files.rs`). Bytes go as the raw body rather than inside JSON,
+ * where a GIF would grow to several times its size as a list of numbers.
+ */
+export type Invoke = <T>(command: string, args?: Record<string, unknown> | Uint8Array) => Promise<T>
 
 /**
  * The shell's command bridge, or null outside the desktop shell. Tauri puts
@@ -123,13 +126,49 @@ export function createDiskStorage(invoke: Invoke): HostStorage {
   }
 }
 
-/** The host inside the desktop shell: projects as files on disk. */
+// What the system's windows need from a file type: the filter's name and its
+// extensions. MIME types are a browser matter.
+const dialogTypes = (types: FileType[]) => types.map(({ description, extensions }) => ({ description, extensions }))
+
+// A picked file comes back as bare bytes. Images are read through a data URL,
+// which carries this type, the way a file from the browser's input carries
+// the type the browser gave it.
+const TYPES: Record<string, string> = {
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  gif: 'image/gif',
+  webp: 'image/webp',
+  bmp: 'image/bmp',
+  tps: 'application/json',
+  json: 'application/json'
+}
+const typeOf = (name: string) => TYPES[name.split('.').pop()?.toLowerCase() ?? ''] ?? ''
+
+/**
+ * The host inside the desktop shell: projects as files on disk, and the
+ * system's own Save and Open windows.
+ *
+ * The page never sees or names a path. The shell opens the window, keeps the
+ * place the person chose, and the next command reads or writes that one file,
+ * so the page can only touch files the person picked themselves.
+ */
 export function createDesktopHost(invoke: Invoke): PixelStitchHost {
   return {
     storage: createDiskStorage(invoke),
-    // Still the browser's download link and file input. The system's own
-    // Save and Open windows (#43) replace these two.
-    saveFile: options => browserHost.saveFile(options),
-    openFile: options => browserHost.openFile(options)
+
+    async saveFile({ data, suggestedName, types }) {
+      const chosen = await invoke<boolean>('save_dialog', { suggestedName, types: dialogTypes(types) })
+      if (!chosen) return false
+      await invoke('write_saved_file', new Uint8Array(await data.arrayBuffer()))
+      return true
+    },
+
+    async openFile({ types }) {
+      const name = await invoke<string | null>('open_dialog', { types: dialogTypes(types) })
+      if (name == null) return null
+      const bytes = await invoke<ArrayBuffer>('read_opened_file')
+      return { name, data: new Blob([bytes], { type: typeOf(name) }) }
+    }
   }
 }

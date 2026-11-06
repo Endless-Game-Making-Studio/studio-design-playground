@@ -490,7 +490,9 @@
       "cutMoveToPos": "Cortado. Mueve el puntero y haz clic para pegar",
       "moveMouseToPaste": "Mueve el puntero a su posición y haz clic para pegar",
       "storageFull": "No se pudo guardar: el almacenamiento de este navegador está lleno. Guarda el proyecto como archivo o elimina los proyectos que no necesites.",
-      "diskSaveFailed": "No se pudo guardar en el disco. Comprueba que haya espacio libre o guarda el proyecto como archivo en otro lugar."
+      "diskSaveFailed": "No se pudo guardar en el disco. Comprueba que haya espacio libre o guarda el proyecto como archivo en otro lugar.",
+      "failedToSaveFile": "No se pudo guardar el archivo ahí. Elige otra carpeta o comprueba que haya espacio libre.",
+      "failedToOpenFile": "No se pudo abrir ese archivo"
     },
     "save": "Guardar",
     "files": {
@@ -505,7 +507,11 @@
       "pngHint": "el fotograma actual",
       "gif": "GIF",
       "gifHint": "toda la animación",
-      "projectImportHint": "se abre en una pestaña nueva"
+      "projectImportHint": "se abre en una pestaña nueva",
+      "projectType": "Proyecto de Pixel Stitch",
+      "pngType": "Imagen PNG",
+      "gifType": "Animación GIF",
+      "imageType": "Imagen"
     },
     "projects": {
       "untitled": "Sin título {n}",
