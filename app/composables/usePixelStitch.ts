@@ -20,6 +20,7 @@ import {
 import {
   loadPalette,
   loadProject,
+  onProjectSaveFailed,
   savePalette,
   saveProject
 } from '~/composables/pixelStitch/persistence'
@@ -596,7 +597,7 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
   }
 
   // Restoring happens on mount rather than in the refs' initialisers because
-  // localStorage doesn't exist during SSR — the server would render one
+  // storage doesn't exist during SSR — the server would render one
   // document and the client would hydrate a different one. The history still
   // needs seeding when persistence is off, or the first undo has nothing to
   // return to.
@@ -627,6 +628,16 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
   // notice line would otherwise repeat the same error as long as someone draws.
   let saveFailing = false
 
+  function saveFailed() {
+    if (saveFailing) return
+    saveFailing = true
+    notify('storageFull', 'error')
+  }
+
+  // A host that writes in the background (to disk) only learns a save failed
+  // after `saveProject` returned, and reports it here instead.
+  if (projectId) onScopeDispose(onProjectSaveFailed(projectId, saveFailed))
+
   function saveNow() {
     if (autoSaveTimer) clearTimeout(autoSaveTimer)
     autoSaveTimer = null
@@ -635,9 +646,8 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
     if (saveProject(projectId, data)) {
       saveFailing = false
       onSave?.(data)
-    } else if (!saveFailing) {
-      saveFailing = true
-      notify('storageFull', 'error')
+    } else {
+      saveFailed()
     }
   }
 
