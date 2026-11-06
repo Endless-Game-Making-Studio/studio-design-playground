@@ -4,7 +4,9 @@ import { expect, test, type Page } from '@playwright/test'
 // test starts in a fresh browser context, so storage is empty unless the test
 // seeds it.
 
-const TOOL = '/make/pixel-stitch'
+// The web build has the tool on the Make page; the desktop build's config
+// points this at the bundle's root.
+const TOOL = process.env.PIXEL_STITCH_URL ?? '/make/pixel-stitch'
 
 const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
