@@ -1,6 +1,6 @@
 ---
 version: alpha
-name: Endless Studios — Studio Home
+name: Endless Studios
 description: >-
   Design tokens for the Studio Home Nuxt 4 app, extracted from the live
   Nuxt UI v4 theme (`app/app.config.ts`), Tailwind v4 tokens
@@ -80,28 +80,6 @@ spacing:
   8: 32px
   12: 48px
   16: 64px
-components:
-  card:
-    backgroundColor: "#ffffff"
-    rounded: "{rounded.3xl}"
-    note: "app.config.ts overrides UPageCard's root to rounded-3xl platform-wide"
-  card-image:
-    rounded: "{rounded.2xl}"
-    note: "custom card/image markup (ProgramTile, TaskTile, PostCard) uses rounded-2xl, one step below the UPageCard shell"
-  badge-primary-soft:
-    backgroundColor: "{colors.primary-50}"
-    textColor: "{colors.primary-900}"
-    rounded: "{rounded.sm}"
-  badge-warning-solid:
-    backgroundColor: "{colors.warning}"
-    textColor: "#ffffff"
-    rounded: "{rounded.sm}"
-    note: "white-on-solid falls short of WCAG AA (4.5:1) — see Do's and Don'ts"
-  badge-kids-soft:
-    backgroundColor: "{colors.kids-50}"
-    textColor: "{colors.kids-700}"
-    rounded: "{rounded.sm}"
-    note: "reserved for youth-gated surfaces, not a general accent"
 ---
 
 ## Overview
@@ -130,7 +108,7 @@ Visually, the app is built entirely on **Nuxt UI v4** over **Tailwind CSS v4**: 
 - Border: `--ui-border` (#dcdce9, a standalone literal, not tied to the slate ramp) → `--ui-border-muted` (slate-200) → `--ui-border-accented` (slate-300).
 
 ### Known gap — contrast
-Because this palette is shared with the wider Endless Studios brand, the same weak spot applies here: white text on solid `primary`/`warning`/`info`/`success` all fall short of WCAG AA's 4.5:1 for normal text (down to ~2.9:1 on `primary`). This affects any solid-variant button or badge in those colors. Prefer soft variants (tinted background + darker text, e.g. `badge-warning-solid` above vs. the safer `badge-primary-soft` pattern) or larger/bolder text as a stopgap; fixing the underlying pairings is a cross-app follow-up, not something to patch per-instance.
+Because this palette is shared with the wider Endless Studios brand, the same weak spot applies here: white text on solid `primary`/`warning`/`info`/`success` all fall short of WCAG AA's 4.5:1 for normal text (down to ~2.9:1 on `primary`). This affects any solid-variant button or badge in those colors. Prefer soft variants (tinted background + darker text, e.g. a `primary-50` background with `primary-900` text) or larger/bolder text as a stopgap; fixing the underlying pairings is a cross-app follow-up, not something to patch per-instance.
 
 ## Typography
 
