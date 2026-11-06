@@ -29,6 +29,11 @@
   "bundle": {
     "active": true,
     "targets": ["nsis", "deb", "rpm", "appimage"],
+    "publisher": "Endless Access",
+    "copyright": "Endless Access",
+    "category": "GraphicsAndDesign",
+    "shortDescription": "Pixel art editor from Endless Studios",
+    "longDescription": "Pixel Stitch is the Endless Studios pixel art editor: draw sprites and export them as PNG, GIF or sprite sheets.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -37,9 +42,16 @@
       "icons/icon.ico"
     ],
     "windows": {
+      "webviewInstallMode": { "type": "embedBootstrapper" },
       "nsis": {
-        "installMode": "currentUser"
+        "installMode": "currentUser",
+        "languages": ["English", "Spanish"],
+        "startMenuFolder": "Pixel Stitch"
       }
+    },
+    "linux": {
+      "deb": { "depends": ["libwebkit2gtk-4.1-0 (>= 2.40)"] },
+      "rpm": { "depends": ["webkit2gtk4.1 >= 2.40"] }
     }
   }
 }
