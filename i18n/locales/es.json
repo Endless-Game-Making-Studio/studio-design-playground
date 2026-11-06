@@ -486,7 +486,8 @@
       "selectionMade": "Selección hecha — pulsa Ctrl+C para copiar",
       "copiedMoveToPos": "Copiado. Mueve el puntero y haz clic para pegar",
       "cutMoveToPos": "Cortado. Mueve el puntero y haz clic para pegar",
-      "moveMouseToPaste": "Mueve el puntero a su posición y haz clic para pegar"
+      "moveMouseToPaste": "Mueve el puntero a su posición y haz clic para pegar",
+      "storageFull": "No se pudo guardar: el almacenamiento de este navegador está lleno. Guarda el proyecto como archivo o elimina los proyectos que no necesites."
     },
     "save": "Guardar",
     "files": {
@@ -500,7 +501,40 @@
       "png": "PNG",
       "pngHint": "el fotograma actual",
       "gif": "GIF",
-      "gifHint": "toda la animación"
+      "gifHint": "toda la animación",
+      "projectImportHint": "se abre en una pestaña nueva"
+    },
+    "projects": {
+      "untitled": "Sin título {n}",
+      "tabsLabel": "Proyectos abiertos",
+      "tabLabel": "{name}, {size}",
+      "rename": "Nombre del proyecto",
+      "close": "Cerrar {name}",
+      "closeTooltip": "Cerrar pestaña. El proyecto queda guardado.",
+      "closeNewTab": "Cerrar la pestaña de proyecto nuevo",
+      "new": "Proyecto nuevo",
+      "newTab": "Proyecto nuevo",
+      "newTitle": "Proyecto nuevo",
+      "newSubtitle": "Ponle un nombre y elige el tamaño del lienzo.",
+      "nameLabel": "Nombre",
+      "sizeLabel": "Tamaño del lienzo",
+      "sizeDefault": "Por defecto",
+      "sizeHint": {
+        "16": "Iconos y objetos pequeños",
+        "32": "Personajes y accesorios",
+        "64": "Sprites detallados",
+        "128": "Arte grande y escenarios"
+      },
+      "sizeLater": "Puedes cambiar el tamaño después desde la barra, pero eso borra el dibujo.",
+      "create": "Crear proyecto",
+      "listTitle": "Tus proyectos",
+      "empty": "Todavía no hay proyectos. Los que crees aparecen aquí, incluso después de cerrar su pestaña.",
+      "open": "Abrir {name}",
+      "switchTo": "Ir a {name}",
+      "openBadge": "Abierto",
+      "delete": "Eliminar {name}",
+      "edited": "Editado {when}",
+      "editedJustNow": "Editado ahora mismo"
     }
   },
   "auth": {

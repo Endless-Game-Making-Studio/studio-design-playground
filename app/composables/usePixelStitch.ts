@@ -23,6 +23,7 @@ import {
   savePalette,
   saveProject
 } from '~/composables/pixelStitch/persistence'
+import type { ProjectData as SavedProject } from '~/composables/pixelStitch/types'
 
 interface HistoryEntry {
   frameIndex: number
@@ -31,23 +32,26 @@ interface HistoryEntry {
 }
 
 /**
- * All of Pixel Stitch's editor state and the operations that mutate it. The
- * page owns a single instance and hands slices of it to the panels, mirroring
+ * All of one project's editor state and the operations that mutate it. Each
+ * open tab owns one instance and hands slices of it to the panels, mirroring
  * the original's single-container-component shape — every tool acts on the same
  * frame/layer cursor, so splitting the state per panel would just mean threading
  * it back together.
  */
 export interface PixelStitchOptions {
   /**
-   * Restore the saved project on mount and autosave to localStorage. Off for
-   * Storybook, where a story seeding its own artwork would otherwise overwrite
-   * whatever the developer had actually drawn.
+   * The project this editor restores on mount and autosaves to. Without one
+   * nothing is read or written — that is Storybook, where a story seeding its
+   * own artwork would otherwise overwrite a real project.
    */
-  persist?: boolean
+  projectId?: string
+  /** Called after each autosave lands, with what was written. */
+  onSave?: (data: SavedProject) => void
 }
 
 export function usePixelStitch(options: PixelStitchOptions = {}) {
-  const { persist = true } = options
+  const { projectId, onSave } = options
+  const persist = !!projectId
   const { t } = useI18n()
 
   // ─── Notices ──────────────────────────────────────────────────────────────
@@ -113,7 +117,11 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
   function setZoom(value: number) {
     zoom.value = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value))
   }
-  const palette = ref<string[][]>(DEFAULT_PALETTE.map(row => [...row]))
+  // One palette for every project: the colours an artist saved are theirs, not
+  // a drawing's. Shared state rather than a per-editor ref, so a colour added
+  // in one tab is already there in the next.
+  const palette = useState<string[][]>('pixel-stitch-palette', () => DEFAULT_PALETTE.map(row => [...row]))
+  const paletteLoaded = useState('pixel-stitch-palette-loaded', () => false)
 
   const isPlaying = ref(false)
 
@@ -592,30 +600,61 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
   // document and the client would hydrate a different one. The history still
   // needs seeding when persistence is off, or the first undo has nothing to
   // return to.
-  onMounted(() => {
-    const saved = persist ? loadProject() : null
+  onMounted(async () => {
+    const saved = projectId ? loadProject(projectId) : null
     if (saved) applyProjectData(saved)
     else resetHistory(currentLayer.value?.data ?? emptyGrid(canvasSize.value))
 
-    const savedPalette = persist ? loadPalette() : null
-    if (savedPalette?.length) palette.value = savedPalette
+    if (persist && !paletteLoaded.value) {
+      paletteLoaded.value = true
+      const savedPalette = loadPalette()
+      if (savedPalette?.length) palette.value = savedPalette
+    }
+
+    // Restoring writes into the refs the autosave watches, but it is not an
+    // edit. Saving it back would mark the project "edited just now" every time
+    // its tab opens, and reorder the start screen's list a second later.
+    await nextTick()
+    if (autoSaveTimer) clearTimeout(autoSaveTimer)
+    autoSaveTimer = null
   })
 
   // Autosave is debounced because it serialises every pixel of every frame, and
   // a drag mutates the grid on each pointer move.
   let autoSaveTimer: ReturnType<typeof setTimeout> | null = null
+
+  // A failed save is said once per run of failures, not on every stroke — the
+  // notice line would otherwise repeat the same error as long as someone draws.
+  let saveFailing = false
+
+  function saveNow() {
+    if (autoSaveTimer) clearTimeout(autoSaveTimer)
+    autoSaveTimer = null
+    if (!projectId) return
+    const data = toProjectData()
+    if (saveProject(projectId, data)) {
+      saveFailing = false
+      onSave?.(data)
+    } else if (!saveFailing) {
+      saveFailing = true
+      notify('storageFull', 'error')
+    }
+  }
+
   watch([frames, canvasSize, fps, currentFrameIndex], () => {
     if (!persist) return
     if (autoSaveTimer) clearTimeout(autoSaveTimer)
-    autoSaveTimer = setTimeout(() => saveProject(toProjectData()), 1000)
+    autoSaveTimer = setTimeout(saveNow, 1000)
   }, { deep: true })
 
   watch(palette, (value) => {
     if (persist) savePalette(value.map(row => [...row]))
   }, { deep: true })
 
+  // Closing a tab unmounts its editor. A change still waiting on the debounce
+  // is written now, or a stroke made in the last second would be lost.
   onBeforeUnmount(() => {
-    if (autoSaveTimer) clearTimeout(autoSaveTimer)
+    if (autoSaveTimer) saveNow()
   })
 
   return {

@@ -486,7 +486,8 @@
       "selectionMade": "Selection made — press Ctrl+C to copy",
       "copiedMoveToPos": "Copied. Move the pointer and click to paste",
       "cutMoveToPos": "Cut. Move the pointer and click to paste",
-      "moveMouseToPaste": "Move the pointer into position and click to paste"
+      "moveMouseToPaste": "Move the pointer into position and click to paste",
+      "storageFull": "Couldn't save: this browser's storage is full. Save the project as a file, or delete projects you don't need."
     },
     "save": "Save",
     "files": {
@@ -500,7 +501,40 @@
       "png": "PNG",
       "pngHint": "the current frame",
       "gif": "GIF",
-      "gifHint": "the whole animation"
+      "gifHint": "the whole animation",
+      "projectImportHint": "opens in a new tab"
+    },
+    "projects": {
+      "untitled": "Untitled {n}",
+      "tabsLabel": "Open projects",
+      "tabLabel": "{name}, {size}",
+      "rename": "Project name",
+      "close": "Close {name}",
+      "closeTooltip": "Close tab. The project stays saved.",
+      "closeNewTab": "Close the new project tab",
+      "new": "New project",
+      "newTab": "New project",
+      "newTitle": "New project",
+      "newSubtitle": "Give it a name and pick the size of its board.",
+      "nameLabel": "Name",
+      "sizeLabel": "Board size",
+      "sizeDefault": "Default",
+      "sizeHint": {
+        "16": "Tiny icons and items",
+        "32": "Characters and props",
+        "64": "Detailed sprites",
+        "128": "Big art and scenes"
+      },
+      "sizeLater": "You can change the size later from the toolbar, but that clears the drawing.",
+      "create": "Create project",
+      "listTitle": "Your projects",
+      "empty": "No projects yet. The ones you create show up here, even after you close their tab.",
+      "open": "Open {name}",
+      "switchTo": "Switch to {name}",
+      "openBadge": "Open",
+      "delete": "Delete {name}",
+      "edited": "Edited {when}",
+      "editedJustNow": "Edited just now"
     }
   },
   "auth": {
