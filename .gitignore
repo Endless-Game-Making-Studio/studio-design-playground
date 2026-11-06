@@ -36,3 +36,7 @@ npm-debug.log*
 # desktop build (npm run build:desktop)
 .nuxt-desktop/
 .output-desktop/
+
+# desktop shell (src-tauri): Cargo build output and tauri-build's generated schemas
+src-tauri/target/
+src-tauri/gen/

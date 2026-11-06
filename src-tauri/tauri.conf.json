@@ -1,0 +1,45 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Pixel Stitch",
+  "mainBinaryName": "pixel-stitch",
+  "version": "../package.json",
+  "identifier": "org.endlessaccess.pixelstitch",
+  "build": {
+    "frontendDist": "../.output-desktop/public",
+    "beforeDevCommand": { "script": "npm run build:desktop", "wait": true },
+    "beforeBuildCommand": "npm run build:desktop"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "create": false,
+        "title": "Pixel Stitch",
+        "width": 1280,
+        "height": 800,
+        "center": true,
+        "visible": false,
+        "zoomHotkeysEnabled": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis", "deb", "rpm", "appimage"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      }
+    }
+  }
+}

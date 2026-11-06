@@ -1,0 +1,28 @@
+[package]
+name = "pixel-stitch"
+# Not the app's version: tauri.conf.json takes that from package.json.
+version = "0.0.0"
+description = "Pixel Stitch, the Endless Studios pixel art tool, as a desktop app"
+edition = "2021"
+publish = false
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-single-instance = "2"
+tauri-plugin-window-state = "2"
+
+# The two WebView2 settings Tauri has no option for (see lock_down_webview).
+# Same versions as Tauri's own, so nothing is built twice.
+[target."cfg(windows)".dependencies]
+webview2-com = "0.39"
+windows-core = "0.62"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true
