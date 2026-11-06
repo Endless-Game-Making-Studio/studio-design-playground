@@ -4,7 +4,9 @@ import { expect, test, type Page } from '@playwright/test'
 // sprite sheet import window used to hold its own file field; it now asks the
 // host's Open for the file, the same way every other import does.
 
-const TOOL = '/make/pixel-stitch'
+// The web build has the tool on the Make page; the desktop build's config
+// points this at the bundle's root.
+const TOOL = process.env.PIXEL_STITCH_URL ?? '/make/pixel-stitch'
 
 const panel = (page: Page) => page.locator('[role="tabpanel"]:visible')
 const sheetWindow = (page: Page) => page.getByRole('dialog', { name: 'Import sprite sheet' })
