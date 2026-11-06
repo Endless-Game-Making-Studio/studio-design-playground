@@ -2,7 +2,6 @@
   "name": "studio-home",
   "version": "0.1.0",
   "private": true,
-  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "build": "nuxt build",
