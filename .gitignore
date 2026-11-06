@@ -28,3 +28,7 @@ npm-debug.log*
 
 # git worktrees for isolated agent work
 .worktrees/
+
+# Playwright run output
+/test-results/
+/playwright-report/

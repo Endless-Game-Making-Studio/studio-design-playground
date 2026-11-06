@@ -11,7 +11,7 @@ Nuxt 3-style app (Nuxt 4) implementing the Endless Studios "Studio Home" page, b
 - `npm install` — installs dependencies. This repo requires `npm install --legacy-peer-deps` in this environment (a stock `npm install` hits an npm/arborist bug — `Cannot read properties of null (reading 'edgesOut')` — unrelated to this project's dependencies).
 - `npm run dev` — start the dev server (`nuxt dev`, defaults to port 3000; pass `-- --port <n>` to override).
 - `npm run build` — production build.
-- No test suite yet.
+- `npm test` — browser tests (Playwright, `tests/e2e/`). They drive the real app in the installed Chrome (`channel: 'chrome'`, no browser download) and reuse a dev server already on port 3000, or start one.
 
 ## Architecture
 
