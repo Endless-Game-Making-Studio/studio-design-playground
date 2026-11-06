@@ -65,6 +65,11 @@ export function createDiskStorage(invoke: Invoke): HostStorage {
     if (!sending.has(key)) sending.set(key, send(key))
   }
 
+  async function whenIdle() {
+    // A change queued while waiting starts a new send, so look again.
+    while (sending.size) await Promise.all(sending.values())
+  }
+
   return {
     kind: 'disk',
 
@@ -116,9 +121,17 @@ export function createDiskStorage(invoke: Invoke): HostStorage {
       return () => failureListeners.delete(listener)
     },
 
-    async whenIdle() {
-      // A change queued while waiting starts a new send, so look again.
-      while (sending.size) await Promise.all(sending.values())
+    whenIdle,
+
+    async flush() {
+      // A key that failed may have nothing new to write since, so its last
+      // value is sent again from memory: the disk may have room by now.
+      for (const key of failed) {
+        const text = memory.get(key)
+        if (typeof text === 'string' && !waiting.has(key)) queue(key, text)
+      }
+      await whenIdle()
+      return failed.size === 0
     }
   }
 }

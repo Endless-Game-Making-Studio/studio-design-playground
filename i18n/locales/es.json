@@ -541,7 +541,13 @@
     },
     "desktop": {
       "language": "Idioma",
-      "version": "Versión {version}"
+      "version": "Versión {version}",
+      "quit": {
+        "title": "¿Salir sin guardar?",
+        "body": "Si sales ahora, se pierden los cambios que no se guardaron.",
+        "stay": "No salir",
+        "quit": "Salir de todos modos"
+      }
     }
   },
   "auth": {

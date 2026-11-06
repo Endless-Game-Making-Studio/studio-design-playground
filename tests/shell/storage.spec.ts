@@ -1,8 +1,8 @@
-import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, test, type Page } from '@playwright/test'
 import { freshDataDir, launch, removeDataDir, type RunningApp } from './app'
+import { allowWrites, canvas, createProject, denyWrites, paintedIn, paintedOnScreen, panel, tab, type StoredProject } from './projects'
 
 // Projects saved as files on disk (issue #41). Every test runs the app on a
 // fresh PIXEL_STITCH_DATA_DIR, so the files land in `<dataDir>/storage`.
@@ -24,38 +24,6 @@ test.afterEach(async () => {
   await removeDataDir(dataDir)
 })
 
-const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-const tab = (page: Page, name: string) => page.getByRole('tab', { name: new RegExp(`^${escapeRegExp(name)}, `) })
-const panel = (page: Page) => page.locator('[role="tabpanel"]:visible')
-const canvas = (page: Page) => panel(page).locator('main canvas')
-
-async function createProject(page: Page, name: string) {
-  await expect(page.getByRole('button', { name: /^(New project|Proyecto nuevo)$/ })).toBeVisible()
-  if (await page.getByRole('textbox', { name: /^(Name|Nombre)$/ }).count() === 0) {
-    await page.getByRole('button', { name: /^(New project|Proyecto nuevo)$/ }).click()
-  }
-  await page.getByRole('textbox', { name: /^(Name|Nombre)$/ }).fill(name)
-  await page.getByRole('button', { name: /^(Create project|Crear proyecto)$/ }).click()
-  await expect(tab(page, name)).toHaveAttribute('aria-selected', 'true')
-}
-
-/** Magenta (the default colour) pixels on the visible artboard. */
-function paintedOnScreen(page: Page) {
-  return canvas(page).evaluate((element: HTMLCanvasElement) => {
-    const { data } = element.getContext('2d')!.getImageData(0, 0, element.width, element.height)
-    let count = 0
-    for (let i = 0; i < data.length; i += 4) {
-      if (data[i] === 255 && data[i + 1] === 0 && data[i + 2] === 255) count++
-    }
-    return count
-  })
-}
-
-interface StoredProject {
-  canvasSize: number
-  frames: { layers: { data: string[][] }[] }[]
-}
-
 function projectFiles() {
   return existsSync(projectsDir()) ? readdirSync(projectsDir()).filter(name => name.endsWith('.tps')) : []
 }
@@ -63,9 +31,6 @@ function projectFiles() {
 function readProject(file: string): StoredProject {
   return JSON.parse(readFileSync(join(projectsDir(), file), 'utf8'))
 }
-
-const paintedIn = (project: StoredProject) =>
-  project.frames.flatMap(frame => frame.layers.flatMap(layer => layer.data.flat())).filter(Boolean).length
 
 /** The one project file there is, once it holds this many painted pixels or more. */
 async function savedWithPixels(atLeast: number) {
@@ -81,17 +46,6 @@ async function savedWithPixels(atLeast: number) {
     }
   }, { timeout: 15_000 }).toBeGreaterThanOrEqual(atLeast)
   return file
-}
-
-// Windows ignores a folder's read-only flag, so the folder refuses new files
-// through its permissions instead: everyone is denied writing into it.
-function denyWrites(dir: string) {
-  const result = spawnSync('icacls', [dir, '/deny', '*S-1-1-0:(OI)(CI)(W,D)'], { encoding: 'utf8' })
-  if (result.status !== 0) throw new Error(`icacls failed: ${result.stdout}${result.stderr}`)
-}
-
-function allowWrites(dir: string) {
-  if (existsSync(dir)) spawnSync('icacls', [dir, '/remove:d', '*S-1-1-0'])
 }
 
 /** Pixel Stitch's keys in the web engine's own storage. */

@@ -21,6 +21,7 @@ import {
   loadPalette,
   loadProject,
   onProjectSaveFailed,
+  onSaveEverything,
   saveFailedNotice,
   savePalette,
   saveProject
@@ -667,6 +668,14 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
   onBeforeUnmount(() => {
     if (autoSaveTimer) saveNow()
   })
+
+  // Quitting the desktop app writes the same pending change, in every open
+  // tab, before the window goes.
+  if (projectId) {
+    onScopeDispose(onSaveEverything(() => {
+      if (autoSaveTimer) saveNow()
+    }))
+  }
 
   return {
     // notices

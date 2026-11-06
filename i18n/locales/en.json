@@ -541,7 +541,13 @@
     },
     "desktop": {
       "language": "Language",
-      "version": "Version {version}"
+      "version": "Version {version}",
+      "quit": {
+        "title": "Quit without saving?",
+        "body": "If you quit now, changes that didn't save are lost.",
+        "stay": "Don't quit",
+        "quit": "Quit anyway"
+      }
     }
   },
   "auth": {

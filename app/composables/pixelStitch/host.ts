@@ -54,6 +54,13 @@ export interface HostStorage {
    */
   onWriteFailed(listener: (key: string) => void): () => void
   /**
+   * Tries again every key whose last write failed, waits like `whenIdle`, and
+   * resolves to whether everything has now reached the real storage. False
+   * means some work exists only in memory; quitting asks the person before it
+   * drops that.
+   */
+  flush(): Promise<boolean>
+  /**
    * Resolves once every write and remove made so far has reached the real
    * storage, failed ones included (those are reported through
    * `onWriteFailed`). Quitting waits on it, so the last stroke isn't lost.

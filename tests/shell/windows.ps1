@@ -8,6 +8,7 @@
 #   windows.ps1 maximize <hwnd>
 #   windows.ps1 place <hwnd> <x> <y> <width> <height>
 #   windows.ps1 close <hwnd>
+#   windows.ps1 close-on-signal <hwnd>       closes it once a line arrives on stdin
 #   windows.ps1 drag-corner <hwnd> <x> <y>
 #   windows.ps1 keys <hwnd> <SendKeys text>
 #   windows.ps1 right-click <hwnd> <x> <y>  x and y inside the window
@@ -148,6 +149,13 @@ switch ($Command) {
   }
   # WM_CLOSE (0x10): the same as the title bar's close button.
   'close' { [void][ShellWin]::PostMessage((Hwnd $Rest[0]), 0x10, [IntPtr]::Zero, [IntPtr]::Zero); '{}' }
+  'close-on-signal' {
+    # Started ahead of time, so the close lands within milliseconds of the
+    # signal rather than after PowerShell's own start-up.
+    [Console]::Out.WriteLine('ready'); [Console]::Out.Flush()
+    [void][Console]::In.ReadLine()
+    [void][ShellWin]::PostMessage((Hwnd $Rest[0]), 0x10, [IntPtr]::Zero, [IntPtr]::Zero); '{}'
+  }
   'drag-corner' {
     # Resizes the way a person does, by dragging the bottom-right corner to a
     # point on screen. `place` would skip the minimum size: Windows only
