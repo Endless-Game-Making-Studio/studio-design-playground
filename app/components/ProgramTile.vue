@@ -19,7 +19,7 @@ const { t } = useI18n()
 
 const sessionsLabel = computed(() => props.sessionCount == null || !props.sessionUnit
   ? undefined
-  : t(`program.sideInfo.${props.sessionUnit}Count`, props.sessionCount, { count: props.sessionCount }))
+  : t(`program.sideInfo.${props.sessionUnit}Count`, { count: props.sessionCount }, props.sessionCount))
 </script>
 
 <template>

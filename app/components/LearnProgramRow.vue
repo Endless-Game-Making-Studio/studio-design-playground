@@ -62,7 +62,7 @@ function onClick() {
       <div class="mt-3 flex flex-wrap items-center gap-2">
         <span class="inline-flex items-center gap-1.5 text-xs text-dimmed">
           <UIcon name="lucide:calendar-days" class="size-4" />
-          {{ t(`program.sideInfo.${program.template.sessionUnit}Count`, program.template.sessionCount, { count: program.template.sessionCount }) }}
+          {{ t(`program.sideInfo.${program.template.sessionUnit}Count`, { count: program.template.sessionCount }, program.template.sessionCount) }}
         </span>
       </div>
 

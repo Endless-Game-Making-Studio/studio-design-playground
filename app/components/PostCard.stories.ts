@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@nuxtjs/storybook'
+import type { ComponentPropsAndSlots, Meta, StoryObj } from '@nuxtjs/storybook'
 import PostCard from './PostCard.vue'
 import { feedPosts } from '../composables/useHomeMockData'
 
@@ -13,21 +13,21 @@ const meta = {
     },
     template: '<PostCard v-bind="args">{{ args.body }}</PostCard>'
   })
-} satisfies Meta<typeof PostCard & { body: string }>
+} satisfies Meta<ComponentPropsAndSlots<typeof PostCard> & { body: string }>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const Announcement: Story = {
-  args: feedPosts[0]
+  args: feedPosts[0]!
 }
 
 export const GameUpdateWithImage: Story = {
-  args: feedPosts[1]
+  args: feedPosts[1]!
 }
 
 export const FromInstructor: Story = {
-  args: feedPosts[2]
+  args: feedPosts[2]!
 }
 
 export const MinimalPost: Story = {

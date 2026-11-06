@@ -48,7 +48,7 @@ defineExpose({ focusGrip: () => gripRef.value?.focusGrip() })
     <ReorderGrip
       ref="gripRef"
       :tooltip="t('melodyLoom.blocks.reorder')"
-      :aria-label="t('melodyLoom.blocks.reorderLabel', { name: label, position: index + 1, count })"
+      :label="t('melodyLoom.blocks.reorderLabel', { name: label, position: index + 1, count })"
       :index="index"
       :count="count"
       class="absolute left-1.5 top-1.5 z-10 h-9 w-7"

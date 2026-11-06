@@ -2,10 +2,22 @@ import type { Meta, StoryObj } from '@nuxtjs/storybook'
 import { computed } from 'vue'
 import ProgramStepDrawer from './ProgramStepDrawer.vue'
 import { programTemplates } from '../composables/useProgramMockData'
-import { flattenCurriculum } from '../composables/useProgramCurriculum'
+import { flattenCurriculum, withAwardableXp } from '../composables/useProgramCurriculum'
+import type { CurriculumModuleSummary } from '../composables/useProgramCurriculum'
 import type { DeliverableSubmission, useProgramProgress } from '../composables/useProgramProgress'
 
-const steps = flattenCurriculum(programTemplates.find(p => p.id === 'core-threadbare')!)
+const template = programTemplates.find(p => p.id === 'core-threadbare')!
+const steps = flattenCurriculum(template)
+
+// Built the way ProgramTabClassroom builds them, with nothing locked or done,
+// so the sidebar nav shows the whole curriculum.
+const modules: CurriculumModuleSummary[] = withAwardableXp(template.curriculum).map(mod => ({
+  id: mod.id,
+  title: mod.title,
+  items: mod.items,
+  isLocked: false,
+  completedCount: 0
+}))
 const topic = steps.find(step => step.type === 'topic')!
 const deliverable = steps.find(step => step.type === 'deliverable')!
 
@@ -37,6 +49,10 @@ const meta = {
     // The drawer portals itself to <body> and covers the lower 85% of the
     // viewport, so a padded canvas would clip it.
     layout: 'fullscreen'
+  },
+  args: {
+    modules,
+    programTitle: template.title
   },
   render: args => ({
     components: { ProgramStepDrawer },
