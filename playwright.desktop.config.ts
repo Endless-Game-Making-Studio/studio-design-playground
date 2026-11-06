@@ -46,7 +46,9 @@ export default defineConfig({
     { name: 'webkit', use: { ...devices['Desktop Safari'], viewport: { width: 1440, height: 900 } } }
   ],
   webServer: {
-    command: `node scripts/serve-static.mjs .output-desktop/public ${port}`,
+    // Under the shell's content security policy, so a bundle change it would
+    // block fails here rather than only in the installed app.
+    command: `node scripts/serve-static.mjs .output-desktop/public ${port} --csp src-tauri/tauri.conf.json`,
     url: `http://localhost:${port}`,
     reuseExistingServer: false
   }

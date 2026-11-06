@@ -3,6 +3,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod close;
+mod files;
 mod storage;
 
 use std::path::PathBuf;
@@ -62,12 +63,18 @@ fn main() {
             }
         }))
         .plugin(window_state.build())
+        .plugin(tauri_plugin_dialog::init())
+        .manage(files::Chosen::default())
         .invoke_handler(tauri::generate_handler![
             storage::storage_read,
             storage::storage_write,
             storage::storage_remove,
             close::quit,
-            close::quit_held
+            close::quit_held,
+            files::save_dialog,
+            files::write_saved_file,
+            files::open_dialog,
+            files::read_opened_file
         ])
         // Holds the window open until the page has saved what is waiting.
         .on_window_event(close::on_window_event)
@@ -102,7 +109,7 @@ fn create_main_window(app: &mut App) -> tauri::Result<WebviewWindow> {
     }
 
     let window = builder.build()?;
-    #[cfg(all(windows, not(debug_assertions)))]
+    #[cfg(all(any(windows, target_os = "linux"), not(debug_assertions)))]
     lock_down_webview(&window)?;
     Ok(window)
 }
@@ -134,5 +141,26 @@ fn lock_down_webview(window: &WebviewWindow) -> tauri::Result<()> {
             }
             Err(error) => eprintln!("Pixel Stitch: couldn't reach the WebView2 settings: {error}"),
         }
+    })
+}
+
+/// The same lockdown on Linux. WebKitGTK has no reload or zoom keys of its
+/// own (those belong to a browser around it), and its inspector only opens
+/// with developer extras on, which Tauri leaves off in release builds; it is
+/// switched off here as well so the inspector key can't reach it whatever
+/// Tauri's default. What is left is the engine's right-click menu (Back,
+/// Reload, Inspect Element), which a handler that claims the event stops.
+#[cfg(all(target_os = "linux", not(debug_assertions)))]
+fn lock_down_webview(window: &WebviewWindow) -> tauri::Result<()> {
+    use webkit2gtk::{SettingsExt, WebViewExt};
+
+    window.with_webview(|webview| {
+        let webview = webview.inner();
+        if let Some(settings) = WebViewExt::settings(&webview) {
+            settings.set_enable_developer_extras(false);
+        }
+        // Returning true says the menu was handled, so WebKitGTK shows none.
+        // The page still gets its contextmenu event first.
+        webview.connect_context_menu(|_, _, _, _| true);
     })
 }

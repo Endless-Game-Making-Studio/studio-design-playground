@@ -10,7 +10,9 @@ publish = false
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+serde = { version = "1", features = ["derive"] }
 tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
 tauri-plugin-single-instance = "2"
 tauri-plugin-window-state = "2"
 
@@ -19,6 +21,11 @@ tauri-plugin-window-state = "2"
 [target."cfg(windows)".dependencies]
 webview2-com = "0.39"
 windows-core = "0.62"
+
+# The WebKitGTK setting Tauri has no option for (see lock_down_webview). Same
+# version as Tauri's own.
+[target.'cfg(target_os = "linux")'.dependencies]
+webkit2gtk = "2.0"
 
 [profile.release]
 codegen-units = 1

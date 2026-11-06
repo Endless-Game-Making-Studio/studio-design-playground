@@ -1,7 +1,7 @@
 import { nextTick } from 'vue'
 import type { ProjectData, ProjectSummary, Workspace } from './types'
 import { usePixelStitchHost } from './host'
-import { PROJECT_FILE } from './fileTypes'
+import { projectFileType } from './fileTypes'
 
 // Before projects existed the tool kept one drawing under this key. It is only
 // read once more, by the migration, and removed after.
@@ -162,16 +162,20 @@ export function projectFileName(name: string) {
 }
 
 /** Resolves to whether the file was saved; cancelling the window is not an error. */
-export function saveProjectFile(data: ProjectData, name: string) {
+export function saveProjectFile(data: ProjectData, name: string, t: (key: string) => string) {
   return usePixelStitchHost().saveFile({
     data: new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }),
     suggestedName: projectFileName(name),
-    types: [PROJECT_FILE]
+    types: [projectFileType(t)]
   })
 }
 
-export async function openProjectFile(): Promise<{ data: ProjectData, name: string } | null> {
-  const file = await usePixelStitchHost().openFile({ types: [PROJECT_FILE] })
+/**
+ * Asks for a project file and reads it. The web and desktop builds both come
+ * through here, so a file saved on the platform opens the same way in the app.
+ */
+export async function openProjectFile(t: (key: string) => string): Promise<{ data: ProjectData, name: string } | null> {
+  const file = await usePixelStitchHost().openFile({ types: [projectFileType(t)] })
   if (!file) return null
   try {
     const parsed = JSON.parse(await file.data.text())
