@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, test, type Page } from '@playwright/test'
-import { freshDataDir, launch, removeDataDir, type RunningApp } from './app'
+import { freshDataDir, launch, pickInOpenWindow, removeDataDir, type RunningApp } from './app'
 import { allowWrites, canvas, createProject, denyWrites, paintedIn, paintedOnScreen, panel, tab, type StoredProject } from './projects'
 
 // Projects saved as files on disk (issue #41). Every test runs the app on a
@@ -84,13 +84,11 @@ test('a project and its drawing come back after quitting, as a file in the stora
   await expect(tab(app.page, 'Keeper')).toHaveAttribute('aria-selected', 'true')
   expect(await paintedOnScreen(app.page)).toBe(painted)
 
-  // The stored file imports as a project file.
+  // The stored file imports as a project file, through the system's Open
+  // window (#43).
   await panel(app.page).getByRole('button', { name: 'Import' }).click()
-  const [chooser] = await Promise.all([
-    app.page.waitForEvent('filechooser'),
-    app.page.getByRole('menuitem', { name: /Project/ }).click()
-  ])
-  await chooser.setFiles(join(projectsDir(), file))
+  await app.page.getByRole('menuitem', { name: /Project/ }).click()
+  pickInOpenWindow(app, join(projectsDir(), file))
   const imported = file.replace(/\.tps$/, '')
   await expect(tab(app.page, imported)).toHaveAttribute('aria-selected', 'true')
   expect(await paintedOnScreen(app.page)).toBe(painted)

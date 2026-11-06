@@ -75,6 +75,8 @@ export const place = (window: AppWindow, box: { x: number, y: number, width: num
  * take the keyboard's path, so the web engine's own shortcuts see them, which
  * Playwright's keyboard (sent straight to the page) would skip.
  */
+/** Answers the app's system Open window with a file, as a person picking it would. */
+export const pickInOpenWindow = (app: { pid: number }, path: string) => windowsHelper('open-file', String(app.pid), path)
 export const pressKeys = (window: AppWindow, keys: string) => windowsHelper('keys', window.hwnd, keys)
 
 /** A real right-click at a point inside the window. */

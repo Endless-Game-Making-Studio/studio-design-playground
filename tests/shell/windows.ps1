@@ -13,6 +13,7 @@
 #   windows.ps1 keys <hwnd> <SendKeys text>
 #   windows.ps1 right-click <hwnd> <x> <y>  x and y inside the window
 #   windows.ps1 start <exe>                 runs it the way the Start menu would
+#   windows.ps1 open-file <pid> <path>      picks a file in the process's system Open window
 param(
   [Parameter(Position = 0)] [string]$Command,
   [Parameter(ValueFromRemainingArguments = $true)] [string[]]$Rest
@@ -50,6 +51,30 @@ public static class ShellWin {
   [DllImport("user32.dll")] public static extern void mouse_event(uint flags, int dx, int dy, uint data, IntPtr extra);
   [DllImport("user32.dll")] public static extern bool AllowSetForegroundWindow(int pid);
   [DllImport("user32.dll")] public static extern void keybd_event(byte vk, byte scan, uint flags, IntPtr extra);
+  [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetClassName(IntPtr hwnd, StringBuilder name, int max);
+  [DllImport("user32.dll")] public static extern IntPtr GetDlgItem(IntPtr dialog, int id);
+  [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern IntPtr FindWindowEx(IntPtr parent, IntPtr after, string className, string title);
+  [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern IntPtr SendMessage(IntPtr hwnd, uint msg, IntPtr w, string l);
+
+  [DllImport("user32.dll")] public static extern bool EnumChildWindows(IntPtr parent, EnumProc proc, IntPtr lParam);
+  [DllImport("user32.dll")] public static extern int GetDlgCtrlID(IntPtr hwnd);
+
+  // The modern Open window nests its fields several levels down, so a direct
+  // GetDlgItem doesn't reach them.
+  public static IntPtr Descendant(IntPtr parent, int id, string className) {
+    IntPtr found = IntPtr.Zero;
+    EnumChildWindows(parent, (hwnd, _) => {
+      if (GetDlgCtrlID(hwnd) == id && (className == null || ClassOf(hwnd) == className)) { found = hwnd; return false; }
+      return true;
+    }, IntPtr.Zero);
+    return found;
+  }
+
+  public static string ClassOf(IntPtr hwnd) {
+    var name = new StringBuilder(256);
+    GetClassName(hwnd, name, name.Capacity);
+    return name.ToString();
+  }
 
   const int WS_CAPTION = 0x00C00000;
 
@@ -213,6 +238,31 @@ switch ($Command) {
     [void][ShellWin]::AllowSetForegroundWindow(-1) # ASFW_ANY
     $started = Start-Process -FilePath $Rest[0] -PassThru -Wait
     ConvertTo-Json -Compress @{ exitCode = $started.ExitCode }
+  }
+  'open-file' {
+    # The system Open window has to be answered from outside the web engine.
+    # Messages rather than real input: the file name is the Edit inside the
+    # ComboBoxEx32 with id 1148, and Open is the button with id 1. Waits up to
+    # 10 seconds for the window to appear.
+    $pids = New-Object 'System.Collections.Generic.HashSet[uint32]'
+    [void]$pids.Add([uint32]$Rest[0])
+    $dialog = [IntPtr]::Zero; $name = [IntPtr]::Zero
+    # The window shows before its fields exist, so wait for the field too.
+    for ($i = 0; $i -lt 100 -and $name -eq [IntPtr]::Zero; $i++) {
+      foreach ($candidate in [ShellWin]::TopLevel($pids, $true)) {
+        if ([ShellWin]::ClassOf($candidate) -ne '#32770') { continue }
+        $box = [ShellWin]::Descendant($candidate, 1148, 'ComboBoxEx32')
+        if ($box -eq [IntPtr]::Zero) { continue }
+        $field = [ShellWin]::FindWindowEx([ShellWin]::FindWindowEx($box, [IntPtr]::Zero, 'ComboBox', $null), [IntPtr]::Zero, 'Edit', $null)
+        if ($field -ne [IntPtr]::Zero) { $dialog = $candidate; $name = $field; break }
+      }
+      if ($name -eq [IntPtr]::Zero) { Start-Sleep -Milliseconds 100 }
+    }
+    if ($name -eq [IntPtr]::Zero) { throw 'No Open window with a file name field appeared' }
+    [void][ShellWin]::SendMessage($name, 0x000C, [IntPtr]::Zero, $Rest[1]) # WM_SETTEXT
+    $open = [ShellWin]::Descendant($dialog, 1, 'Button')
+    [void][ShellWin]::PostMessage($open, 0x00F5, [IntPtr]::Zero, [IntPtr]::Zero) # BM_CLICK
+    '{}'
   }
   default { throw "Unknown command: $Command" }
 }
