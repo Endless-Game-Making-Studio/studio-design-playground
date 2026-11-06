@@ -2,8 +2,12 @@
 const props = defineProps<{
   /** Tooltip text — each tool words its own hint, so it arrives already translated. */
   tooltip: string
-  /** Accessible name for the grip, likewise already translated. */
-  ariaLabel: string
+  /**
+   * Accessible name for the grip, likewise already translated. Not called
+   * `ariaLabel`: vue-tsc treats a caller's `aria-label` as the HTML attribute
+   * and never matches it to the prop.
+   */
+  label: string
   index: number
   count: number
 }>()
@@ -35,7 +39,7 @@ defineExpose({ focusGrip: () => gripRef.value?.focus() })
       ref="gripRef"
       type="button"
       class="flex shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-dimmed transition-colors hover:text-default focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:cursor-grabbing"
-      :aria-label="ariaLabel"
+      :aria-label="label"
       v-bind="$attrs"
       @keydown="onKeyDown"
     >

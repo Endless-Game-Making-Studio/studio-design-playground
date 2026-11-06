@@ -66,7 +66,7 @@ function onNameKeyDown(event: KeyboardEvent) {
       <ReorderGrip
         ref="gripRef"
         :tooltip="t('patchworkshop.layers.reorder')"
-        :aria-label="t('patchworkshop.layers.reorderLabel', { name: layer.name })"
+        :label="t('patchworkshop.layers.reorderLabel', { name: layer.name })"
         :index="index"
         :count="count"
         class="h-8 w-[22px]"

@@ -51,7 +51,7 @@ const facts = computed(() => {
       icon: undefined,
       iconClass: '',
       image: '/images/icons/calendar.svg',
-      value: t(`program.sideInfo.${sessionUnit}Count`, sessionCount, { count: sessionCount })
+      value: t(`program.sideInfo.${sessionUnit}Count`, { count: sessionCount }, sessionCount)
     }
   ]
 
@@ -61,7 +61,7 @@ const facts = computed(() => {
       icon: undefined,
       iconClass: '',
       image: '/images/icons/flag.svg',
-      value: t('program.sideInfo.milestoneCount', milestoneCount, { count: milestoneCount })
+      value: t('program.sideInfo.milestoneCount', { count: milestoneCount }, milestoneCount)
     })
   }
 
@@ -399,7 +399,7 @@ const daysUntilStart = computed(() => {
 })
 
 const waitingCtaLabel = computed(() => daysUntilStart.value
-  ? t('program.enroll.cta.startsIn', daysUntilStart.value, { count: daysUntilStart.value })
+  ? t('program.enroll.cta.startsIn', { count: daysUntilStart.value }, daysUntilStart.value)
   : t('program.enroll.cta.startsOn', { date: enrollModalStartDateLabel.value }))
 
 // The invite covers the whole run as an all-day span, which is as precise as

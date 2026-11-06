@@ -46,7 +46,9 @@ const swatches = computed(() => editor.palette.value[rowIndex.value] ?? [])
 // Each option carries its own row of colours: the four names alone
 // ("Colour", "Shade 1"…) leave the artist guessing what is actually in each
 // one, and the swatches are the thing being chosen.
-const rowItems = computed<DropdownMenuItem[]>(() =>
+// `satisfies` rather than a `DropdownMenuItem[]` annotation, so `colours` and
+// the `row` slot name survive into the slot's `item` type.
+const rowItems = computed(() =>
   ROWS.map((row, index) => ({
     label: t(`pixelStitch.color.row.${row}`),
     type: 'checkbox' as const,
@@ -54,7 +56,7 @@ const rowItems = computed<DropdownMenuItem[]>(() =>
     slot: 'row' as const,
     colours: (editor.palette.value[index] ?? []).slice(0, PALETTE_ROW_LENGTH),
     onSelect: () => (activeRow.value = row)
-  }))
+  })) satisfies DropdownMenuItem[]
 )
 
 const draggedColor = ref<string | null>(null)

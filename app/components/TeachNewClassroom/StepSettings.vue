@@ -44,8 +44,10 @@ const canSubmit = computed(() => !!name.value.trim() && !!ageRange.value && cons
       </UFormField>
 
       <UFormField :label="t('teach.new.wizard.settings.ageRangeLabel')">
+        <!-- USelect's model has no null; the wizard keeps null for "not picked yet". -->
         <USelect
-          v-model="ageRange"
+          :model-value="ageRange ?? undefined"
+          @update:model-value="ageRange = $event"
           :items="ageRangeOptions"
           :placeholder="t('teach.new.wizard.settings.ageRangePlaceholder')"
           size="lg"

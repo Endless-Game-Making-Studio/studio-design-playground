@@ -36,12 +36,12 @@ export function paintSample(editor: PixelStitchEditor, frameIndex = 0, offset = 
   const size = editor.canvasSize.value
   const layer = editor.frames.value[frameIndex]?.layers[0]
   if (!layer) return
-  const ink = DEFAULT_PALETTE[(offset % 8) + 1]!
+  const ink = DEFAULT_PALETTE[0]![(offset % 8) + 1]!
   for (let i = 0; i < size; i++) {
     const x = (i + offset) % size
     layer.data[i]![x] = ink
     if (i < size / 3) {
-      for (let j = 0; j < size / 3; j++) layer.data[i]![j] = DEFAULT_PALETTE[20 + (offset % 8)]!
+      for (let j = 0; j < size / 3; j++) layer.data[i]![j] = DEFAULT_PALETTE[2]![offset % 8]!
     }
   }
 }

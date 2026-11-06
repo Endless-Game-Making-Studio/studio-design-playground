@@ -278,5 +278,5 @@ export function weekCellsFor(isOnboarded: boolean): WeekCell[] {
   const kinds: WeekCell['kind'][] = isOnboarded
     ? ['done', 'today', 'up', 'up', 'up', 'off', 'off']
     : ['today', 'up', 'up', 'up', 'up', 'off', 'off']
-  return WEEKDAY_LETTERS.map((letter, i) => ({ letter, kind: kinds[i] }))
+  return WEEKDAY_LETTERS.map((letter, i) => ({ letter, kind: kinds[i]! }))
 }

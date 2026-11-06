@@ -10,7 +10,7 @@ const projects = computed(() => projectsForProgram(programId.value))
 
 <template>
   <UContainer class="pt-10 pb-16">
-    <SectionTitle :title="t('program.projects.libraryTitle', projects.length, { count: projects.length })" />
+    <SectionTitle :title="t('program.projects.libraryTitle', { count: projects.length }, projects.length)" />
 
     <div v-if="projects.length" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
       <ProgramProjectCard

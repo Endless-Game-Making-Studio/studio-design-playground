@@ -726,7 +726,6 @@ export function usePixelStitch(options: PixelStitchOptions = {}) {
     commitPaste,
     // project
     toProjectData,
-    applyProjectData,
-    notify
+    applyProjectData
   }
 }

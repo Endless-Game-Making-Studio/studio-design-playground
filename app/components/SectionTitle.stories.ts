@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@nuxtjs/storybook'
+import type { ComponentPropsAndSlots, Meta, StoryObj } from '@nuxtjs/storybook'
 import SectionTitle from './SectionTitle.vue'
 
 const meta = {
@@ -18,7 +18,7 @@ const meta = {
       </SectionTitle>
     `
   })
-} satisfies Meta<typeof SectionTitle & { trailingLabel: string }>
+} satisfies Meta<ComponentPropsAndSlots<typeof SectionTitle> & { trailingLabel?: string }>
 
 export default meta
 type Story = StoryObj<typeof meta>

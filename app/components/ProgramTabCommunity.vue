@@ -58,6 +58,7 @@ function addPost(body: string) {
       channelId,
       author: 'You',
       time: t('program.community.justNow'),
+      postedAt: new Date().toISOString(),
       body,
       likes: 0,
       comments: []

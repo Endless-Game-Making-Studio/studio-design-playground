@@ -141,7 +141,7 @@ function onConfirmImport() {
         <div v-else class="flex flex-col gap-3">
           <UFileUpload v-model="csvFile" accept=".csv" variant="area" :label="t('teach.hub.invite.csv.dropLabel')" />
           <p v-if="parsed" class="text-sm text-muted">
-            {{ t('teach.hub.invite.csv.preview', parsed.rows.length, { count: parsed.rows.length }) }}
+            {{ t('teach.hub.invite.csv.preview', { count: parsed.rows.length }, parsed.rows.length) }}
           </p>
           <UButton
             v-if="parsed"
