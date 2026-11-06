@@ -2,17 +2,17 @@
 //! writes, and the disk writes run in the background, so quitting the moment
 //! the window is asked to close would lose the last stroke. The shell holds
 //! the close and asks the page to save everything first; the page answers with
-//! `quit` once the writes are done, or with `quit_held` when it asks the person
-//! whether to quit after a write failed.
+//! `quit_held` as soon as it starts saving, then `quit` once the writes are
+//! done, or asks the person whether to quit when a write failed.
 
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
 use tauri::{AppHandle, Manager, Runtime, State, Window, WindowEvent};
 
-/// How long the page gets to save and answer before the shell quits anyway,
-/// so a page that has stopped responding can still be closed. Saving takes
-/// well under a second even for tens of megabytes of projects.
+/// How long the page gets to answer before the shell quits anyway, so a page
+/// that has stopped responding can still be closed. The page answers with
+/// `quit_held` before it starts saving, so a slow save never runs into this.
 const PAGE_DEADLINE: Duration = Duration::from_secs(10);
 
 /// What the page runs when the window is asked to close. A page that hasn't
@@ -83,9 +83,10 @@ pub fn quit<R: Runtime>(app: AppHandle<R>) {
     app.exit(0);
 }
 
-/// The page is asking the person whether to quit after a failed write. The
-/// window stays open until they answer, however long that takes, and a later
-/// click on the close button starts a new request.
+/// The page has taken the close over: it is saving, or asking the person
+/// whether to quit after a failed write. The window stays open until the page
+/// calls `quit`, however long that takes, and a later click on the close
+/// button starts a new request.
 #[tauri::command]
 pub fn quit_held(requests: State<'_, CloseRequests>) {
     requests.hold();

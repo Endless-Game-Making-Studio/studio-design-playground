@@ -15,20 +15,27 @@ type CloseHandlerWindow = Window & { __pixelStitchCloseRequested?: () => Promise
 
 const invoke = shellInvoke()
 
+// A second click on the close button while the first is still saving.
+let saving = false
+
 async function onCloseRequested() {
+  if (saving) return
+  saving = true
+  // Answer the shell before saving, not after: until it hears back it quits on
+  // its own after a few seconds, and a slow disk could still be writing then.
+  await invoke!('quit_held')
   let saved = false
   try {
     saved = await saveEverything()
   } catch (error) {
     console.error(`Pixel Stitch: ${String(error)}`)
+  } finally {
+    saving = false
   }
   if (saved) {
     await invoke!('quit')
     return
   }
-  // Tell the shell first: until it hears back it would quit on its own after
-  // a few seconds, taking the unsaved work with it.
-  await invoke!('quit_held')
   open.value = true
 }
 
