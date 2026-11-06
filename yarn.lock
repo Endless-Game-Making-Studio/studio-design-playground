@@ -1575,6 +1575,28 @@
   dependencies:
     "@tanstack/virtual-core" "3.17.5"
 
+"@tauri-apps/cli-win32-x64-msvc@2.12.4":
+  version "2.12.4"
+  resolved "https://registry.npmjs.org/@tauri-apps/cli-win32-x64-msvc/-/cli-win32-x64-msvc-2.12.4.tgz"
+  integrity sha512-DJhDeCqjLDNMWYFy7ZS8cfeAHX2RK0RbQMLiA3bMVVkXRDJ4NBYiHriGqsUhsr9iG41aTb+dJGkFPmPw1gWwVw==
+
+"@tauri-apps/cli@^2.12.4":
+  version "2.12.4"
+  resolved "https://registry.npmjs.org/@tauri-apps/cli/-/cli-2.12.4.tgz"
+  integrity sha512-JI9bHfudSRJikGOrjbXEm6RjzzvmKuLc+JixB1NE8hNzQkNlCCIC3pTES3uypkR9lxHrsbxzcnSwhI2IxBQphw==
+  optionalDependencies:
+    "@tauri-apps/cli-darwin-arm64" "2.12.4"
+    "@tauri-apps/cli-darwin-x64" "2.12.4"
+    "@tauri-apps/cli-linux-arm-gnueabihf" "2.12.4"
+    "@tauri-apps/cli-linux-arm64-gnu" "2.12.4"
+    "@tauri-apps/cli-linux-arm64-musl" "2.12.4"
+    "@tauri-apps/cli-linux-riscv64-gnu" "2.12.4"
+    "@tauri-apps/cli-linux-x64-gnu" "2.12.4"
+    "@tauri-apps/cli-linux-x64-musl" "2.12.4"
+    "@tauri-apps/cli-win32-arm64-msvc" "2.12.4"
+    "@tauri-apps/cli-win32-ia32-msvc" "2.12.4"
+    "@tauri-apps/cli-win32-x64-msvc" "2.12.4"
+
 "@testing-library/jest-dom@^6.6.3":
   version "6.9.1"
   resolved "https://registry.npmjs.org/@testing-library/jest-dom/-/jest-dom-6.9.1.tgz"
