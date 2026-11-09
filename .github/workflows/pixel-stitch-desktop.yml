@@ -1,0 +1,139 @@
+# Builds the Pixel Stitch desktop installers (#35, #45).
+# A pixel-stitch-v* tag builds them, checks the version and the size budget, and
+# attaches them to a draft release for that tag. Run by hand on a branch, it
+# does the same checks and leaves the files as workflow artifacts instead.
+# How to release: docs/pixel-stitch-desktop-release-checklist.md.
+name: Pixel Stitch desktop
+
+on:
+  push:
+    tags: ['pixel-stitch-v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pixel-stitch-desktop-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            bundles: nsis
+            artifact: pixel-stitch-windows
+          # The oldest supported Ubuntu, so the .deb links against the oldest
+          # glibc and WebKitGTK 4.1 we promise to run on.
+          - os: ubuntu-22.04
+            bundles: deb,rpm,appimage
+            artifact: pixel-stitch-linux
+    defaults:
+      run:
+        shell: bash
+    env:
+      BUNDLE_DIR: src-tauri/target/release/bundle
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install the Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file \
+            libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf \
+            libfuse2 xdg-utils
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      # --legacy-peer-deps: the lockfile was resolved that way. On Windows, npm
+      # runs scripts in cmd.exe by default, where postinstall's patch:nuxt step
+      # (patch, `|| true`) doesn't exist; Git Bash has both.
+      - name: Install npm dependencies
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            export npm_config_script_shell="C:\\Program Files\\Git\\bin\\bash.exe"
+          fi
+          npm ci --legacy-peer-deps
+
+      - name: Check the tag matches package.json
+        if: github.ref_type == 'tag'
+        run: node scripts/check-desktop-version.mjs "$GITHUB_REF_NAME"
+
+      - name: Test the release scripts
+        run: npm run test:release-scripts
+
+      # beforeBuildCommand builds the web bundle (npm run build:desktop) first.
+      - name: Build the installers
+        id: build
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            export npm_config_script_shell="C:\\Program Files\\Git\\bin\\bash.exe"
+          fi
+          npx tauri build --ci --bundles ${{ matrix.bundles }}
+
+      - name: Check the installers are named for the tag
+        if: github.ref_type == 'tag'
+        run: node scripts/check-desktop-version.mjs "$GITHUB_REF_NAME" "$BUNDLE_DIR"
+
+      - name: Check the size budget
+        run: node scripts/check-installer-size.mjs "$BUNDLE_DIR"
+
+      # Uploaded even when the size check fails, so the oversized file can be
+      # inspected; the release job still won't run.
+      - name: Upload the installers
+        if: ${{ !cancelled() && steps.build.outcome != 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          if-no-files-found: error
+          path: |
+            ${{ env.BUNDLE_DIR }}/nsis/*-setup.exe
+            ${{ env.BUNDLE_DIR }}/deb/*.deb
+            ${{ env.BUNDLE_DIR }}/rpm/*.rpm
+            ${{ env.BUNDLE_DIR }}/appimage/*.AppImage
+
+  release:
+    name: Draft release
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: installers
+          merge-multiple: true
+
+      - name: Attach the installers to a draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          shopt -s globstar nullglob
+          files=(installers/**/*-setup.exe installers/**/*.deb installers/**/*.rpm installers/**/*.AppImage)
+          ls -l "${files[@]}"
+          # A re-run of the same tag replaces the files on the existing draft.
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" "${files[@]}" --clobber
+          else
+            gh release create "$TAG" "${files[@]}" --draft --verify-tag \
+              --title "Pixel Stitch ${TAG#pixel-stitch-v}" \
+              --notes "Installers for Pixel Stitch ${TAG#pixel-stitch-v}. Before publishing, run docs/pixel-stitch-desktop-release-checklist.md on Windows and Ubuntu."
+          fi

@@ -8,6 +8,8 @@ import {
   loadIndex,
   loadLegacyProject,
   loadWorkspace,
+  preloadProject,
+  preloadStorage,
   saveIndex,
   saveProject,
   saveWorkspace
@@ -42,8 +44,8 @@ export function usePixelStitchProjects(options: { persist?: boolean } = {}) {
   const projects = ref<ProjectSummary[]>([])
   const openIds = ref<string[]>([])
   const activeId = ref<string | null>(null)
-  // Storage only exists on the client, so nothing is known until mount. The
-  // page waits on this rather than flashing the start screen at someone whose
+  // Storage only exists on the client, and a host may read it asynchronously,
+  // so nothing is known until mount and the preload. The page waits on this rather than flashing the start screen at someone whose
   // tabs are about to be restored.
   const ready = ref(!persist)
 
@@ -96,9 +98,16 @@ export function usePixelStitchProjects(options: { persist?: boolean } = {}) {
     return add(cleanName(name) || suggestName(), data)
   }
 
-  function open(id: string) {
+  // A closed project is loaded before its tab mounts: the tab's editor reads
+  // its drawing synchronously, and a host that keeps projects on disk only has
+  // it in memory once loaded.
+  async function open(id: string) {
     if (!byId(id)) return
-    if (!openIds.value.includes(id)) openIds.value.push(id)
+    if (!openIds.value.includes(id)) {
+      if (persist) await preloadProject(id)
+      if (!byId(id)) return
+      if (!openIds.value.includes(id)) openIds.value.push(id)
+    }
     activeId.value = id
     returnTo = null
   }
@@ -154,7 +163,8 @@ export function usePixelStitchProjects(options: { persist?: boolean } = {}) {
     project.canvasSize = data.canvasSize
   }
 
-  function restore() {
+  async function restore() {
+    await preloadStorage()
     const index = loadIndex()
     if (index) {
       projects.value = index

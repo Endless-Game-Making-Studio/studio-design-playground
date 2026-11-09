@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import type { OpenedFile } from '~/composables/pixelStitch/host'
+import { usePixelStitchHost } from '~/composables/pixelStitch/host'
+import { imageFileType } from '~/composables/pixelStitch/fileTypes'
+
 const props = defineProps<{
   mode: 'export' | 'import'
   frameCount: number
@@ -8,14 +12,17 @@ const open = defineModel<boolean>('open', { required: true })
 
 const emit = defineEmits<{
   export: [columns: number]
-  import: [file: File, columns: number, rows: number]
+  import: [file: Blob, columns: number, rows: number]
 }>()
 
 const { t } = useI18n()
 
 const columns = ref(4)
 const rows = ref(1)
-const file = ref<File | null>(null)
+const file = ref<OpenedFile | null>(null)
+// This window has no notice line of its own, so a file that was picked but
+// couldn't be read shows its error on the field instead.
+const openFailed = ref(false)
 
 // Reset per open so a previous run's file doesn't get re-imported by accident,
 // and default the row count to whatever squares off the current frames.
@@ -24,17 +31,28 @@ watch(open, (isOpen) => {
   columns.value = 4
   rows.value = Math.max(1, Math.ceil(props.frameCount / 4))
   file.value = null
+  openFailed.value = false
 })
 
 const exportRows = computed(() => Math.ceil(props.frameCount / Math.max(1, columns.value)))
 
-function onFileChange(event: Event) {
-  file.value = (event.target as HTMLInputElement).files?.[0] ?? null
+// The file comes through the host's Open window, like every other import, so a
+// desktop build shows its native dialog here too. Cancelling keeps whatever
+// was picked before.
+async function chooseFile() {
+  try {
+    const picked = await usePixelStitchHost().openFile({ types: [imageFileType(t)] })
+    if (picked) file.value = picked
+    openFailed.value = false
+  } catch (error) {
+    console.error(`Pixel Stitch: ${String(error)}`)
+    openFailed.value = true
+  }
 }
 
 function confirm() {
   if (props.mode === 'export') emit('export', Math.max(1, columns.value))
-  else if (file.value) emit('import', file.value, Math.max(1, columns.value), Math.max(1, rows.value))
+  else if (file.value) emit('import', file.value.data, Math.max(1, columns.value), Math.max(1, rows.value))
   open.value = false
 }
 </script>
@@ -47,15 +65,24 @@ function confirm() {
   >
     <template #body>
       <div class="flex flex-col gap-4">
-        <UFormField v-if="mode === 'import'" :label="t('pixelStitch.sheet.imageFile')">
-          <!-- A native file input: Nuxt UI's UInput has no file variant, and a
-               real <input type="file"> is what opens the OS picker. -->
-          <input
-            type="file"
-            accept="image/*"
-            class="w-full text-sm text-default file:mr-3 file:rounded-md file:border-0 file:bg-elevated file:px-3 file:py-1.5 file:text-sm file:text-default file:cursor-pointer"
-            @change="onFileChange"
-          >
+        <UFormField
+          v-if="mode === 'import'"
+          :label="t('pixelStitch.sheet.imageFile')"
+          :error="openFailed ? t('pixelStitch.toast.failedToOpenFile') : false"
+        >
+          <div class="flex min-w-0 items-center gap-3">
+            <UButton
+              :label="t('pixelStitch.sheet.chooseFile')"
+              icon="lucide:image-plus"
+              color="neutral"
+              variant="outline"
+              class="shrink-0"
+              @click="chooseFile"
+            />
+            <span class="truncate text-sm" :class="file ? 'text-default' : 'text-muted'">
+              {{ file?.name ?? t('pixelStitch.sheet.noFile') }}
+            </span>
+          </div>
         </UFormField>
 
         <UFormField :label="t('pixelStitch.sheet.columns')">

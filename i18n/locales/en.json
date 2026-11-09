@@ -448,6 +448,8 @@
       "exportTitle": "Export sprite sheet",
       "importTitle": "Import sprite sheet",
       "imageFile": "Image file",
+      "chooseFile": "Choose image",
+      "noFile": "No file chosen",
       "columns": "Columns",
       "rows": "Rows",
       "summary": "{count} frames will be arranged in a {columns} × {rows} grid.",
@@ -487,7 +489,10 @@
       "copiedMoveToPos": "Copied. Move the pointer and click to paste",
       "cutMoveToPos": "Cut. Move the pointer and click to paste",
       "moveMouseToPaste": "Move the pointer into position and click to paste",
-      "storageFull": "Couldn't save: this browser's storage is full. Save the project as a file, or delete projects you don't need."
+      "storageFull": "Couldn't save: this browser's storage is full. Save the project as a file, or delete projects you don't need.",
+      "diskSaveFailed": "Couldn't save to disk. Check that there's free space, or save the project as a file somewhere else.",
+      "failedToSaveFile": "Couldn't save the file there. Pick another folder, or check that there's free space.",
+      "failedToOpenFile": "Couldn't open that file"
     },
     "save": "Save",
     "files": {
@@ -502,7 +507,11 @@
       "pngHint": "the current frame",
       "gif": "GIF",
       "gifHint": "the whole animation",
-      "projectImportHint": "opens in a new tab"
+      "projectImportHint": "opens in a new tab",
+      "projectType": "Pixel Stitch project",
+      "pngType": "PNG image",
+      "gifType": "GIF animation",
+      "imageType": "Image"
     },
     "projects": {
       "untitled": "Untitled {n}",
@@ -535,6 +544,16 @@
       "delete": "Delete {name}",
       "edited": "Edited {when}",
       "editedJustNow": "Edited just now"
+    },
+    "desktop": {
+      "language": "Language",
+      "version": "Version {version}",
+      "quit": {
+        "title": "Quit without saving?",
+        "body": "If you quit now, changes that didn't save are lost.",
+        "stay": "Don't quit",
+        "quit": "Quit anyway"
+      }
     }
   },
   "auth": {

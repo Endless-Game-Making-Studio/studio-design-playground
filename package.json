@@ -1,18 +1,28 @@
 {
   "name": "studio-home",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
+    "build:desktop": "nuxt generate --envName desktop",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare && npm run patch:nuxt",
     "patch:nuxt": "cd node_modules/nuxt && (patch -p1 -N --dry-run -s < ../../patches/nuxt+4.5.0.patch && patch -p1 -N < ../../patches/nuxt+4.5.0.patch) || true",
     "storybook": "STORYBOOK=true storybook dev -p 6006",
     "build-storybook": "STORYBOOK=true storybook build",
     "test": "playwright test",
-    "typecheck": "nuxt typecheck"
+    "test:desktop": "npm run build:desktop && playwright test --config playwright.desktop.config.ts",
+    "typecheck": "nuxt typecheck",
+    "desktop:dev": "tauri dev",
+    "desktop:build": "tauri build --no-bundle",
+    "desktop:installers": "tauri build",
+    "desktop:check-size": "node scripts/check-installer-size.mjs src-tauri/target/release/bundle",
+    "desktop:check-version": "node scripts/check-desktop-version.mjs",
+    "test:release-scripts": "node --test scripts/desktop-release-checks.test.mjs",
+    "test:shell": "playwright test --config tests/shell/playwright.config.ts"
   },
   "dependencies": {
     "@nuxt/icon": "^2.3.1",
@@ -31,6 +41,7 @@
     "@playwright/test": "^1.65.0",
     "@storybook/addon-a11y": "^10.0.8",
     "@storybook/addon-docs": "^10.0.8",
+    "@tauri-apps/cli": "^2.12.4",
     "@types/node": "^22.20.5",
     "jsdoc-type-pratt-parser": "^4.8.0",
     "storybook": "^10.0.8",

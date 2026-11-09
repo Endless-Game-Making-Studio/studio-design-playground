@@ -1,5 +1,7 @@
+import { nextTick } from 'vue'
 import type { ProjectData, ProjectSummary, Workspace } from './types'
-import { downloadBlob, pickFile } from '~/composables/files'
+import { usePixelStitchHost } from './host'
+import { projectFileType } from './fileTypes'
 
 // Before projects existed the tool kept one drawing under this key. It is only
 // read once more, by the migration, and removed after.
@@ -33,26 +35,63 @@ function isSummary(value: unknown): value is ProjectSummary {
     && typeof entry.updatedAt === 'number'
 }
 
-function read(key: string): unknown {
-  if (!import.meta.client) return null
-  try {
-    const raw = localStorage.getItem(key)
-    return raw ? JSON.parse(raw) : null
-  } catch {
-    return null
-  }
+const read = (key: string) => usePixelStitchHost().storage.read(key)
+const write = (key: string, value: unknown) => usePixelStitchHost().storage.write(key, value)
+const remove = (key: string) => usePixelStitchHost().storage.remove(key)
+
+/**
+ * Reads what the first render needs: the projects list, the workspace, the
+ * palette, the drawing from before projects existed, and every project open as
+ * a tab. Awaited behind the "nothing renders until storage has been read" gate.
+ */
+export async function preloadStorage() {
+  const { storage } = usePixelStitchHost()
+  await storage.load([INDEX_KEY, WORKSPACE_KEY, PALETTE_KEY, LEGACY_PROJECT_KEY])
+  await storage.load((loadWorkspace()?.open ?? []).map(projectKey))
 }
 
-// Returns whether the write landed. Quota exceeded is the realistic failure:
-// several 128×128 projects with a handful of frames add up to megabytes.
-function write(key: string, value: unknown): boolean {
-  if (!import.meta.client) return true
-  try {
-    localStorage.setItem(key, JSON.stringify(value))
-    return true
-  } catch {
-    return false
-  }
+/** Awaited before a closed project's tab mounts, so its editor can read it synchronously. */
+export function preloadProject(id: string) {
+  return usePixelStitchHost().storage.load([projectKey(id)])
+}
+
+/**
+ * Calls back when a save of this project that returned true fails afterwards.
+ * Returns the unsubscribe.
+ */
+export function onProjectSaveFailed(id: string, listener: () => void) {
+  const key = projectKey(id)
+  return usePixelStitchHost().storage.onWriteFailed((failed) => {
+    if (failed === key) listener()
+  })
+}
+
+// Each open editor's "write what's waiting on autosave now". Every tab stays
+// mounted while open, so this holds one per open tab, front or not.
+const pendingSaves = new Set<() => void>()
+
+/** Registers an editor's flush for `saveEverything`. Returns the unregister. */
+export function onSaveEverything(flush: () => void) {
+  pendingSaves.add(flush)
+  return () => pendingSaves.delete(flush)
+}
+
+/**
+ * Writes every open editor's pending autosave and waits for the host to
+ * finish writing. Resolves to whether everything landed. The desktop shell
+ * awaits it before quitting.
+ */
+export async function saveEverything() {
+  for (const flush of pendingSaves) flush()
+  // A save updates the projects list's date, and its watcher writes the list
+  // on the next tick.
+  await nextTick()
+  return usePixelStitchHost().storage.flush()
+}
+
+/** The `pixelStitch.toast` key for a failed save, worded for where the host keeps projects. */
+export function saveFailedNotice() {
+  return usePixelStitchHost().storage.kind === 'disk' ? 'diskSaveFailed' : 'storageFull'
 }
 
 export function loadProject(id: string): ProjectData | null {
@@ -65,7 +104,7 @@ export function saveProject(id: string, data: ProjectData): boolean {
 }
 
 export function deleteProject(id: string) {
-  if (import.meta.client) localStorage.removeItem(projectKey(id))
+  remove(projectKey(id))
 }
 
 export function loadIndex(): ProjectSummary[] | null {
@@ -99,7 +138,7 @@ export function loadLegacyProject(): ProjectData | null {
 // Separate from the read: the old entry only goes once its drawing has been
 // written as a project, so a failed write can't lose it.
 export function clearLegacyProject() {
-  if (import.meta.client) localStorage.removeItem(LEGACY_PROJECT_KEY)
+  remove(LEGACY_PROJECT_KEY)
 }
 
 // Saved as rows since the palette became rows that can grow; anything else
@@ -122,16 +161,24 @@ export function projectFileName(name: string) {
   return `${safe || 'pixel-stitch-project'}.tps`
 }
 
-export function downloadProjectFile(data: ProjectData, name: string) {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-  downloadBlob(blob, projectFileName(name))
+/** Resolves to whether the file was saved; cancelling the window is not an error. */
+export function saveProjectFile(data: ProjectData, name: string, t: (key: string) => string) {
+  return usePixelStitchHost().saveFile({
+    data: new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }),
+    suggestedName: projectFileName(name),
+    types: [projectFileType(t)]
+  })
 }
 
-export async function openProjectFile(): Promise<{ data: ProjectData, name: string } | null> {
-  const file = await pickFile('.tps,.json')
+/**
+ * Asks for a project file and reads it. The web and desktop builds both come
+ * through here, so a file saved on the platform opens the same way in the app.
+ */
+export async function openProjectFile(t: (key: string) => string): Promise<{ data: ProjectData, name: string } | null> {
+  const file = await usePixelStitchHost().openFile({ types: [projectFileType(t)] })
   if (!file) return null
   try {
-    const parsed = JSON.parse(await file.text())
+    const parsed = JSON.parse(await file.data.text())
     if (!isProjectData(parsed)) return null
     return { data: parsed, name: file.name.replace(/\.(tps|json)$/i, '') }
   } catch {
