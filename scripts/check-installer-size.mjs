@@ -1,7 +1,8 @@
 // Fails when a Pixel Stitch installer that has a size budget is over it.
 // Usage: node scripts/check-installer-size.mjs <file or folder>...
-// Folders are searched recursively for the budgeted kinds (the NSIS setup .exe
-// and the .deb). The AppImage carries its own WebKitGTK and is exempt.
+// Folders are searched recursively for the budgeted kinds (the NSIS setup .exe,
+// the portable .exe and the .deb). The AppImage carries its own WebKitGTK and
+// is exempt.
 import { readdirSync, statSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -11,7 +12,7 @@ export const BUDGET_BYTES = 15 * 1024 * 1024
 
 export function isBudgeted(file) {
   const name = basename(file).toLowerCase()
-  return name.endsWith('-setup.exe') || name.endsWith('.deb')
+  return name.endsWith('-setup.exe') || name.endsWith('-portable.exe') || name.endsWith('.deb')
 }
 
 export function findInstallers(paths) {
@@ -54,7 +55,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const files = findInstallers(paths)
   // A wrong path or a renamed bundle would otherwise pass with nothing checked.
   if (files.length === 0) {
-    console.error(`No NSIS setup .exe or .deb found under: ${paths.join(', ')}`)
+    console.error(`No setup .exe, portable .exe or .deb found under: ${paths.join(', ')}`)
     process.exit(1)
   }
   const { ok, lines } = checkSizes(files)

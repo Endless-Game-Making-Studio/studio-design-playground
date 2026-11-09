@@ -17,13 +17,14 @@ const file = (path, bytes) => {
   return full
 }
 
-test('finds the setup exe and the deb, and skips the AppImage and the rest', () => {
+test('finds the setup exe, the portable exe and the deb, and skips the AppImage and the rest', () => {
   const exe = file('nsis/Pixel Stitch_0.1.0_x64-setup.exe', 10)
+  const portable = file('portable/Pixel Stitch_0.1.0_x64-portable.exe', 10)
   const deb = file('deb/Pixel Stitch_0.1.0_amd64.deb', 10)
   file('appimage/Pixel Stitch_0.1.0_amd64.AppImage', 10)
   file('rpm/Pixel Stitch-0.1.0-1.x86_64.rpm', 10)
   file('nsis/pixel-stitch.exe', 10)
-  assert.deepEqual(findInstallers([dir]).sort(), [deb, exe].sort())
+  assert.deepEqual(findInstallers([dir]).sort(), [deb, exe, portable].sort())
 })
 
 test('passes at the budget and fails one byte over, naming the file and the excess', () => {
