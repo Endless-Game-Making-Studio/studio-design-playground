@@ -10,8 +10,9 @@ The `Pixel Stitch desktop` workflow (`.github/workflows/pixel-stitch-desktop.yml
    git tag pixel-stitch-v0.2.0
    git push origin pixel-stitch-v0.2.0
    ```
-3. The workflow builds on Windows and Ubuntu. It fails if the tag doesn't match `package.json`, or if the Windows installer or the .deb is over 15 MB (it names the file and by how much). When it passes, it creates a draft GitHub Release for the tag with these files:
+3. The workflow builds on Windows and Ubuntu. It fails if the tag doesn't match `package.json`, or if the Windows installer, the portable .exe or the .deb is over 15 MB (it names the file and by how much). When it passes, it creates a draft GitHub Release for the tag with these files:
    - `Pixel.Stitch_<version>_x64-setup.exe`: Windows (GitHub replaces the space in the name with a dot)
+   - `Pixel.Stitch_<version>_x64-portable.exe`: Windows, without installing. It needs WebView2, which Windows 11 and an up-to-date Windows 10 already have; the installer adds it when it's missing. It keeps projects in the same per-user folder as the installed app, and has no Start menu entry or uninstaller.
    - `Pixel.Stitch_<version>_amd64.deb`: Ubuntu, Debian
    - `Pixel.Stitch-<version>-1.x86_64.rpm`: Fedora
    - `Pixel.Stitch_<version>_amd64.AppImage`: other distributions. It carries its own WebKitGTK, so it's much larger and has no size budget.
@@ -22,7 +23,7 @@ To check a build without releasing, run the workflow by hand from the Actions ta
 
 ### Size budget
 
-`scripts/check-installer-size.mjs` holds the budget: 15 MB (15 × 1024 × 1024 bytes) each for the NSIS setup .exe and the .deb. The Windows installer includes Microsoft's WebView2 bootstrapper (about 1.8 MB).
+`scripts/check-installer-size.mjs` holds the budget: 15 MB (15 × 1024 × 1024 bytes) each for the NSIS setup .exe, the portable .exe and the .deb. The Windows installer includes Microsoft's WebView2 bootstrapper (about 1.8 MB).
 
 ## Before you start
 
@@ -114,6 +115,16 @@ On Windows, `npm run test:shell` covers this. On Ubuntu it has to be done by han
 | Windows: Settings → Apps → Installed apps → Pixel Stitch → Uninstall. It runs without a UAC prompt. | [ ] | n/a |
 | Ubuntu: `sudo apt remove <package>` (find the name with `dpkg -l \| grep -i stitch`). | n/a | [ ] |
 | The Start menu or launcher entry is gone, and so is the install folder. | [ ] | [ ] |
+
+### Portable exe (Windows only)
+
+Run this on a machine where Pixel Stitch was never installed, or after the uninstall above.
+
+| Step | Windows |
+| --- | --- |
+| Download the portable .exe and double-click it. After SmartScreen's **More info** → **Run anyway**, the app opens without installing anything and without a UAC prompt. | [ ] |
+| Draw a few pixels, quit, open the .exe again: the project is still there. | [ ] |
+| Settings → Apps → Installed apps doesn't list Pixel Stitch, and the Start menu has no entry for it. | [ ] |
 
 ### Other distributions (spot check)
 

@@ -86,6 +86,15 @@ jobs:
           fi
           npx tauri build --ci --bundles ${{ matrix.bundles }}
 
+      # The app itself runs without installing: the web bundle is inside the
+      # exe. Named like the setup .exe so the version and size checks cover it.
+      - name: Add the portable exe
+        if: runner.os == 'Windows'
+        run: |
+          version=$(node -p "require('./package.json').version")
+          mkdir -p "$BUNDLE_DIR/portable"
+          cp src-tauri/target/release/pixel-stitch.exe "$BUNDLE_DIR/portable/Pixel Stitch_${version}_x64-portable.exe"
+
       - name: Check the installers are named for the tag
         if: github.ref_type == 'tag'
         run: node scripts/check-desktop-version.mjs "$GITHUB_REF_NAME" "$BUNDLE_DIR"
@@ -103,6 +112,7 @@ jobs:
           if-no-files-found: error
           path: |
             ${{ env.BUNDLE_DIR }}/nsis/*-setup.exe
+            ${{ env.BUNDLE_DIR }}/portable/*-portable.exe
             ${{ env.BUNDLE_DIR }}/deb/*.deb
             ${{ env.BUNDLE_DIR }}/rpm/*.rpm
             ${{ env.BUNDLE_DIR }}/appimage/*.AppImage
@@ -127,7 +137,7 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           shopt -s globstar nullglob
-          files=(installers/**/*-setup.exe installers/**/*.deb installers/**/*.rpm installers/**/*.AppImage)
+          files=(installers/**/*-setup.exe installers/**/*-portable.exe installers/**/*.deb installers/**/*.rpm installers/**/*.AppImage)
           ls -l "${files[@]}"
           # A re-run of the same tag replaces the files on the existing draft.
           if gh release view "$TAG" > /dev/null 2>&1; then

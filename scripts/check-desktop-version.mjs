@@ -27,7 +27,8 @@ export function checkVersion(tag, packageVersion, installers = []) {
     errors.push(`Tag ${tag} is version ${tagVersion}, but package.json says ${packageVersion}. Bump "version" in package.json to ${tagVersion} (or tag ${TAG_PREFIX}${packageVersion}) and tag again.`)
   }
   for (const file of installers) {
-    // Tauri names them <product>_<version>_<arch>-setup.exe / .deb.
+    // Tauri names them <product>_<version>_<arch>-setup.exe / .deb; the
+    // workflow names the portable copy the same way.
     if (!basename(file).includes(`_${tagVersion}_`)) {
       errors.push(`${file} isn't named for version ${tagVersion}.`)
     }
