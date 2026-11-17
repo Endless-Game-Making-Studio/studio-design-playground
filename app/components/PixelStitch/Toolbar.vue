@@ -10,17 +10,17 @@ const { t } = useI18n()
 // drawing tools, the three that transform a layer, clear, and the grid switch
 // apart at the bottom.
 const TOOLS: { id: PixelTool, icon: string }[] = [
-  { id: 'pencil', icon: 'lucide:pencil' },
-  { id: 'eraser', icon: 'lucide:eraser' },
-  { id: 'fill', icon: 'lucide:paint-bucket' },
-  { id: 'replace', icon: 'lucide:paintbrush-vertical' },
-  { id: 'select', icon: 'lucide:box-select' }
+  { id: 'pencil', icon: 'pixel:pencil' },
+  { id: 'eraser', icon: 'pixel:eraser' },
+  { id: 'fill', icon: 'pixel:fill' },
+  { id: 'replace', icon: 'pixel:replace' },
+  { id: 'select', icon: 'pixel:select' }
 ]
 
 const TRANSFORMS: { key: string, icon: string, run: () => void }[] = [
-  { key: 'removeBackground', icon: 'lucide:scissors', run: () => editor.removeBackground() },
-  { key: 'flipHorizontal', icon: 'lucide:flip-horizontal', run: () => editor.flipHorizontal() },
-  { key: 'flipVertical', icon: 'lucide:flip-vertical', run: () => editor.flipVertical() }
+  { key: 'removeBackground', icon: 'pixel:scissors', run: () => editor.removeBackground() },
+  { key: 'flipHorizontal', icon: 'pixel:flip-horizontal', run: () => editor.flipHorizontal() },
+  { key: 'flipVertical', icon: 'pixel:flip-vertical', run: () => editor.flipVertical() }
 ]
 
 const clearItems = computed<DropdownMenuItem[]>(() => [
@@ -66,7 +66,10 @@ function onToolClick(id: PixelTool) {
 // leave open while drawing and glance at, not something to reach for.
 const previewOpen = ref(false)
 
-const RAIL_BUTTON = 'size-[34px] justify-center rounded-md'
+// The pixel icons are a 16×16 grid shown at 32px, so every drawn pixel is
+// exactly 2 screen pixels.
+const RAIL_BUTTON = 'size-12 justify-center rounded-md p-0'
+const RAIL_ICON = { leadingIcon: 'size-8' }
 </script>
 
 <template>
@@ -81,10 +84,11 @@ const RAIL_BUTTON = 'size-[34px] justify-center rounded-md'
       <UTooltip :text="t(`pixelStitch.tools.${tool.id}Tooltip`)" :content="{ side: 'right' }">
         <UButton
           :icon="tool.icon"
+          :ui="RAIL_ICON"
           :aria-label="t(`pixelStitch.tools.${tool.id}`)"
           :color="editor.currentTool.value === tool.id ? 'primary' : 'neutral'"
-          :variant="editor.currentTool.value === tool.id ? 'solid' : 'outline'"
-          :class="RAIL_BUTTON"
+          :variant="editor.currentTool.value === tool.id ? 'subtle' : 'outline'"
+          :class="[RAIL_BUTTON, editor.currentTool.value === tool.id ? 'ring-2 ring-primary' : '']"
           @click="onToolClick(tool.id)"
         />
       </UTooltip>
@@ -128,6 +132,7 @@ const RAIL_BUTTON = 'size-[34px] justify-center rounded-md'
     >
       <UButton
         :icon="action.icon"
+        :ui="RAIL_ICON"
         color="neutral"
         variant="outline"
         :aria-label="t(`pixelStitch.toolbar.${action.key}`)"
@@ -141,7 +146,8 @@ const RAIL_BUTTON = 'size-[34px] justify-center rounded-md'
     <UDropdownMenu :items="clearItems" :content="{ side: 'right', align: 'start' }">
       <UTooltip :text="t('pixelStitch.toolbar.clearOptions')" :content="{ side: 'right' }">
         <UButton
-          icon="lucide:trash-2"
+          icon="pixel:trash"
+          :ui="RAIL_ICON"
           color="neutral"
           variant="outline"
           :aria-label="t('pixelStitch.toolbar.clearOptions')"
@@ -159,7 +165,8 @@ const RAIL_BUTTON = 'size-[34px] justify-center rounded-md'
 
       <UTooltip :text="t('pixelStitch.toolbar.toggleGrid')" :content="{ side: 'right' }">
         <UButton
-          icon="lucide:grid-3x3"
+          icon="pixel:grid"
+          :ui="RAIL_ICON"
           color="neutral"
           :variant="editor.gridVisible.value ? 'subtle' : 'outline'"
           :aria-label="t('pixelStitch.toolbar.toggleGrid')"
@@ -172,7 +179,8 @@ const RAIL_BUTTON = 'size-[34px] justify-center rounded-md'
       <UPopover v-model:open="previewOpen" :content="{ side: 'right', align: 'end' }">
         <UTooltip :text="t('pixelStitch.toolbar.actualSize')" :content="{ side: 'right' }">
           <UButton
-            icon="lucide:image"
+            icon="pixel:image"
+            :ui="RAIL_ICON"
             color="neutral"
             :variant="previewOpen ? 'subtle' : 'outline'"
             :aria-label="t('pixelStitch.toolbar.actualSize')"
