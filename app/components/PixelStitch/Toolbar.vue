@@ -171,7 +171,9 @@ const RAIL_BUTTON = 'size-12 justify-center rounded-md p-0'
           :class="[RAIL_BUTTON, editor.gridVisible.value ? 'bg-slate-100 ring-slate-200 text-highlighted' : '']"
           @click="editor.gridVisible.value = !editor.gridVisible.value"
         >
-          <PixelStitchPixelIcon name="grid" />
+          <!-- The icon shows the board as it is now, lines or no lines, and
+               hovering previews what the click will do. -->
+          <PixelStitchPixelIcon :name="editor.gridVisible.value ? 'grid' : 'grid-off'" />
         </UButton>
       </UTooltip>
 
