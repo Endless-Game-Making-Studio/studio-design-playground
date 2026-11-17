@@ -31,12 +31,7 @@ export default defineNuxtConfig({
     provider: 'server',
     serverBundle: {
       collections: ['lucide']
-    },
-    // Pixel Stitch's own pixel-art icons, drawn on a 16×16 grid so each pixel
-    // lands on exactly 2 screen pixels at the rail's 32px icon size.
-    customCollections: [
-      { prefix: 'pixel', dir: './app/assets/icons/pixel' }
-    ]
+    }
   },
   colorMode: {
     preference: 'light'
@@ -93,7 +88,6 @@ export default defineNuxtConfig({
         fallbackToApi: false,
         clientBundle: {
           scan: { globInclude: ['**/*.{vue,ts}'], globExclude: ['node_modules', '.*'] },
-          includeCustomCollections: true,
           sizeLimitKb: 512
         }
       },

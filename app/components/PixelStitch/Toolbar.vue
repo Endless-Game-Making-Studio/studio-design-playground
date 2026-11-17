@@ -10,17 +10,17 @@ const { t } = useI18n()
 // drawing tools, the three that transform a layer, clear, and the grid switch
 // apart at the bottom.
 const TOOLS: { id: PixelTool, icon: string }[] = [
-  { id: 'pencil', icon: 'pixel:pencil' },
-  { id: 'eraser', icon: 'pixel:eraser' },
-  { id: 'fill', icon: 'pixel:fill' },
-  { id: 'replace', icon: 'pixel:replace' },
-  { id: 'select', icon: 'pixel:select' }
+  { id: 'pencil', icon: 'pencil' },
+  { id: 'eraser', icon: 'eraser' },
+  { id: 'fill', icon: 'fill' },
+  { id: 'replace', icon: 'replace' },
+  { id: 'select', icon: 'select' }
 ]
 
 const TRANSFORMS: { key: string, icon: string, run: () => void }[] = [
-  { key: 'removeBackground', icon: 'pixel:scissors', run: () => editor.removeBackground() },
-  { key: 'flipHorizontal', icon: 'pixel:flip-horizontal', run: () => editor.flipHorizontal() },
-  { key: 'flipVertical', icon: 'pixel:flip-vertical', run: () => editor.flipVertical() }
+  { key: 'removeBackground', icon: 'scissors', run: () => editor.removeBackground() },
+  { key: 'flipHorizontal', icon: 'flip-horizontal', run: () => editor.flipHorizontal() },
+  { key: 'flipVertical', icon: 'flip-vertical', run: () => editor.flipVertical() }
 ]
 
 const clearItems = computed<DropdownMenuItem[]>(() => [
@@ -66,10 +66,9 @@ function onToolClick(id: PixelTool) {
 // leave open while drawing and glance at, not something to reach for.
 const previewOpen = ref(false)
 
-// The pixel icons are a 16×16 grid shown at 32px, so every drawn pixel is
-// exactly 2 screen pixels.
+// The pixel icons are a 16×16 grid shown at 32px (PixelIcon), so every drawn
+// pixel is exactly 2 screen pixels.
 const RAIL_BUTTON = 'size-12 justify-center rounded-md p-0'
-const RAIL_ICON = { leadingIcon: 'size-8' }
 </script>
 
 <template>
@@ -83,14 +82,14 @@ const RAIL_ICON = { leadingIcon: 'size-8' }
     >
       <UTooltip :text="t(`pixelStitch.tools.${tool.id}Tooltip`)" :content="{ side: 'right' }">
         <UButton
-          :icon="tool.icon"
-          :ui="RAIL_ICON"
           :aria-label="t(`pixelStitch.tools.${tool.id}`)"
           :color="editor.currentTool.value === tool.id ? 'primary' : 'neutral'"
           :variant="editor.currentTool.value === tool.id ? 'subtle' : 'outline'"
           :class="[RAIL_BUTTON, editor.currentTool.value === tool.id ? 'ring-2 ring-primary' : '']"
           @click="onToolClick(tool.id)"
-        />
+        >
+          <PixelStitchPixelIcon :name="tool.icon" />
+        </UButton>
       </UTooltip>
       <template v-if="isSized(tool.id)" #content>
         <!-- Just the number between the two buttons. What really shows the size
@@ -131,14 +130,14 @@ const RAIL_ICON = { leadingIcon: 'size-8' }
       :content="{ side: 'right' }"
     >
       <UButton
-        :icon="action.icon"
-        :ui="RAIL_ICON"
         color="neutral"
         variant="outline"
         :aria-label="t(`pixelStitch.toolbar.${action.key}`)"
         :class="RAIL_BUTTON"
         @click="action.run()"
-      />
+      >
+        <PixelStitchPixelIcon :name="action.icon" />
+      </UButton>
     </UTooltip>
 
     <USeparator class="my-0.5" />
@@ -146,13 +145,13 @@ const RAIL_ICON = { leadingIcon: 'size-8' }
     <UDropdownMenu :items="clearItems" :content="{ side: 'right', align: 'start' }">
       <UTooltip :text="t('pixelStitch.toolbar.clearOptions')" :content="{ side: 'right' }">
         <UButton
-          icon="pixel:trash"
-          :ui="RAIL_ICON"
           color="neutral"
           variant="outline"
           :aria-label="t('pixelStitch.toolbar.clearOptions')"
           :class="RAIL_BUTTON"
-        />
+        >
+          <PixelStitchPixelIcon name="trash" />
+        </UButton>
       </UTooltip>
     </UDropdownMenu>
 
@@ -165,28 +164,28 @@ const RAIL_ICON = { leadingIcon: 'size-8' }
 
       <UTooltip :text="t('pixelStitch.toolbar.toggleGrid')" :content="{ side: 'right' }">
         <UButton
-          icon="pixel:grid"
-          :ui="RAIL_ICON"
           color="neutral"
           :variant="editor.gridVisible.value ? 'subtle' : 'outline'"
           :aria-label="t('pixelStitch.toolbar.toggleGrid')"
           :aria-pressed="editor.gridVisible.value"
           :class="[RAIL_BUTTON, editor.gridVisible.value ? 'bg-slate-100 ring-slate-200 text-highlighted' : '']"
           @click="editor.gridVisible.value = !editor.gridVisible.value"
-        />
+        >
+          <PixelStitchPixelIcon name="grid" />
+        </UButton>
       </UTooltip>
 
       <UPopover v-model:open="previewOpen" :content="{ side: 'right', align: 'end' }">
         <UTooltip :text="t('pixelStitch.toolbar.actualSize')" :content="{ side: 'right' }">
           <UButton
-            icon="pixel:image"
-            :ui="RAIL_ICON"
             color="neutral"
             :variant="previewOpen ? 'subtle' : 'outline'"
             :aria-label="t('pixelStitch.toolbar.actualSize')"
             :aria-pressed="previewOpen"
             :class="[RAIL_BUTTON, previewOpen ? 'bg-slate-100 ring-slate-200 text-highlighted' : '']"
-          />
+          >
+            <PixelStitchPixelIcon name="image" />
+          </UButton>
         </UTooltip>
         <template #content>
           <PixelStitchActualSizePreview />
