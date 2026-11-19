@@ -323,15 +323,6 @@
     "savePng": "Save as PNG",
     "savePngTooltip": "Download the current frame as a PNG",
     "exportingGif": "Exporting GIF…",
-    "canvasSize": {
-      "label": "Canvas",
-      "tooltip": "Set the canvas to {size} pixels",
-      "confirmTitle": "Change the canvas to {size}?",
-      "confirmBody": "Everything drawn on the frame will be cleared. | Everything drawn on all {count} frames will be cleared.",
-      "confirmKeep": "Keep {size}",
-      "confirmClear": "Clear and resize",
-      "confirmReason": "A drawing made for a {size} grid cannot be carried over to another one without redrawing it."
-    },
     "holdToConfirm": {
       "instruction": "Hold for one second to {action}.",
       "holding": "Holding",
@@ -358,8 +349,8 @@
       "flipVertical": "Flip vertically",
       "decreaseSize": "Smaller brush",
       "increaseSize": "Bigger brush",
-      "undo": "Undo the last action",
-      "redo": "Redo the last action",
+      "undo": "Undo",
+      "redo": "Redo",
       "toggleGrid": "Toggle the grid overlay",
       "importImage": "Import an image onto the canvas",
       "exportGif": "Export the animation as a GIF",
@@ -369,8 +360,7 @@
       "exportSpriteSheet": "Export every frame as a sprite sheet",
       "importSpriteSheet": "Import a sprite sheet as frames",
       "submit": "Save & submit",
-      "submitTooltip": "Download the current frame as a PNG",
-      "actualSize": "Preview at actual size"
+      "submitTooltip": "Download the current frame as a PNG"
     },
     "canvas": {
       "zoomFit": "Fit to window",
@@ -534,7 +524,7 @@
         "64": "Detailed sprites",
         "128": "Big art and scenes"
       },
-      "sizeLater": "You can change the size later from the toolbar, but that clears the drawing.",
+      "sizeLater": "The size can't be changed once the project is created.",
       "create": "Create project",
       "listTitle": "Your projects",
       "empty": "No projects yet. The ones you create show up here, even after you close their tab.",

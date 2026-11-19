@@ -79,7 +79,6 @@ test('each board size opens a tab with a board of that size', async ({ page }) =
   for (const size of [16, 32, 64, 128]) {
     await createProject(page, `Board ${size}`, size)
     await expect(tab(page, `Board ${size}`)).toHaveAccessibleName(`Board ${size}, ${size}×${size}`)
-    await expect(panel(page).getByRole('button', { name: 'Canvas', exact: true })).toContainText(`${size}×${size}`)
   }
   await expect(page.getByRole('tab')).toHaveCount(4)
 })
@@ -110,7 +109,7 @@ test('drawing and undo stay inside their own tab', async ({ page }) => {
 
   await createProject(page, 'Coin')
   expect(await paintedOnScreen(page)).toBe(0)
-  await expect(panel(page).getByRole('button', { name: 'Undo the last action' })).toBeDisabled()
+  await expect(panel(page).getByRole('button', { name: 'Undo', exact: true })).toBeDisabled()
 
   // Undo in the other tab must not reach back into Hero.
   await page.keyboard.press('Control+z')

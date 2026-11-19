@@ -287,10 +287,32 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
 
 <template>
   <div class="flex min-h-0 grow flex-col">
-    <!-- What frames the canvas on the left, what reads or writes a file on the
-         right. -->
-    <div class="relative z-10 flex h-[52px] shrink-0 items-center gap-2.5 border-b border-default bg-slate-50 px-4">
-      <PixelStitchCanvasSizeSelector />
+    <!-- History on the left, zoom in the middle, what reads or writes a file
+         on the right. Equal side columns keep the zoom centred on the screen
+         whatever the buttons beside it measure. -->
+    <div class="relative z-10 grid h-[52px] shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2.5 border-b border-default bg-slate-50 px-4">
+      <div class="flex">
+        <div class="flex h-[34px] items-center gap-0.5 rounded-md border border-default bg-default px-1">
+          <UButton
+            :label="t('pixelStitch.toolbar.undo')"
+            icon="lucide:undo"
+            color="neutral"
+            variant="ghost"
+            :disabled="!editor.canUndo.value"
+            class="h-[26px] gap-1.5 rounded px-1.5 text-[13px]"
+            @click="editor.undo()"
+          />
+          <UButton
+            :label="t('pixelStitch.toolbar.redo')"
+            icon="lucide:redo"
+            color="neutral"
+            variant="ghost"
+            :disabled="!editor.canRedo.value"
+            class="h-[26px] gap-1.5 rounded px-1.5 text-[13px]"
+            @click="editor.redo()"
+          />
+        </div>
+      </div>
 
       <div class="flex h-[34px] items-center gap-0.5 rounded-md border border-default bg-default px-1">
         <UTooltip :text="t('pixelStitch.canvas.zoomOut')">
@@ -330,63 +352,38 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
         </UTooltip>
       </div>
 
-      <div class="flex h-[34px] items-center gap-0.5 rounded-md border border-default bg-default px-1">
-        <UTooltip :text="t('pixelStitch.toolbar.undo')">
+      <div class="flex items-center justify-end gap-2.5">
+        <!-- Both menus drop from the bar, anchored to the button that opened
+             them. Save is the primary one: writing the file is the gesture
+             someone came to this end of the bar for. -->
+        <UDropdownMenu :items="importItems" :content="{ align: 'end' }" :ui="{ content: 'w-[280px]' }">
           <UButton
-            icon="lucide:undo"
+            :label="t('pixelStitch.toolbar.import')"
+            icon="lucide:download"
+            trailing-icon="lucide:chevron-down"
             color="neutral"
-            variant="ghost"
-            :disabled="!editor.canUndo.value"
-            :aria-label="t('pixelStitch.toolbar.undo')"
-            class="size-[26px] justify-center rounded"
-            @click="editor.undo()"
+            variant="outline"
+            class="h-[34px] gap-1.5 rounded-md px-2.5 text-[13px]"
           />
-        </UTooltip>
-        <UTooltip :text="t('pixelStitch.toolbar.redo')">
+
+          <template #item-trailing="{ item }">
+            <span class="truncate text-xs text-dimmed">{{ (item as FileItem).hint }}</span>
+          </template>
+        </UDropdownMenu>
+        <UDropdownMenu :items="saveItems" :content="{ align: 'end' }" :ui="{ content: 'w-[300px]' }">
           <UButton
-            icon="lucide:redo"
-            color="neutral"
-            variant="ghost"
-            :disabled="!editor.canRedo.value"
-            :aria-label="t('pixelStitch.toolbar.redo')"
-            class="size-[26px] justify-center rounded"
-            @click="editor.redo()"
+            :label="t('pixelStitch.save')"
+            icon="lucide:upload"
+            trailing-icon="lucide:chevron-down"
+            color="primary"
+            class="h-[34px] gap-1.5 rounded-md px-2.5 text-[13px]"
           />
-        </UTooltip>
+
+          <template #item-trailing="{ item }">
+            <span class="max-w-[150px] truncate text-xs text-dimmed">{{ (item as FileItem).hint }}</span>
+          </template>
+        </UDropdownMenu>
       </div>
-
-      <div class="grow" />
-
-      <!-- Both menus drop from the bar, anchored to the button that opened
-           them. Save is the primary one: writing the file is the gesture
-           someone came to this end of the bar for. -->
-      <UDropdownMenu :items="importItems" :content="{ align: 'end' }" :ui="{ content: 'w-[280px]' }">
-        <UButton
-          :label="t('pixelStitch.toolbar.import')"
-          icon="lucide:download"
-          trailing-icon="lucide:chevron-down"
-          color="neutral"
-          variant="outline"
-          class="h-[34px] gap-1.5 rounded-md px-2.5 text-[13px]"
-        />
-
-        <template #item-trailing="{ item }">
-          <span class="truncate text-xs text-dimmed">{{ (item as FileItem).hint }}</span>
-        </template>
-      </UDropdownMenu>
-      <UDropdownMenu :items="saveItems" :content="{ align: 'end' }" :ui="{ content: 'w-[300px]' }">
-        <UButton
-          :label="t('pixelStitch.save')"
-          icon="lucide:upload"
-          trailing-icon="lucide:chevron-down"
-          color="primary"
-          class="h-[34px] gap-1.5 rounded-md px-2.5 text-[13px]"
-        />
-
-        <template #item-trailing="{ item }">
-          <span class="max-w-[150px] truncate text-xs text-dimmed">{{ (item as FileItem).hint }}</span>
-        </template>
-      </UDropdownMenu>
     </div>
 
     <div class="flex min-h-0 grow">

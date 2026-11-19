@@ -62,10 +62,6 @@ function onToolClick(id: PixelTool) {
   editor.currentTool.value = id
 }
 
-// The actual-size preview is a toggle rather than a hover: it is something to
-// leave open while drawing and glance at, not something to reach for.
-const previewOpen = ref(false)
-
 // The pixel icons are a 16×16 grid shown at 32px (PixelIcon), so every drawn
 // pixel is exactly 2 screen pixels.
 const RAIL_BUTTON = 'size-12 justify-center rounded-md p-0'
@@ -155,10 +151,10 @@ const RAIL_BUTTON = 'size-12 justify-center rounded-md p-0'
       </UTooltip>
     </UDropdownMenu>
 
-    <!-- The two view switches sit apart at the foot of the rail: they change
-         what you see, not what you draw. Their on state is a grey fill rather
-         than the orange one — in this rail orange means "this is the tool in
-         your hand", and neither of these is a tool. -->
+    <!-- The grid switch sits apart at the foot of the rail: it changes what
+         you see, not what you draw. Its on state is a grey fill rather than
+         the orange one — in this rail orange means "this is the tool in your
+         hand", and the grid is not a tool. -->
     <div class="mt-auto flex flex-col gap-1.5 pt-1.5">
       <USeparator class="my-0.5" />
 
@@ -177,22 +173,6 @@ const RAIL_BUTTON = 'size-12 justify-center rounded-md p-0'
         </UButton>
       </UTooltip>
 
-      <UPopover v-model:open="previewOpen" :content="{ side: 'right', align: 'end' }">
-        <UTooltip :text="t('pixelStitch.toolbar.actualSize')" :content="{ side: 'right' }">
-          <UButton
-            color="neutral"
-            :variant="previewOpen ? 'subtle' : 'outline'"
-            :aria-label="t('pixelStitch.toolbar.actualSize')"
-            :aria-pressed="previewOpen"
-            :class="[RAIL_BUTTON, previewOpen ? 'bg-slate-100 ring-slate-200 text-highlighted' : '']"
-          >
-            <PixelStitchPixelIcon name="image" />
-          </UButton>
-        </UTooltip>
-        <template #content>
-          <PixelStitchActualSizePreview />
-        </template>
-      </UPopover>
     </div>
   </section>
 </template>
