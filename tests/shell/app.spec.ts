@@ -93,7 +93,7 @@ test('web page keys and the right-click menu are off, and the tool\'s own shortc
   app = await launch(dataDir)
   const { page } = app
   await page.getByRole('button', { name: 'Create project' }).click()
-  const undo = page.getByRole('button', { name: 'Undo the last action' })
+  const undo = page.getByRole('button', { name: 'Undo', exact: true })
   await expect(undo).toBeDisabled()
   await page.locator('[role="tabpanel"]:visible main canvas').click({ position: { x: 20, y: 20 } })
   await expect(undo).toBeEnabled()

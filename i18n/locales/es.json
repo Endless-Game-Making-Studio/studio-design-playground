@@ -323,15 +323,6 @@
     "savePng": "Guardar como PNG",
     "savePngTooltip": "Descargar el fotograma actual como PNG",
     "exportingGif": "Exportando GIF…",
-    "canvasSize": {
-      "label": "Lienzo",
-      "tooltip": "Establecer el lienzo en {size} píxeles",
-      "confirmTitle": "¿Cambiar el lienzo a {size}?",
-      "confirmBody": "Se borrará todo lo dibujado en el fotograma. | Se borrará todo lo dibujado en los {count} fotogramas.",
-      "confirmKeep": "Mantener {size}",
-      "confirmClear": "Borrar y cambiar",
-      "confirmReason": "Un dibujo hecho para una cuadrícula de {size} no se puede trasladar a otra sin volver a dibujarlo."
-    },
     "holdToConfirm": {
       "instruction": "Mantén pulsado durante un segundo para {action}.",
       "holding": "Manteniendo",
@@ -358,8 +349,8 @@
       "flipVertical": "Voltear verticalmente",
       "decreaseSize": "Pincel más pequeño",
       "increaseSize": "Pincel más grande",
-      "undo": "Deshacer la última acción",
-      "redo": "Rehacer la última acción",
+      "undo": "Deshacer",
+      "redo": "Rehacer",
       "toggleGrid": "Alternar la cuadrícula",
       "importImage": "Importar una imagen al lienzo",
       "exportGif": "Exportar la animación como GIF",
@@ -369,8 +360,7 @@
       "exportSpriteSheet": "Exportar todos los fotogramas como hoja de sprites",
       "importSpriteSheet": "Importar una hoja de sprites como fotogramas",
       "submit": "Guardar y enviar",
-      "submitTooltip": "Descargar el fotograma actual como PNG",
-      "actualSize": "Vista previa a tamaño real"
+      "submitTooltip": "Descargar el fotograma actual como PNG"
     },
     "canvas": {
       "zoomFit": "Ajustar a la ventana",
@@ -534,7 +524,7 @@
         "64": "Sprites detallados",
         "128": "Arte grande y escenarios"
       },
-      "sizeLater": "Puedes cambiar el tamaño después desde la barra, pero eso borra el dibujo.",
+      "sizeLater": "El tamaño no se puede cambiar después de crear el proyecto.",
       "create": "Crear proyecto",
       "listTitle": "Tus proyectos",
       "empty": "Todavía no hay proyectos. Los que crees aparecen aquí, incluso después de cerrar su pestaña.",
